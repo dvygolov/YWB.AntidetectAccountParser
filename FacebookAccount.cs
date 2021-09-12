@@ -108,14 +108,14 @@ namespace YWB.AntidetectAccountParser
             foreach (var f in files)
             {
                 var fa = new FacebookAccount(Path.GetFileNameWithoutExtension(f));
-                Console.WriteLine($"Обработка файла: {f}");
+                Console.WriteLine($"Parsing file: {f}");
                 using (var archive = ZipFile.OpenRead(f))
                 {
                     foreach (var entry in archive.Entries)
                     {
                         if (entry.FullName.ToLowerInvariant().Contains("password"))
                         {
-                            Console.WriteLine($"Найден файл с паролями: {entry.FullName}");
+                            Console.WriteLine($"Found file with passwords: {entry.FullName}");
                             using (var s = entry.Open())
                             {
                                 var lines = Encoding.UTF8.GetString(s.ReadAllBytes()).Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries).ToList();
@@ -127,7 +127,7 @@ namespace YWB.AntidetectAccountParser
                                     if (!string.IsNullOrEmpty(login) && !string.IsNullOrEmpty(password))
                                     {
                                         if (fa.AddLoginPassword(login, password))
-                                            Console.WriteLine("Найден логин-пароль от фб!");
+                                            Console.WriteLine("Found Facebook login/password!");
                                     }
                                 }
                             }
@@ -135,7 +135,7 @@ namespace YWB.AntidetectAccountParser
 
                         if (entry.FullName.ToLowerInvariant().Contains("cookie") && entry.Length > 0)
                         {
-                            Console.WriteLine($"Найден файл с cookies: {entry.FullName}");
+                            Console.WriteLine($"Found file with cookies: {entry.FullName}");
                             using (var s = entry.Open())
                             {
                                 var text = Encoding.UTF8.GetString(s.ReadAllBytes());
@@ -149,7 +149,7 @@ namespace YWB.AntidetectAccountParser
                                 var fbCookies = CookieHelper.GetFacebookCookies(cookies);
                                 if (!string.IsNullOrEmpty(fbCookies))
                                     if (fa.AddCookies(fbCookies))
-                                        Console.WriteLine("Найдены куки фб!");
+                                        Console.WriteLine("Found Facebook cookies!");
                             }
                         }
                     }
