@@ -9,10 +9,11 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using YWB.IndigoAccountParser.Helpers;
-using YWB.IndigoAccountParser.Model;
+using YWB.AntidetectAccountParser.Helpers;
+using YWB.AntidetectAccountParser.Model;
+using YWB.AntidetectAccountParser.Model.Indigo;
 
-namespace YWB.IndigoAccountParser.Services
+namespace YWB.AntidetectAccountParser.Services
 {
     public class IndigoApiService
     {
@@ -101,6 +102,90 @@ namespace YWB.IndigoAccountParser.Services
             return await ExecuteRequestAsync<IndigoPlanSettings>(r);
         }
 
+        public async Task ImportLogsAsync()
+        {
+            var proxy = Proxy.Parse(File.ReadAllText("proxy.txt"));
+            var accounts = FacebookAccount.AutoParseFromZip("logs");
+            if (accounts.Count == 0)
+            {
+                Console.WriteLine("Couldn't find valid accounts to import!");
+                return;
+            }
+            else
+                Console.WriteLine($"Found {accounts.Count} accounts.");
+
+            var groups = AllGroups.OrderBy(g => g.Key);
+            Console.WriteLine("Choose group:");
+            var selected = SelectHelper.Select(groups, g => g.Key);
+
+            var os = string.Empty;
+            Console.WriteLine("Choose operating system:");
+            os = SelectHelper.Select(new[] { "win", "mac" });
+
+            for (int i = 0; i < accounts.Count; i++)
+            {
+                if (accounts[i].AllCookies.Count == 0)
+                {
+                    string pId = string.Empty;
+                    string pName = $"PasswordOnly_{accounts[i].Name}";
+                    Console.WriteLine($"Creating profile {pName}...");
+                    pId = await CreateNewProfileAsync($"{pName}",os, selected.Value.Sid, proxy);
+                    Console.WriteLine($"Profile with ID={pId} created!");
+                    await SaveItemToNoteAsync(pId, accounts[i].ToString(), true);
+                    Console.WriteLine("Note saved!");
+                    continue;
+                }
+
+                for (int j = 0; j < accounts[i].AllCookies.Count; j++)
+                {
+                    string pId = string.Empty;
+                    string pName = $"{accounts[i].Name}_{j + 1}";
+                    Console.WriteLine($"Creating profile {pName}...");
+                    pId = await CreateNewProfileAsync($"{pName}", os, selected.Value.Sid, proxy);
+                    Console.WriteLine($"Profile with ID={pId} created!");
+                    Console.WriteLine($"Importing cookies to account {accounts[i].Name}...");
+
+                    if (CookieHelper.AreCookiesInBase64(accounts[i].Cookies))
+                    {
+                        accounts[i].Cookies = Encoding.UTF8.GetString(Convert.FromBase64String(accounts[i].Cookies));
+                    }
+                    var json = await ImportCookiesAsync(pId, accounts[i].Cookies);
+                    if (json != null && json["status"].ToString() == "OK")
+                        Console.WriteLine("Cookies imported! Saving all data to profile's note...");
+                    else
+                    {
+                        if (json["message"].ToString() == "Can't enable Google services")
+                        {
+                            Console.WriteLine("Couldn't swith on Google services, switching them off...");
+                            var settings = await GetProfileSettingsAsync(pId);
+                            settings.googleServices = false;
+                            settings.loadCustomExtensions = false;
+                            await SaveProfileSettingsAsync(settings);
+
+                            json = await ImportCookiesAsync(pId, accounts[i].Cookies);
+                            if (json != null && json["status"].ToString() == "OK")
+                                Console.WriteLine("Cookies imported! Saving all data to profile's note...");
+                            else
+                                Console.WriteLine($"Cookies NOT imported!!!{json} Adding all data to profile's note...");
+                        }
+                        else
+                        {
+                            Console.WriteLine($"Couldnt' import all cookies:{json}, trying to import only Facebook's...");
+                            json = await ImportCookiesAsync(pId, CookieHelper.GetFacebookCookies(accounts[i].Cookies));
+                            if (json != null && json["status"].ToString() == "OK")
+                                Console.WriteLine("Facebook cookies imported! Adding all data to profile's note...");
+                            else
+                                Console.WriteLine($"Cookies NOT imported!!!{json} Adding all data to profile's note...");
+                        }
+                    }
+
+                    await SaveItemToNoteAsync(pId, accounts[i].ToString(), true);
+                    Console.WriteLine("Note saved!");
+                }
+            }
+        }
+
+
         public async Task ImportAccountsAsync()
         {
             var proxy = Proxy.Parse(File.ReadAllText("proxy.txt"));
@@ -141,7 +226,7 @@ namespace YWB.IndigoAccountParser.Services
                 {
                     pName = $"{namePrefix}{i}";
                     Console.WriteLine($"Creating profile {pName}...");
-                    pId = await CreateNewProfileAsync($"{pName}",os, selected.Value.Sid, proxy);
+                    pId = await CreateNewProfileAsync($"{pName}", os, selected.Value.Sid, proxy);
                     Console.WriteLine($"Profile with ID={pId} created!");
                 }
                 else

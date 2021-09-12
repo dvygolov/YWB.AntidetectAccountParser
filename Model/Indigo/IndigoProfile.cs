@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace YWB.IndigoAccountParser.Model
+namespace YWB.AntidetectAccountParser.Model.Indigo
 {
     public class IndigoProfile
     {

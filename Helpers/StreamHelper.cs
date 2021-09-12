@@ -1,6 +1,6 @@
 ﻿using System.IO;
 
-namespace YWB.IndigoAccountParser.Helpers
+namespace YWB.AntidetectAccountParser.Helpers
 {
     public static class StreamHelper
     {

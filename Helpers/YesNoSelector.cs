@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace YWB.IndigoAccountParser.Helpers
+namespace YWB.AntidetectAccountParser.Helpers
 {
     public static class YesNoSelector
     {

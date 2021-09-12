@@ -1,4 +1,4 @@
-﻿namespace YWB.IndigoAccountParser.Model
+﻿namespace YWB.AntidetectAccountParser.Model.Indigo
 {
     public class IndigoProfilesGroup
     {

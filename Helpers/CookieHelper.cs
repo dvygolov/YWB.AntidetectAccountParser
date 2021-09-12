@@ -3,7 +3,7 @@ using System;
 using System.Linq;
 using System.Text.RegularExpressions;
 
-namespace YWB.IndigoAccountParser.Helpers
+namespace YWB.AntidetectAccountParser.Helpers
 {
     public class CookieHelper
     {

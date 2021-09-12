@@ -4,12 +4,11 @@ using System.Collections.Generic;
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
-using System.Reflection;
 using System.Text;
 using System.Text.RegularExpressions;
-using YWB.IndigoAccountParser.Helpers;
+using YWB.AntidetectAccountParser.Helpers;
 
-namespace YWB.IndigoAccountParser
+namespace YWB.AntidetectAccountParser
 {
     public class FacebookAccount
     {
@@ -102,28 +101,70 @@ namespace YWB.IndigoAccountParser
             return true;
         }
 
-        public static List<FacebookAccount> Parse(string input, string regex)
+        public static List<FacebookAccount> AutoParseFromZip(string folder)
         {
-            var matches = Regex.Matches(input, regex, RegexOptions.Multiline);
-            var lst = new List<FacebookAccount>();
-            foreach (Match m in matches)
+            var res = new List<FacebookAccount>();
+            var files = Directory.GetFiles(folder, "*.zip");
+            foreach (var f in files)
             {
-                var fba = new FacebookAccount();
-                Type type = fba.GetType();
-                PropertyInfo[] properties = type.GetProperties();
-                for (int i = 0; i < properties.Length; i++)
+                var fa = new FacebookAccount(Path.GetFileNameWithoutExtension(f));
+                Console.WriteLine($"Обработка файла: {f}");
+                using (var archive = ZipFile.OpenRead(f))
                 {
-                    PropertyInfo property = properties[i];
-                    if (m.Groups.ContainsKey(property.Name))
+                    foreach (var entry in archive.Entries)
                     {
-                        property.SetValue(fba, m.Groups[property.Name].Value);
+                        if (entry.FullName.ToLowerInvariant().Contains("password"))
+                        {
+                            Console.WriteLine($"Найден файл с паролями: {entry.FullName}");
+                            using (var s = entry.Open())
+                            {
+                                var lines = Encoding.UTF8.GetString(s.ReadAllBytes()).Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries).ToList();
+                                int index = -1;
+                                while ((index = lines.FindIndex(index + 1, l => l.ToLowerInvariant().Contains("facebook"))) != -1)
+                                {
+                                    var login = lines[index + 1].Split(' ')[1];
+                                    var password = lines[index + 2].Split(' ')[1];
+                                    if (!string.IsNullOrEmpty(login) && !string.IsNullOrEmpty(password))
+                                    {
+                                        if (fa.AddLoginPassword(login, password))
+                                            Console.WriteLine("Найден логин-пароль от фб!");
+                                    }
+                                }
+                            }
+                        }
+
+                        if (entry.FullName.ToLowerInvariant().Contains("cookie") && entry.Length > 0)
+                        {
+                            Console.WriteLine($"Найден файл с cookies: {entry.FullName}");
+                            using (var s = entry.Open())
+                            {
+                                var text = Encoding.UTF8.GetString(s.ReadAllBytes());
+                                string cookies = string.Empty;
+                                if (!text.Trim().StartsWith('['))
+                                {
+                                    cookies = CookieHelper.NetscapeCookiesToJSON(text);
+                                }
+                                else
+                                    cookies = text;
+                                var fbCookies = CookieHelper.GetFacebookCookies(cookies);
+                                if (!string.IsNullOrEmpty(fbCookies))
+                                    if (fa.AddCookies(fbCookies))
+                                        Console.WriteLine("Найдены куки фб!");
+                            }
+                        }
                     }
                 }
-                lst.Add(fba);
+                if (fa.AllCookies.Any(c=>CookieHelper.HasCUserCookie(c))|| (fa.Login != null && fa.Password != null))
+                    res.Add(fa);
+                else
+                {
+                    var invalid = Path.Combine(folder, "Invalid");
+                    if (!Directory.Exists(invalid)) Directory.CreateDirectory(invalid);
+                    File.Move(f, Path.Combine(invalid, Path.GetFileName(f)));
+                }
             }
-            return lst;
+            return res;
         }
-
         public static List<FacebookAccount> AutoParse(string input)
         {
             var re = new Regex(@"^(?<Login>[^\:;\|\s]+)[:;\|\s](?<Password>[^\:;\|\s]+)[:;\|\s]", RegexOptions.Multiline);
