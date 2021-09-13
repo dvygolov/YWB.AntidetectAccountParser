@@ -105,7 +105,7 @@ namespace YWB.AntidetectAccountParser.Services
         public async Task ImportLogsAsync()
         {
             var proxy = Proxy.Parse(File.ReadAllText("proxy.txt"));
-            var accounts = FacebookAccount.AutoParseFromZip("logs");
+            var accounts = FacebookAccount.AutoParseFromArchives("logs");
             if (accounts.Count == 0)
             {
                 Console.WriteLine("Couldn't find valid accounts to import!");
