@@ -1,8 +1,11 @@
 ﻿using Newtonsoft.Json.Linq;
+using SharpCompress.Archives;
+using SharpCompress.Archives.Rar;
+using SharpCompress.Archives.Zip;
+using SharpCompress.Common;
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.IO.Compression;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -101,60 +104,26 @@ namespace YWB.AntidetectAccountParser
             return true;
         }
 
-        public static List<FacebookAccount> AutoParseFromZip(string folder)
+        public static List<FacebookAccount> AutoParseFromArchives(string folder)
         {
             var res = new List<FacebookAccount>();
+            bool isRar = false;
             var files = Directory.GetFiles(folder, "*.zip");
+            if (files.Length == 0)
+            {
+                files = Directory.GetFiles(folder, "*.rar");
+                isRar = true;
+            }
+
             foreach (var f in files)
             {
                 var fa = new FacebookAccount(Path.GetFileNameWithoutExtension(f));
                 Console.WriteLine($"Parsing file: {f}");
-                using (var archive = ZipFile.OpenRead(f))
-                {
-                    foreach (var entry in archive.Entries)
-                    {
-                        if (entry.FullName.ToLowerInvariant().Contains("password"))
-                        {
-                            Console.WriteLine($"Found file with passwords: {entry.FullName}");
-                            using (var s = entry.Open())
-                            {
-                                var lines = Encoding.UTF8.GetString(s.ReadAllBytes()).Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries).ToList();
-                                int index = -1;
-                                while ((index = lines.FindIndex(index + 1, l => l.ToLowerInvariant().Contains("facebook"))) != -1)
-                                {
-                                    var login = lines[index + 1].Split(' ')[1];
-                                    var password = lines[index + 2].Split(' ')[1];
-                                    if (!string.IsNullOrEmpty(login) && !string.IsNullOrEmpty(password))
-                                    {
-                                        if (fa.AddLoginPassword(login, password))
-                                            Console.WriteLine("Found Facebook login/password!");
-                                    }
-                                }
-                            }
-                        }
-
-                        if (entry.FullName.ToLowerInvariant().Contains("cookie") && entry.Length > 0)
-                        {
-                            Console.WriteLine($"Found file with cookies: {entry.FullName}");
-                            using (var s = entry.Open())
-                            {
-                                var text = Encoding.UTF8.GetString(s.ReadAllBytes());
-                                string cookies = string.Empty;
-                                if (!text.Trim().StartsWith('['))
-                                {
-                                    cookies = CookieHelper.NetscapeCookiesToJSON(text);
-                                }
-                                else
-                                    cookies = text;
-                                var fbCookies = CookieHelper.GetFacebookCookies(cookies);
-                                if (!string.IsNullOrEmpty(fbCookies))
-                                    if (fa.AddCookies(fbCookies))
-                                        Console.WriteLine("Found Facebook cookies!");
-                            }
-                        }
-                    }
-                }
-                if (fa.AllCookies.Any(c=>CookieHelper.HasCUserCookie(c))|| (fa.Login != null && fa.Password != null))
+                if (isRar)
+                    RarHelper.Parse(fa, f);
+                else
+                    ZipHelper.Parse(fa, f);
+                if (fa.AllCookies.Any(c => CookieHelper.HasCUserCookie(c)) || (fa.Login != null && fa.Password != null))
                     res.Add(fa);
                 else
                 {
@@ -165,6 +134,7 @@ namespace YWB.AntidetectAccountParser
             }
             return res;
         }
+
         public static List<FacebookAccount> AutoParse(string input)
         {
             var re = new Regex(@"^(?<Login>[^\:;\|\s]+)[:;\|\s](?<Password>[^\:;\|\s]+)[:;\|\s]", RegexOptions.Multiline);

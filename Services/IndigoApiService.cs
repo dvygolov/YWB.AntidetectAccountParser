@@ -105,7 +105,7 @@ namespace YWB.AntidetectAccountParser.Services
         public async Task ImportLogsAsync()
         {
             var proxy = Proxy.Parse(File.ReadAllText("proxy.txt"));
-            var accounts = FacebookAccount.AutoParseFromZip("logs");
+            var accounts = FacebookAccount.AutoParseFromArchives("logs");
             if (accounts.Count == 0)
             {
                 Console.WriteLine("Couldn't find valid accounts to import!");
@@ -324,7 +324,17 @@ namespace YWB.AntidetectAccountParser.Services
             r.AddHeader("token", _token);
             rc.UserAgent = "Mozilla/5.0  MultiLoginApp ui client. 5.14.0.29";
             var resp = await rc.ExecuteAsync(r, new CancellationToken());
-            return JsonConvert.DeserializeObject<T>(resp.Content);
+            T res = default(T);
+            try 
+            {	        
+                res= JsonConvert.DeserializeObject<T>(resp.Content);
+            }
+            catch (Exception)
+            {
+                Console.WriteLine($"Error deserializing {resp.Content} to {typeof(T)}");
+                throw;
+            }   
+            return res;
         }
 
         private async Task<T> ExecuteLocalRequestAsync<T>(RestRequest r, bool addToken = true)
@@ -338,7 +348,17 @@ namespace YWB.AntidetectAccountParser.Services
                 r.AddHeader("token", _token);
             }
             var resp = await rc.ExecuteAsync(r, new CancellationToken());
-            return JsonConvert.DeserializeObject<T>(resp.Content);
+            T res = default(T);
+            try 
+            {	        
+                res= JsonConvert.DeserializeObject<T>(resp.Content);
+            }
+            catch (Exception)
+            {
+                Console.WriteLine($"Error deserializing {resp.Content} to {typeof(T)}");
+                throw;
+            }   
+            return res;
         }
 
         private async Task ExecuteLocalRequestAsync(RestRequest r)

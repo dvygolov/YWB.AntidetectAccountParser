@@ -20,7 +20,7 @@ namespace YWB.AntidetectAccountParser
 
             var ias = new IndigoApiService();
             Console.WriteLine("What do you want to parse?");
-            var actions = new List<string> { "Accounts from text file", "Accounts from ZIP files" };
+            var actions = new List<string> { "Accounts from text file", "Accounts from ZIP/RAR files" };
             var selected = SelectHelper.Select(actions);
             switch (actions.IndexOf(selected))
             {
