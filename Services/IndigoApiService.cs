@@ -15,7 +15,7 @@ using YWB.AntidetectAccountParser.Model.Indigo;
 
 namespace YWB.AntidetectAccountParser.Services
 {
-    public class IndigoApiService
+    public class IndigoApiService : IAntidetectApiService
     {
         private string _token;
         private IndigoPlanSettings _ips;
@@ -129,7 +129,7 @@ namespace YWB.AntidetectAccountParser.Services
                     string pId = string.Empty;
                     string pName = $"PasswordOnly_{accounts[i].Name}";
                     Console.WriteLine($"Creating profile {pName}...");
-                    pId = await CreateNewProfileAsync($"{pName}",os, selected.Value.Sid, proxy);
+                    pId = await CreateNewProfileAsync($"{pName}", os, selected.Value.Sid, proxy);
                     Console.WriteLine($"Profile with ID={pId} created!");
                     await SaveItemToNoteAsync(pId, accounts[i].ToString(), true);
                     Console.WriteLine("Note saved!");
