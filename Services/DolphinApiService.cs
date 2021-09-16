@@ -1,16 +1,17 @@
 ﻿using RestSharp;
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 using YWB.AntidetectAccountParser.Model;
 using YWB.AntidetectAccountParser.Model.Indigo;
+using YWB.AntidetectAccountParser.Services.Interfaces;
 
 namespace YWB.AntidetectAccountParser.Services
 {
-    public class DolphinApiService : IAntidetectApiService
+    public class DolphinApiService : AbstractAntidetectApiService
     {
+        public DolphinApiService(IAccountsParser parser, IProxyProvider proxyProvider) : base(parser, proxyProvider) { }
+
         public Dictionary<string, IndigoProfilesGroup> AllGroups => throw new NotImplementedException();
 
         public Task<string> CreateNewProfileAsync(string pName, string os, string groupId, Proxy p)
@@ -66,8 +67,8 @@ namespace YWB.AntidetectAccountParser.Services
         public Task<Dictionary<string, IndigoProfilesGroup>> GetAllGroupsAsync() => throw new NotImplementedException();
         public Task<Dictionary<string, List<IndigoProfile>>> GetAllProfilesAsync() => throw new NotImplementedException();
         public Task<List<IndigoProfile>> GetAllProfilesByGroupAsync(string groupName) => throw new NotImplementedException();
-        public Task ImportAccountsAsync() => throw new NotImplementedException();
-        public Task ImportLogsAsync() => throw new NotImplementedException();
-        public Task<bool> SaveItemToNoteAsync(string profileId, string item, bool replace = false) => throw new NotImplementedException();
+        protected override Task<List<(string pName, string pId)>> GetProfilesAsync(List<FacebookAccount> accounts) => throw new NotImplementedException();
+        protected override Task ImportCookiesAsync(string profileId, string cookies) => throw new NotImplementedException();
+        protected override Task<bool> SaveItemToNoteAsync(string profileId, string item, bool replace = false) => throw new NotImplementedException();
     }
 }

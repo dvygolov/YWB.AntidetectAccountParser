@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using YWB.AntidetectAccountParser.Helpers;
 using YWB.AntidetectAccountParser.Services;
+using YWB.AntidetectAccountParser.Services.Interfaces;
 
 namespace YWB.AntidetectAccountParser
 {
@@ -10,7 +11,7 @@ namespace YWB.AntidetectAccountParser
     {
         static async Task Main(string[] args)
         {
-            Console.WriteLine("Antidetect Accounts Parser v2.0 by Yellow Web (https://yellowweb.top)");
+            Console.WriteLine("Antidetect Accounts Parser v2.1 by Yellow Web (https://yellowweb.top)");
             Console.WriteLine("If you like this software, please, donate!");
             Console.WriteLine("WebMoney: Z182653170916");
             Console.WriteLine("Bitcoin: bc1qqv99jasckntqnk0pkjnrjtpwu0yurm0qd0gnqv");
@@ -18,19 +19,23 @@ namespace YWB.AntidetectAccountParser
             await Task.Delay(5000);
             Console.WriteLine();
 
-            var ias = new IndigoApiService();
+            var proxyProvider = new FileProxyProvider();
             Console.WriteLine("What do you want to parse?");
-            var actions = new List<string> { "Accounts from text file", "Accounts from ZIP/RAR files" };
-            var selected = SelectHelper.Select(actions);
-            switch (actions.IndexOf(selected))
+            var actions = new Dictionary<string, Func<IAccountsParser>> {
+                {"Accounts from text file",()=>new TextAccountsParser() },
+                {"Accounts from ZIP/RAR files",()=>new ArchiveAccountsParser() }
+            };
+            var selectedParser = SelectHelper.Select(actions, a => a.Key).Value();
+
+            Console.WriteLine("Choose your antidetect browser:");
+            var browsers = new Dictionary<string, Func<AbstractAntidetectApiService>>
             {
-                case 0:
-                    await ias.ImportAccountsAsync();
-                    break;
-                case 1:
-                    await ias.ImportLogsAsync();
-                    break;
-            }
+                {"Indigo",()=> new IndigoApiService(selectedParser,proxyProvider) },
+                {"Dolphin",()=>new DolphinApiService(selectedParser,proxyProvider) }
+            };
+            var selectedBrowser = SelectHelper.Select(browsers, b => b.Key).Value();
+
+            await selectedBrowser.ImportAccountsAsync();
 
 
             Console.WriteLine("All done! Press any key to exit... and don't forget to donate ;-)");
