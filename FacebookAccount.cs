@@ -186,7 +186,7 @@ namespace YWB.AntidetectAccountParser
                 }
             }
 
-            re = new Regex(@"[\:;\|](?<Cookies>\[\s*\{.*?\}\s*\]\s*)($|[\:;\|])", RegexOptions.Multiline);
+            re = new Regex(@"[\:;\|\s](?<Cookies>\[\s*\{.*?\}\s*\]\s*)($|[\:;\|\s])", RegexOptions.Multiline);
             matches = re.Matches(input);
             if (matches.Count == 0)
             {
