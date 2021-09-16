@@ -72,6 +72,9 @@ namespace YWB.AntidetectAccountParser
 
         public List<string> AllCookies => _cookies;
 
+        public List<string> Logins { get => _logins; set => _logins = value; }
+        public List<string> Passwords { get => _passwords; set => _passwords = value; }
+
         public bool AddCookies(string cookies)
         {
             var newCookies = JArray.Parse(cookies);
