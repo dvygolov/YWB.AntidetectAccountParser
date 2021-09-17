@@ -17,17 +17,27 @@ namespace YWB.AntidetectAccountParser.Services
         private string _token;
         public DolphinApiService(IAccountsParser parser, IProxyProvider proxyProvider) : base(parser, proxyProvider) { }
 
-        public async Task<string> CreateNewProfileAsync(string pName, string os, Proxy p)
+        private async Task<string> CreateProxyAsync(Proxy p)
         {
-            var request = new RestRequest("browser_profiles",Method.POST);
+            var r = new RestRequest("proxy", Method.POST);
+            if (p.Type == "socks") p.Type = "socks5";
+            r.AddParameter("type", p.Type);
+            r.AddParameter("host", p.Address);
+            r.AddParameter("port", p.Port);
+            r.AddParameter("login", p.Login);
+            r.AddParameter("password", p.Password);
+            r.AddParameter("name", DateTime.Now.ToString("G"));
+            var res=await ExecuteRequestAsync<JObject>(r);
+            return res["data"]["id"].ToString();
+        }
+
+        public async Task<string> CreateNewProfileAsync(string pName, string os, string proxyId)
+        {
+            var request = new RestRequest("browser_profiles", Method.POST);
             request.AddParameter("name", pName);
             request.AddParameter("platform", os);
-            request.AddParameter("proxy[type]", p.Type);
-            request.AddParameter("proxy[host]", p.Address);
-            request.AddParameter("proxy[port]", p.Port);
-            request.AddParameter("proxy[login]", p.Login);
-            request.AddParameter("proxy[password]", p.Password);
-            var res=await ExecuteRequestAsync<JObject>(request);
+            request.AddParameter("proxy[id]", proxyId);
+            var res = await ExecuteRequestAsync<JObject>(request);
             return res["browserProfileId"].ToString();
         }
 
@@ -43,17 +53,21 @@ namespace YWB.AntidetectAccountParser.Services
             }
             Console.WriteLine("Choose operating system:");
             var os = SelectHelper.Select(new[] { "windows", "linux", "macos" });
+            Console.WriteLine("Adding proxy...");
+            var proxyId = await CreateProxyAsync(proxy);
+            Console.WriteLine("Proxy added!");
             var res = new List<(string, string)>();
             for (int i = 0; i < accounts.Count; i++)
             {
                 var pName = string.IsNullOrEmpty(accounts[i].Name) ? $"{namePrefix}{i}" : accounts[i].Name;
                 Console.WriteLine($"Creating profile {pName}...");
-                var pId = await CreateNewProfileAsync(pName, os, proxy);
+                var pId = await CreateNewProfileAsync(pName, os, proxyId);
                 Console.WriteLine($"Profile with ID={pId} created!");
                 res.Add((pName, pId));
             }
             return res;
         }
+
 
         protected override async Task ImportCookiesAsync(string profileId, string cookies)
         {
@@ -66,9 +80,9 @@ namespace YWB.AntidetectAccountParser.Services
 
         protected override async Task<bool> SaveItemToNoteAsync(string profileId, FacebookAccount fa)
         {
-            var request = new RestRequest($"browser_profiles/{profileId}",Method.PATCH);
+            var request = new RestRequest($"browser_profiles/{profileId}", Method.PATCH);
             request.AddParameter("notes[content]", fa.ToString(true));
-            var res=await ExecuteRequestAsync<JObject>(request);
+            var res = await ExecuteRequestAsync<JObject>(request);
             return true;
         }
 
