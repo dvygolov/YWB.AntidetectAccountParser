@@ -141,8 +141,6 @@ namespace YWB.AntidetectAccountParser.Services
             }
         }
 
-
-
         protected override async Task ImportCookiesAsync(string profileId, string cookies)
         {
             var r = new RestRequest($"api/v1/profile/cookies/import/webext?profileId={profileId}", Method.POST);
@@ -190,15 +188,13 @@ namespace YWB.AntidetectAccountParser.Services
             return res["uuid"].ToString();
         }
 
-        protected override async Task<bool> SaveItemToNoteAsync(string profileId, string item, bool replace = false)
+        protected override async Task<bool> SaveItemToNoteAsync(string profileId, FacebookAccount fa)
         {
             var j = await GetProfileSettingsAsync(profileId);
             if (j == null) { return false; }
 
-            var note = replace ? "" : j.notes;
-            note += $" {Environment.NewLine}{item}";
             var r = new RestRequest($"accpmp/rest/ui/v1/profile/{profileId}/note", Method.POST);
-            r.AddParameter("text/plain", note, ParameterType.RequestBody);
+            r.AddParameter("text/plain", fa.ToString(), ParameterType.RequestBody);
             var resp = await ExecuteRequestAsync<JObject>(r);
             if (resp["status"].ToString().ToUpperInvariant() == "ERROR")
             {

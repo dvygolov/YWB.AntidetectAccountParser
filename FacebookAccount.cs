@@ -101,37 +101,39 @@ namespace YWB.AntidetectAccountParser
             return true;
         }
 
-        public override string ToString()
+        public string ToString(bool toHtml = false)
         {
+            var sd = toHtml ? "<p>" : "\n"; //start delimiter
+            var ed = toHtml ? "</p>" : string.Empty; //end delimiter
             string str = string.Empty;
             for (int i = 0; i < _logins.Count; i++)
             {
-                str += $"\nFacebook: {_logins[i]}:{_passwords[i]}";
+                str += $"{sd}Facebook: {_logins[i]}:{_passwords[i]}{ed}";
             }
             if (!string.IsNullOrEmpty(Birthday))
-                str += $"\nBirthday: {Birthday}";
+                str += $"{sd}Birthday: {Birthday}{ed}";
             if (!string.IsNullOrEmpty(TwoFactor))
-                str += $"\n2FA: {TwoFactor}";
+                str += $"{sd}2FA: {TwoFactor}{ed}";
             if (!string.IsNullOrEmpty(EmailPassword))
             {
                 var eLogin = EmailLogin ?? Login;
-                str += $"\nEmail: {eLogin}:{EmailPassword}";
+                str += $"{sd}Email: {eLogin}:{EmailPassword}{ed}";
             }
             if (!string.IsNullOrEmpty(Token))
             {
-                str += $"\nToken: {Token}";
+                str += $"{sd}Token: {Token} {ed}";
             }
             if (!string.IsNullOrEmpty(BmLinks))
             {
-                str += $"\nBmLinks: {BmLinks}";
+                str += $"{sd}BmLinks: {BmLinks} {ed}";
             }
             if (!string.IsNullOrEmpty(Cookies))
             {
-                var cookies = $"\nCookies: {Regex.Replace(Cookies.Replace("\r\n", ""), "[ ]+", "")}";
+                var cookies = $"{sd}Cookies: {Regex.Replace(Cookies.Replace("\r\n", ""), "[ ]+", "")}{ed}";
                 if ((str + cookies).Length > 5000)
                 {
                     var fbCookies = CookieHelper.GetFacebookCookies(Cookies);
-                    cookies = $"\nCookies: {fbCookies}";
+                    cookies = $"{sd}Cookies: {fbCookies}{ed}";
 
                     if ((str + cookies).Length > 5000)
                         Console.WriteLine("Length is more then 5000 symbols, skipping cookies...");

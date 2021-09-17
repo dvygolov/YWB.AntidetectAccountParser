@@ -22,7 +22,7 @@ namespace YWB.AntidetectAccountParser.Services
 
         protected abstract Task ImportCookiesAsync(string profileId, string cookies);
 
-        protected abstract Task<bool> SaveItemToNoteAsync(string profileId, string item, bool replace = false);
+        protected abstract Task<bool> SaveItemToNoteAsync(string profileId, FacebookAccount fa);
 
         public async Task ImportAccountsAsync()
         {
@@ -53,7 +53,7 @@ namespace YWB.AntidetectAccountParser.Services
                     await ImportCookiesAsync(pId, accounts[i].Cookies);
                 }
 
-                await SaveItemToNoteAsync(pId, accounts[i].ToString(), true);
+                await SaveItemToNoteAsync(pId, accounts[i]);
                 Console.WriteLine("Note saved!");
             }
         }
