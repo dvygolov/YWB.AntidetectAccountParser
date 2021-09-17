@@ -11,7 +11,7 @@ namespace YWB.AntidetectAccountParser.Helpers
         {
             var cookieArray = JArray.Parse(cookies);
             var fbCookies = cookieArray
-                .Where(c => c["domain"].ToString() == ".facebook.com")
+                .Where(c => c["domain"]?.ToString() == ".facebook.com")
                 .Select(c => c.ToString()).ToList();
             if (fbCookies.Count == 0) return string.Empty;
             var lstStr = '[' + string.Join(',', fbCookies) + ']';
