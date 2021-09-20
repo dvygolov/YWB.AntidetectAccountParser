@@ -27,18 +27,63 @@ namespace YWB.AntidetectAccountParser.Services
             r.AddParameter("login", p.Login);
             r.AddParameter("password", p.Password);
             r.AddParameter("name", DateTime.Now.ToString("G"));
-            var res=await ExecuteRequestAsync<JObject>(r);
+            var res = await ExecuteRequestAsync<JObject>(r);
             return res["data"]["id"].ToString();
         }
 
         public async Task<string> CreateNewProfileAsync(string pName, string os, string proxyId)
         {
+            var fingerprint = await GetNewFingerprintAsync(os);
+            var ua = await GetNewUseragentAsync(os);
             var request = new RestRequest("browser_profiles", Method.POST);
             request.AddParameter("name", pName);
+            request.AddParameter("screen[mode]", "manual");
+            request.AddParameter("screen[resolution]", $"{fingerprint["screen"]["width"]}x{fingerprint["screen"]["height"]}");
             request.AddParameter("platform", os);
             request.AddParameter("proxy[id]", proxyId);
+            request.AddParameter("useragent[mode]", "manual");
+            request.AddParameter("useragent[value]", ua);
+            request.AddParameter("webrtc[mode]", "altered");
+            request.AddParameter("canvas[mode]", "real");
+            request.AddParameter("webgl[mode]", "noise");
+            request.AddParameter("webglInfo[mode]", "manual");
+            request.AddParameter("webglInfo[vendor]", fingerprint["webgl"]["unmaskedVendor"].ToString());
+            request.AddParameter("webglInfo[renderer]", fingerprint["webgl"]["unmaskedRenderer"].ToString());
+            request.AddParameter("geolocation[mode]", "auto");
+            request.AddParameter("timezone[mode]", "auto");
+            request.AddParameter("locale[mode]", "auto");
+            request.AddParameter("cpu[mode]", "manual");
+            request.AddParameter("cpu[value]", int.Parse(fingerprint["hardwareConcurrency"].ToString()));
+            request.AddParameter("memory[mode]", "manual");
+            request.AddParameter("memory[value]", int.Parse(fingerprint["deviceMemory"].ToString()));
+            request.AddParameter("doNotTrack", int.Parse(fingerprint["donottrack"].ToString()));
+            request.AddParameter("fonts", fingerprint["fonts"].ToString());
+            request.AddParameter("mediaDevices[mode]","manual");
+            request.AddParameter("mediaDevices[audioInputs]", new Random().Next(1,4));
+            request.AddParameter("mediaDevices[audioOutputs]", new Random().Next(1,4));
+            request.AddParameter("mediaDevices[videoInputs]", new Random().Next(1,4));
+            request.AddParameter("browserType", "anty");
             var res = await ExecuteRequestAsync<JObject>(request);
             return res["browserProfileId"].ToString();
+        }
+
+
+        public async Task<JObject> GetNewFingerprintAsync(string os)
+        {
+            var request = new RestRequest("fingerprints/fingerprint", Method.GET);
+            request.AddQueryParameter("platform", os);
+            request.AddQueryParameter("browser_type", "anty");
+            request.AddQueryParameter("browser_version", "undefined");
+            var res = await ExecuteRequestAsync<JObject>(request);
+            return res;
+        }
+
+        public async Task<string> GetNewUseragentAsync(string os)
+        {
+            var request = new RestRequest("fingerprints/useragent", Method.GET);
+            request.AddQueryParameter("platform", os);
+            var res = await ExecuteRequestAsync<JObject>(request);
+            return res["data"].ToString();
         }
 
         protected override async Task<List<(string pName, string pId)>> GetProfilesAsync(List<FacebookAccount> accounts)

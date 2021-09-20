@@ -11,7 +11,7 @@ namespace YWB.AntidetectAccountParser
     {
         static async Task Main(string[] args)
         {
-            Console.WriteLine("Antidetect Accounts Parser v3.0a by Yellow Web (https://yellowweb.top)");
+            Console.WriteLine("Antidetect Accounts Parser v3.0b by Yellow Web (https://yellowweb.top)");
             Console.WriteLine("If you like this software, please, donate!");
             Console.WriteLine("WebMoney: Z182653170916");
             Console.WriteLine("Bitcoin: bc1qqv99jasckntqnk0pkjnrjtpwu0yurm0qd0gnqv");
