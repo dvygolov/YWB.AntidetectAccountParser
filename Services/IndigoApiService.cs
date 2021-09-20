@@ -5,7 +5,6 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
-using System.Net.WebSockets;
 using System.Threading;
 using System.Threading.Tasks;
 using YWB.AntidetectAccountParser.Helpers;
@@ -111,7 +110,7 @@ namespace YWB.AntidetectAccountParser.Services
             var selected = SelectHelper.Select(groups, g => g.Key);
             var createNew = YesNoSelector.ReadAnswerEqualsYes("Should I create new profiles? If not, then you'll choose from existing.");
             List<IndigoProfile> selectedProfiles = null;
-            var proxy = _proxyProvider.Get();
+            var proxies = _proxyProvider.Get();
             if (createNew)
             {
                 var namePrefix = string.Empty;
@@ -127,7 +126,8 @@ namespace YWB.AntidetectAccountParser.Services
                 {
                     var pName = string.IsNullOrEmpty(accounts[i].Name) ? $"{namePrefix}{i}" : accounts[i].Name;
                     Console.WriteLine($"Creating profile {pName}...");
-                    var pId = await CreateNewProfileAsync($"{pName}", os, selected.Value.Sid, proxy);
+                    var proxyIndex = i < proxies.Count - 1 ? i : i % proxies.Count;
+                    var pId = await CreateNewProfileAsync($"{pName}", os, selected.Value.Sid, proxies[proxyIndex]);
                     Console.WriteLine($"Profile with ID={pId} created!");
                     res.Add((pName, pId));
                 }

@@ -4,6 +4,7 @@ using RestSharp;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using YWB.AntidetectAccountParser.Helpers;
@@ -35,6 +36,10 @@ namespace YWB.AntidetectAccountParser.Services
         {
             var fingerprint = await GetNewFingerprintAsync(os);
             var ua = await GetNewUseragentAsync(os);
+            var memory = int.Parse(fingerprint["deviceMemory"].ToString());
+            if (memory == 0) memory++;
+            var cpu = int.Parse(fingerprint["hardwareConcurrency"].ToString());
+            if (cpu == 0) cpu++;
             var request = new RestRequest("browser_profiles", Method.POST);
             request.AddParameter("name", pName);
             request.AddParameter("screen[mode]", "manual");
@@ -53,15 +58,15 @@ namespace YWB.AntidetectAccountParser.Services
             request.AddParameter("timezone[mode]", "auto");
             request.AddParameter("locale[mode]", "auto");
             request.AddParameter("cpu[mode]", "manual");
-            request.AddParameter("cpu[value]", int.Parse(fingerprint["hardwareConcurrency"].ToString()));
+            request.AddParameter("cpu[value]", cpu);
             request.AddParameter("memory[mode]", "manual");
-            request.AddParameter("memory[value]", int.Parse(fingerprint["deviceMemory"].ToString()));
+            request.AddParameter("memory[value]", memory);
             request.AddParameter("doNotTrack", int.Parse(fingerprint["donottrack"].ToString()));
             request.AddParameter("fonts", fingerprint["fonts"].ToString());
-            request.AddParameter("mediaDevices[mode]","manual");
-            request.AddParameter("mediaDevices[audioInputs]", new Random().Next(1,4));
-            request.AddParameter("mediaDevices[audioOutputs]", new Random().Next(1,4));
-            request.AddParameter("mediaDevices[videoInputs]", new Random().Next(1,4));
+            request.AddParameter("mediaDevices[mode]", "manual");
+            request.AddParameter("mediaDevices[audioInputs]", new Random().Next(1, 4));
+            request.AddParameter("mediaDevices[audioOutputs]", new Random().Next(1, 4));
+            request.AddParameter("mediaDevices[videoInputs]", new Random().Next(1, 4));
             request.AddParameter("browserType", "anty");
             var res = await ExecuteRequestAsync<JObject>(request);
             return res["browserProfileId"].ToString();
@@ -89,7 +94,7 @@ namespace YWB.AntidetectAccountParser.Services
         protected override async Task<List<(string pName, string pId)>> GetProfilesAsync(List<FacebookAccount> accounts)
         {
             var profiles = new List<(string, string)>();
-            var proxy = _proxyProvider.Get();
+            var proxies = _proxyProvider.Get();
             var namePrefix = string.Empty;
             if (!accounts.All(a => !string.IsNullOrEmpty(a.Name)))
             {
@@ -98,15 +103,23 @@ namespace YWB.AntidetectAccountParser.Services
             }
             Console.WriteLine("Choose operating system:");
             var os = SelectHelper.Select(new[] { "windows", "linux", "macos" });
-            Console.WriteLine("Adding proxy...");
-            var proxyId = await CreateProxyAsync(proxy);
-            Console.WriteLine("Proxy added!");
+
+            var proxyIds = new Dictionary<Proxy, string>();
             var res = new List<(string, string)>();
             for (int i = 0; i < accounts.Count; i++)
             {
+                var proxyIndex = i < proxies.Count - 1 ? i : i % proxies.Count;
+                var p = proxies[proxyIndex];
+                if (!proxyIds.ContainsKey(p))
+                {
+                    Console.WriteLine("Adding proxy...");
+                    var proxyId = await CreateProxyAsync(p);
+                    proxyIds.Add(p, proxyId);
+                    Console.WriteLine("Proxy added!");
+                }
                 var pName = string.IsNullOrEmpty(accounts[i].Name) ? $"{namePrefix}{i}" : accounts[i].Name;
                 Console.WriteLine($"Creating profile {pName}...");
-                var pId = await CreateNewProfileAsync(pName, os, proxyId);
+                var pId = await CreateNewProfileAsync(pName, os, proxyIds[p]);
                 Console.WriteLine($"Profile with ID={pId} created!");
                 res.Add((pName, pId));
             }
