@@ -31,7 +31,7 @@ namespace YWB.AntidetectAccountParser
             var browsers = new Dictionary<string, Func<AbstractAntidetectApiService>>
             {
                 {"Indigo",()=> new IndigoApiService(selectedParser,proxyProvider) },
-                {"Dolphin",()=>new DolphinApiService(selectedParser,proxyProvider) }
+                {"Dolphin Anty",()=>new DolphinApiService(selectedParser,proxyProvider) }
             };
             var selectedBrowser = SelectHelper.Select(browsers, b => b.Key).Value();
 
