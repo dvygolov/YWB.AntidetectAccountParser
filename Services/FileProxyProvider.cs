@@ -15,7 +15,7 @@ namespace YWB.AntidetectAccountParser.Services.Interfaces
             var fullPath = Path.Combine(dir, FileName);
             if (!File.Exists(fullPath))
                 throw new FileNotFoundException("There's no proxy.txt file!!!");
-            return File.ReadAllLines(FileName).Select(l =>
+            return File.ReadAllLines(fullPath).Select(l =>
             {
                 var split = l.Split(':');
                 return new Proxy()
