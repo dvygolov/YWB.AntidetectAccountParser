@@ -2,15 +2,18 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Text.RegularExpressions;
 
 namespace YWB.AntidetectAccountParser.Services
 {
     public class TextAccountsParser : IAccountsParser
     {
+        private const string FileName = "accounts.txt";
         public List<FacebookAccount> Parse()
         {
-            var input = File.ReadAllText("accounts.txt");
+            var input = File.ReadAllText(Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location),FileName));
+
             var re = new Regex(@"^(?<Login>[^\:;\|\s]+)[:;\|\s](?<Password>[^\:;\|\s]+)[:;\|\s]", RegexOptions.Multiline);
             var matches = re.Matches(input);
             Console.WriteLine($"Found {matches.Count} logins/passwords!");

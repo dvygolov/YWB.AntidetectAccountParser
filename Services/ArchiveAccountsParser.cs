@@ -2,21 +2,23 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using YWB.AntidetectAccountParser.Helpers;
 
 namespace YWB.AntidetectAccountParser.Services
 {
     public class ArchiveAccountsParser : IAccountsParser
     {
+        private const string Folder = "logs";
         public List<FacebookAccount> Parse()
         {
-            const string folder = "logs";
+            var fullDirPath = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), Folder);
             var res = new List<FacebookAccount>();
             bool isRar = false;
-            var files = Directory.GetFiles(folder, "*.zip");
+            var files = Directory.GetFiles(fullDirPath, "*.zip");
             if (files.Length == 0)
             {
-                files = Directory.GetFiles(folder, "*.rar");
+                files = Directory.GetFiles(fullDirPath, "*.rar");
                 isRar = true;
             }
 
@@ -37,7 +39,7 @@ namespace YWB.AntidetectAccountParser.Services
                 }
                 else
                 {
-                    var invalid = Path.Combine(folder, "Invalid");
+                    var invalid = Path.Combine(fullDirPath, "Invalid");
                     if (!Directory.Exists(invalid)) Directory.CreateDirectory(invalid);
                     File.Move(f, Path.Combine(invalid, Path.GetFileName(f)));
                 }

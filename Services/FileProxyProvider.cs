@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using YWB.AntidetectAccountParser.Model;
 
 namespace YWB.AntidetectAccountParser.Services.Interfaces
@@ -10,6 +11,10 @@ namespace YWB.AntidetectAccountParser.Services.Interfaces
         private const string FileName = "proxy.txt";
         public List<Proxy> Get()
         {
+            var dir = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
+            var fullPath = Path.Combine(dir, FileName);
+            if (!File.Exists(fullPath))
+                throw new FileNotFoundException("There's no proxy.txt file!!!");
             return File.ReadAllLines(FileName).Select(l =>
             {
                 var split = l.Split(':');
