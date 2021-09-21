@@ -101,7 +101,7 @@ namespace YWB.AntidetectAccountParser
             return true;
         }
 
-        public string ToString(bool toHtml = false)
+        public string ToString(bool toHtml = false, bool withCookies = true)
         {
             var sd = toHtml ? "<p>" : "\n"; //start delimiter
             var ed = toHtml ? "</p>" : string.Empty; //end delimiter
@@ -127,21 +127,24 @@ namespace YWB.AntidetectAccountParser
             {
                 str += $"{sd}BmLinks: {BmLinks} {ed}";
             }
-            if (!string.IsNullOrEmpty(Cookies))
+            if (withCookies)
             {
-                var cookies = $"{sd}Cookies: {Regex.Replace(Cookies.Replace("\r\n", ""), "[ ]+", "")}{ed}";
-                if ((str + cookies).Length > 5000)
+                if (!string.IsNullOrEmpty(Cookies))
                 {
-                    var fbCookies = CookieHelper.GetFacebookCookies(Cookies);
-                    cookies = $"{sd}Cookies: {fbCookies}{ed}";
-
+                    var cookies = $"{sd}Cookies: {Regex.Replace(Cookies.Replace("\r\n", ""), "[ ]+", "")}{ed}";
                     if ((str + cookies).Length > 5000)
-                        Console.WriteLine("Length is more then 5000 symbols, skipping cookies...");
+                    {
+                        var fbCookies = CookieHelper.GetFacebookCookies(Cookies);
+                        cookies = $"{sd}Cookies: {fbCookies}{ed}";
+
+                        if ((str + cookies).Length > 5000)
+                            Console.WriteLine("Length is more then 5000 symbols, skipping cookies...");
+                        else
+                            str += cookies;
+                    }
                     else
                         str += cookies;
                 }
-                else
-                    str += cookies;
             }
             return str;
         }

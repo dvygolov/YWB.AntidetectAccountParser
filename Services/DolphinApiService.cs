@@ -4,7 +4,6 @@ using RestSharp;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using YWB.AntidetectAccountParser.Helpers;
@@ -16,6 +15,19 @@ namespace YWB.AntidetectAccountParser.Services
     public class DolphinApiService : AbstractAntidetectApiService
     {
         private string _token;
+        private string[] _oses = new[] { "windows", "linux", "macos" };
+        private Dictionary<string, string> _platform = new Dictionary<string, string>
+        {
+            { "windows", "Win32" },
+            { "linux", "MacIntel" },
+            { "macos", "Win32" }
+        };
+        private Dictionary<string, string> _osVersion = new Dictionary<string, string>
+        {
+            { "windows", "10" },
+            { "linux", "10.15.1" },
+            { "macos", "7" }
+        };
         public DolphinApiService(IAccountsParser parser, IProxyProvider proxyProvider) : base(parser, proxyProvider) { }
 
         private async Task<string> CreateProxyAsync(Proxy p)
@@ -34,40 +46,61 @@ namespace YWB.AntidetectAccountParser.Services
 
         public async Task<string> CreateNewProfileAsync(string pName, string os, string proxyId)
         {
-            var fingerprint = await GetNewFingerprintAsync(os);
+            var fp = await GetNewFingerprintAsync(os);
             var ua = await GetNewUseragentAsync(os);
-            var memory = int.Parse(fingerprint["deviceMemory"].ToString());
+            var memory = int.Parse(fp["deviceMemory"].ToString());
             if (memory == 0) memory++;
-            var cpu = int.Parse(fingerprint["hardwareConcurrency"].ToString());
+            var cpu = int.Parse(fp["hardwareConcurrency"].ToString());
             if (cpu == 0) cpu++;
             var request = new RestRequest("browser_profiles", Method.POST);
             request.AddParameter("name", pName);
             request.AddParameter("screen[mode]", "manual");
-            request.AddParameter("screen[resolution]", $"{fingerprint["screen"]["width"]}x{fingerprint["screen"]["height"]}");
+            request.AddParameter("screen[resolution]", $"{fp["screen"]["width"]}x{fp["screen"]["height"]}");
             request.AddParameter("platform", os);
+            request.AddParameter("platformName", fp["platform"]);
+            request.AddParameter("osVersion", fp["os"]["version"]);
             request.AddParameter("proxy[id]", proxyId);
             request.AddParameter("useragent[mode]", "manual");
             request.AddParameter("useragent[value]", ua);
             request.AddParameter("webrtc[mode]", "altered");
+            request.AddParameter("webrtc[ipAddress]", "");
             request.AddParameter("canvas[mode]", "real");
             request.AddParameter("webgl[mode]", "noise");
             request.AddParameter("webglInfo[mode]", "manual");
-            request.AddParameter("webglInfo[vendor]", fingerprint["webgl"]["unmaskedVendor"].ToString());
-            request.AddParameter("webglInfo[renderer]", fingerprint["webgl"]["unmaskedRenderer"].ToString());
+            request.AddParameter("webglInfo[vendor]", fp["webgl"]["unmaskedVendor"]);
+            request.AddParameter("webglInfo[renderer]", fp["webgl"]["unmaskedRenderer"]);
+            request.AddParameter("clientRect[mode]", "real");
             request.AddParameter("geolocation[mode]", "auto");
             request.AddParameter("timezone[mode]", "auto");
+            request.AddParameter("timezone[value]", "");
             request.AddParameter("locale[mode]", "auto");
+            request.AddParameter("locale[value]", "");
             request.AddParameter("cpu[mode]", "manual");
-            request.AddParameter("cpu[value]", cpu);
+            request.AddParameter("cpu[value]", cpu.ToString());
             request.AddParameter("memory[mode]", "manual");
-            request.AddParameter("memory[value]", memory);
-            request.AddParameter("doNotTrack", int.Parse(fingerprint["donottrack"].ToString()));
-            request.AddParameter("fonts", fingerprint["fonts"].ToString());
+            request.AddParameter("memory[value]", memory.ToString());
+            request.AddParameter("doNotTrack", fp["donottrack"]);
+            request.AddParameter("fonts", fp["fonts"]);
             request.AddParameter("mediaDevices[mode]", "manual");
             request.AddParameter("mediaDevices[audioInputs]", new Random().Next(1, 4));
             request.AddParameter("mediaDevices[audioOutputs]", new Random().Next(1, 4));
             request.AddParameter("mediaDevices[videoInputs]", new Random().Next(1, 4));
             request.AddParameter("browserType", "anty");
+            request.AddParameter("mainWebsite", "facebook");
+            request.AddParameter("appCodeName", fp["appCodeName"]);
+            request.AddParameter("cpuArchitecture", fp["cpu"]["architecture"]);
+            request.AddParameter("vendor", fp["vendor"]);
+            request.AddParameter("vendorSub", fp["vendorSub"]);
+            request.AddParameter("product", fp["product"]);
+            request.AddParameter("productSub", fp["productSub"]);
+            //request.AddParameter("connectionDownlink", fp["connection"]["downlink"].Value<double>());
+            request.AddParameter("connectionRtt", fp["connection"]["rtt"].Value<int>());
+            request.AddParameter("connectionEffectiveType", fp["connection"]["effectiveType"]);
+            request.AddParameter("connectionSaveData", fp["connection"]["saveData"].Value<int>());
+            request.AddParameter("ports[mode]", "protect");
+            request.AddParameter("ports[blacklist]", "3389,5900,5800,7070,6568,5938");
+            request.AddParameter("statusId", 0);
+
             var res = await ExecuteRequestAsync<JObject>(request);
             return res["browserProfileId"].ToString();
         }
@@ -102,7 +135,7 @@ namespace YWB.AntidetectAccountParser.Services
                 namePrefix = Console.ReadLine();
             }
             Console.WriteLine("Choose operating system:");
-            var os = SelectHelper.Select(new[] { "windows", "linux", "macos" });
+            var os = SelectHelper.Select(_oses);
 
             var proxyIds = new Dictionary<Proxy, string>();
             var res = new List<(string, string)>();
@@ -139,7 +172,10 @@ namespace YWB.AntidetectAccountParser.Services
         protected override async Task<bool> SaveItemToNoteAsync(string profileId, FacebookAccount fa)
         {
             var request = new RestRequest($"browser_profiles/{profileId}", Method.PATCH);
-            request.AddParameter("notes[content]", fa.ToString(true));
+            request.AddParameter("notes[content]", fa.ToString(true,false));
+            request.AddParameter("notes[color]", "blue");
+            request.AddParameter("notes[style]", "text");
+            request.AddParameter("notes[icon]", null);
             var res = await ExecuteRequestAsync<JObject>(request);
             return true;
         }
