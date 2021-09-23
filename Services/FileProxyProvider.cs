@@ -3,6 +3,7 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using YWB.AntidetectAccountParser.Model;
+using YWB.AntidetectAccountParser.Services.Interfaces;
 
 namespace YWB.AntidetectAccountParser.Services
 {

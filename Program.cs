@@ -3,7 +3,9 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using YWB.AntidetectAccountParser.Helpers;
 using YWB.AntidetectAccountParser.Services;
+using YWB.AntidetectAccountParser.Services.Browsers;
 using YWB.AntidetectAccountParser.Services.Interfaces;
+using YWB.AntidetectAccountParser.Services.Parsers;
 
 namespace YWB.AntidetectAccountParser
 {

@@ -3,6 +3,7 @@ using System;
 using System.IO.Compression;
 using System.Linq;
 using System.Text;
+using YWB.AntidetectAccountParser.Model;
 
 namespace YWB.AntidetectAccountParser.Helpers
 {

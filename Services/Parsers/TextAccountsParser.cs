@@ -4,6 +4,8 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Text.RegularExpressions;
+using YWB.AntidetectAccountParser.Model;
+using YWB.AntidetectAccountParser.Services.Interfaces;
 
 namespace YWB.AntidetectAccountParser.Services.Parsers
 {
