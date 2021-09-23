@@ -3,7 +3,9 @@ using Newtonsoft.Json.Linq;
 using RestSharp;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 using YWB.AntidetectAccountParser.Helpers;
@@ -14,20 +16,9 @@ namespace YWB.AntidetectAccountParser.Services
 {
     public class DolphinApiService : AbstractAntidetectApiService
     {
+        private const string FileName = "dolphinanty.txt";
         private string _token;
         private string[] _oses = new[] { "windows", "linux", "macos" };
-        private Dictionary<string, string> _platform = new Dictionary<string, string>
-        {
-            { "windows", "Win32" },
-            { "linux", "MacIntel" },
-            { "macos", "Win32" }
-        };
-        private Dictionary<string, string> _osVersion = new Dictionary<string, string>
-        {
-            { "windows", "10" },
-            { "linux", "10.15.1" },
-            { "macos", "7" }
-        };
         public DolphinApiService(IAccountsParser parser, IProxyProvider proxyProvider) : base(parser, proxyProvider) { }
 
         private async Task<string> CreateProxyAsync(Proxy p)
@@ -61,62 +52,62 @@ namespace YWB.AntidetectAccountParser.Services
             p.screen.resolution = $"{fp["screen"]["width"]}x{fp["screen"]["height"]}";
             p.platform = os;
             p.platformName = fp["platform"];
-            p.osVersion=fp["os"]["version"];
+            p.osVersion = fp["os"]["version"];
             p.proxy = new JObject();
-            p.proxy.id= proxyId;
+            p.proxy.id = proxyId;
             p.useragent = new JObject();
-            p.useragent.mode= "manual";
-            p.useragent.value= ua;
+            p.useragent.mode = "manual";
+            p.useragent.value = ua;
             p.webrtc = new JObject();
-            p.webrtc.mode= "altered";
-            p.webrtc.ipAddress= "";
+            p.webrtc.mode = "altered";
+            p.webrtc.ipAddress = "";
             p.canvas = new JObject();
-            p.canvas.mode= "real";
+            p.canvas.mode = "real";
             p.webgl = new JObject();
-            p.webgl.mode= "noise";
+            p.webgl.mode = "noise";
             p.webglInfo = new JObject();
-            p.webglInfo.mode= "manual";
-            p.webglInfo.vendor= fp["webgl"]["unmaskedVendor"];
-            p.webglInfo.renderer= fp["webgl"]["unmaskedRenderer"];
+            p.webglInfo.mode = "manual";
+            p.webglInfo.vendor = fp["webgl"]["unmaskedVendor"];
+            p.webglInfo.renderer = fp["webgl"]["unmaskedRenderer"];
             p.clientRect = new JObject();
-            p.clientRect.mode= "real";
+            p.clientRect.mode = "real";
             p.geolocation = new JObject();
-            p.geolocation.mode= "auto";
+            p.geolocation.mode = "auto";
             p.timezone = new JObject();
-            p.timezone.mode= "auto";
-            p.timezone.value= "";
+            p.timezone.mode = "auto";
+            p.timezone.value = "";
             p.locale = new JObject();
-            p.locale.mode= "auto";
-            p.locale.value= "";
+            p.locale.mode = "auto";
+            p.locale.value = "";
             p.cpu = new JObject();
-            p.cpu.mode= "manual";
-            p.cpu.value= cpu.ToString();
+            p.cpu.mode = "manual";
+            p.cpu.value = cpu.ToString();
             p.memory = new JObject();
-            p.memory.mode= "manual";
-            p.memory.value= memory.ToString();
-            p.doNotTrack= fp["donottrack"];
-            p.fonts= fp["fonts"];
+            p.memory.mode = "manual";
+            p.memory.value = memory.ToString();
+            p.doNotTrack = fp["donottrack"];
+            p.fonts = fp["fonts"];
             p.mediaDevices = new JObject();
-            p.mediaDevices.mode= "manual";
-            p.mediaDevices.audioInputs= new Random().Next(1, 4);
-            p.mediaDevices.audioOutputs= new Random().Next(1, 4);
-            p.mediaDevices.videoInputs= new Random().Next(1, 4);
-            p.browserType= "anty";
-            p.mainWebsite= "facebook";
-            p.appCodeName= fp["appCodeName"];
-            p.cpuArchitecture= fp["cpu"]["architecture"];
-            p.vendor= fp["vendor"];
-            p.vendorSub= fp["vendorSub"];
-            p.product= fp["product"];
-            p.productSub= fp["productSub"];
-            p.connectionDownlink= fp["connection"]["downlink"];
-            p.connectionRtt= fp["connection"]["rtt"];
-            p.connectionEffectiveType= fp["connection"]["effectiveType"];
-            p.connectionSaveData= fp["connection"]["saveData"];
+            p.mediaDevices.mode = "manual";
+            p.mediaDevices.audioInputs = new Random().Next(1, 4);
+            p.mediaDevices.audioOutputs = new Random().Next(1, 4);
+            p.mediaDevices.videoInputs = new Random().Next(1, 4);
+            p.browserType = "anty";
+            p.mainWebsite = "facebook";
+            p.appCodeName = fp["appCodeName"];
+            p.cpuArchitecture = fp["cpu"]["architecture"];
+            p.vendor = fp["vendor"];
+            p.vendorSub = fp["vendorSub"];
+            p.product = fp["product"];
+            p.productSub = fp["productSub"];
+            p.connectionDownlink = fp["connection"]["downlink"];
+            p.connectionRtt = fp["connection"]["rtt"];
+            p.connectionEffectiveType = fp["connection"]["effectiveType"];
+            p.connectionSaveData = fp["connection"]["saveData"];
             p.ports = new JObject();
-            p.ports.mode= "protect";
-            p.ports.blacklist= "3389,5900,5800,7070,6568,5938";
-            p.statusId= 0;
+            p.ports.mode = "protect";
+            p.ports.blacklist = "3389,5900,5800,7070,6568,5938";
+            p.statusId = 0;
             p.tags = new JArray();
 
             request.AddParameter("application/json", p.ToString(), ParameterType.RequestBody);
@@ -221,10 +212,7 @@ namespace YWB.AntidetectAccountParser.Services
 
         private async Task<string> GetDolphinApiTokenAsync()
         {
-            Console.Write("Enter your Dolphin Anty login:");
-            var login = Console.ReadLine();
-            Console.Write("Enter your Dolphin Anty password:");
-            var password = Console.ReadLine();
+            (string login, string password) = GetLoginAndPassword();
             var client = new RestClient("https://anty-api.com/auth/login");
             client.Timeout = -1;
             var request = new RestRequest(Method.POST);
@@ -233,6 +221,25 @@ namespace YWB.AntidetectAccountParser.Services
             var response = await client.ExecuteAsync(request, new CancellationToken());
             var res = JObject.Parse(response.Content);
             return res["token"].ToString();
+        }
+
+        private (string login, string password) GetLoginAndPassword()
+        {
+            var dir = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
+            var fullPath = Path.Combine(dir, FileName);
+            if (File.Exists(fullPath))
+            {
+                var split=File.ReadAllText(fullPath).Split(':');
+                return (split[0], split[1]);
+            }
+            else
+            {
+                Console.Write("Enter your Dolphin Anty login:");
+                var login = Console.ReadLine();
+                Console.Write("Enter your Dolphin Anty password:");
+                var password = Console.ReadLine();
+                return (login, password);
+            }
         }
     }
 }
