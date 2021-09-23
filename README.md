@@ -1,4 +1,4 @@
-# YWB.AntidetectAccountParser
+# Antidetect Account Parser by Yellow Web
 This program automatically parses a file with Facebook accounts (or zip/rar-files with 1 FB account for each file), creates profiles in Indigo or Dolphin Anty browser, imports cookies and saves all account's info into profile's note.
 
 1. Create proxy.txt file in the program's directory
