@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 using YWB.AntidetectAccountParser.Helpers;
 using YWB.AntidetectAccountParser.Services.Interfaces;
 
-namespace YWB.AntidetectAccountParser.Services
+namespace YWB.AntidetectAccountParser.Services.Interfaces
 {
     public abstract class AbstractAntidetectApiService
     {

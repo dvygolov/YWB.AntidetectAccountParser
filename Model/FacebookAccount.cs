@@ -5,7 +5,7 @@ using System.Linq;
 using System.Text.RegularExpressions;
 using YWB.AntidetectAccountParser.Helpers;
 
-namespace YWB.AntidetectAccountParser
+namespace YWB.AntidetectAccountParser.Model
 {
     public class FacebookAccount
     {

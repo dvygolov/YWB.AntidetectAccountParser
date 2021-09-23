@@ -12,7 +12,7 @@ using YWB.AntidetectAccountParser.Model;
 using YWB.AntidetectAccountParser.Model.Indigo;
 using YWB.AntidetectAccountParser.Services.Interfaces;
 
-namespace YWB.AntidetectAccountParser.Services
+namespace YWB.AntidetectAccountParser.Services.Browsers
 {
     public class IndigoApiService : AbstractAntidetectApiService
     {

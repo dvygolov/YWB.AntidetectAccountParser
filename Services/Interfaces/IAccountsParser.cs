@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 
-namespace YWB.AntidetectAccountParser.Services
+namespace YWB.AntidetectAccountParser.Services.Interfaces
 {
     public interface IAccountsParser
     {
