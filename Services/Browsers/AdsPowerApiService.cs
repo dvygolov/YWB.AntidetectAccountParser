@@ -6,8 +6,6 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
-using System.Security.Cryptography;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using YWB.AntidetectAccountParser.Helpers;
@@ -57,7 +55,7 @@ namespace YWB.AntidetectAccountParser.Services.Browsers
         private async Task<string> CreateNewProfileAsync(string pName, string os, Proxy p)
         {
             if (p.Type == "socks") p.Type = "socks5";
-            var r = new RestRequest("api/v1/user/create", Method.POST);
+            var r = new RestRequest("fbcc/user/single-import-user", Method.POST);
             r.AddParameter("name", pName);
             r.AddParameter("domain_name", "facebook.com");
             dynamic ap = new JObject();
@@ -134,8 +132,6 @@ namespace YWB.AntidetectAccountParser.Services.Browsers
             r.AddParameter("password", MD5Helper.CreateMD5(password).ToLowerInvariant());
             r.AddParameter("remember", "1");
             r.AddParameter("language", "en-US");
-            //r.AddParameter("c_id", "3274d503");
-            //r.AddParameter("wr", "5.164.164.223");
             r.AddParameter("unique_id", res["data"]["unique_id"]);
             var rc = new RestClient("https://api.adspower.net");
             rc.UserAgent = "Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) adspower/3.9.24 Chrome/87.0.4280.141 Electron/11.3.0 Safari/537.36";
