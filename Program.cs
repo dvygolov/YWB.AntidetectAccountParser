@@ -13,7 +13,7 @@ namespace YWB.AntidetectAccountParser
     {
         static async Task Main(string[] args)
         {
-            Console.WriteLine("Antidetect Accounts Parser v3.4 by Yellow Web (https://yellowweb.top)");
+            Console.WriteLine("Antidetect Accounts Parser v3.5 Yellow Web (https://yellowweb.top)");
             Console.WriteLine("If you like this software, please, donate!");
             Console.WriteLine("WebMoney: Z182653170916");
             Console.WriteLine("Bitcoin: bc1qqv99jasckntqnk0pkjnrjtpwu0yurm0qd0gnqv");
@@ -33,7 +33,8 @@ namespace YWB.AntidetectAccountParser
             var browsers = new Dictionary<string, Func<AbstractAntidetectApiService>>
             {
                 {"Indigo",()=> new IndigoApiService(selectedParser,proxyProvider) },
-                {"Dolphin Anty",()=>new DolphinApiService(selectedParser,proxyProvider) }
+                {"Dolphin Anty",()=>new DolphinApiService(selectedParser,proxyProvider) },
+                {"AdsPower",()=>new AdsPowerApiService(selectedParser,proxyProvider) }
             };
             var selectedBrowser = SelectHelper.Select(browsers, b => b.Key).Value();
 

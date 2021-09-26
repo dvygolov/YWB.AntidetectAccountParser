@@ -30,6 +30,8 @@ namespace YWB.AntidetectAccountParser.Services.Browsers
             r.AddParameter("port", p.Port);
             r.AddParameter("login", p.Login);
             r.AddParameter("password", p.Password);
+            if (!string.IsNullOrEmpty(p.UpdateLink))
+                r.AddParameter("changeIpUrl", p.UpdateLink);
             r.AddParameter("name", DateTime.Now.ToString("G"));
             var res = await ExecuteRequestAsync<JObject>(r);
             return res["data"]["id"].ToString();
