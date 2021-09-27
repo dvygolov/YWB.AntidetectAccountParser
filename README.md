@@ -10,7 +10,7 @@ Right now this software supports 3 Antidetect browsers:
 - [Dolphin Anty](https://yellowweb.top/dolphinanty)
 - [AdsPower](https://adspower.net)
 
-#How to use this software
+# How to use this software
 1. Compile the source code
 2. Start your browser and leave it opened
 3. Create **proxy.txt** file in the compiled program's directory
