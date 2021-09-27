@@ -44,7 +44,7 @@ namespace YWB.AntidetectAccountParser.Services.Browsers
                 var p = proxies[proxyIndex];
                 var pName = string.IsNullOrEmpty(accounts[i].Name) ? $"{namePrefix}{i}" : accounts[i].Name;
                 Console.WriteLine($"Creating profile {pName}...");
-                var pId = await CreateNewProfileAsync(pName, os, p);
+                var pId = await CreateNewProfileAsync(pName, os, p, accounts[i]);
                 Console.WriteLine($"Profile with ID={pId} created!");
                 res.Add((pName, pId));
             }
@@ -52,31 +52,61 @@ namespace YWB.AntidetectAccountParser.Services.Browsers
 
         }
 
-        private async Task<string> CreateNewProfileAsync(string pName, string os, Proxy p)
+        private async Task<string> CreateNewProfileAsync(string pName, string os, Proxy p, FacebookAccount fa)
         {
-            if (p.Type == "socks") p.Type = "socks5";
-            var r = new RestRequest("fbcc/user/single-import-user", Method.POST);
+            var r = new RestRequest("fbcc/user/rand-get-user-agent", Method.POST);
+            r.AddParameter("system", os);
+            var json = await ExecuteRequestAsync<JObject>(r);
+            string ua = json["data"]["ua"].ToString();
+
+            r = new RestRequest("fbcc/user/random-webgl-config", Method.POST);
+            r.AddParameter("ua", ua);
+            json = await ExecuteRequestAsync<JObject>(r);
+            string renderer = json["data"]["unmasked_renderer"].ToString();
+            string vendor = json["data"]["unmasked_vendor"].ToString();
+
+            r = new RestRequest("fbcc/user/single-import-user", Method.POST);
+            r.AddParameter("batch_id", "0");
             r.AddParameter("name", pName);
             r.AddParameter("domain_name", "facebook.com");
-            dynamic ap = new JObject();
-            ap.proxy_type = p.Type;
-            ap.proxy_host = p.Address;
-            ap.proxy_port = p.Port;
-            ap.proxy_user = p.Login;
-            ap.proxy_password = p.Password;
-            r.AddParameter("user_proxy_config", ap.ToString());
+            if (!string.IsNullOrEmpty(fa.Login) && !string.IsNullOrEmpty(fa.Password))
+            {
+                r.AddParameter("username", fa.Login);
+                r.AddParameter("password", fa.Password);
+            }
+
+            if (!string.IsNullOrEmpty(fa.Cookies))
+                r.AddParameter("cookie", fa.Cookies);
+
+            if (p.Type == "socks") p.Type = "socks5";
+            r.AddParameter("proxytype", p.Type);
+            r.AddParameter("proxy", $"{p.Address}:{p.Port}:{p.Login}:{p.Password}");
             dynamic fp = new JObject();
             fp.automatic_timezone = "1";
             fp.webrtc = "disabled";
-            fp.canvas = "0";
-            fp.webgl_image = "1";
+            fp.canvas = "0"; //real
+            fp.webgl_image = "1"; //noise
+            fp.webgl = "2"; //custom
+            fp.webgl_config = new JObject();
+            fp.webgl_config.unmasked_vendor = vendor;
+            fp.webgl_config.unmasked_renderer = renderer;
+            fp.audio = "1"; //add noise
+            fp.ua = ua;
+            fp.scan_port_type = 1; //protect
             r.AddParameter("fingerprint_config", fp.ToString());
-            var json=await ExecuteRequestAsync<JObject>(r);
-            return string.Empty;
+            json = await ExecuteRequestAsync<JObject>(r);
+            return json["data"]["id"].ToString();
         }
 
-        protected override Task ImportCookiesAsync(string profileId, string cookies) => throw new NotImplementedException();
-        protected override Task<bool> SaveItemToNoteAsync(string profileId, FacebookAccount fa) => throw new NotImplementedException();
+        protected override Task ImportCookiesAsync(string profileId, string cookies)
+        {
+            return Task.CompletedTask;
+        }
+
+        protected override Task<bool> SaveItemToNoteAsync(string profileId, FacebookAccount fa)
+        {
+            return Task.FromResult(true);
+        }
 
         private async Task<T> ExecuteRequestAsync<T>(RestRequest r, string url = "https://api.adspower.net")
         {
