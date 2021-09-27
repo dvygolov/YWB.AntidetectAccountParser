@@ -25,7 +25,8 @@ namespace YWB.AntidetectAccountParser.Services
                     Address = split[1],
                     Port = split[2],
                     Login = split[3],
-                    Password = split[4]
+                    Password = split[4],
+                    UpdateLink=split.Length==6?split[5]:string.Empty
                 };
             }).ToList();
         }

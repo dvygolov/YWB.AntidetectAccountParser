@@ -30,6 +30,8 @@ namespace YWB.AntidetectAccountParser.Services.Browsers
             r.AddParameter("port", p.Port);
             r.AddParameter("login", p.Login);
             r.AddParameter("password", p.Password);
+            if (!string.IsNullOrEmpty(p.UpdateLink))
+                r.AddParameter("changeIpUrl", p.UpdateLink);
             r.AddParameter("name", DateTime.Now.ToString("G"));
             var res = await ExecuteRequestAsync<JObject>(r);
             return res["data"]["id"].ToString();
@@ -89,9 +91,9 @@ namespace YWB.AntidetectAccountParser.Services.Browsers
             p.fonts = fp["fonts"];
             p.mediaDevices = new JObject();
             p.mediaDevices.mode = "manual";
-            p.mediaDevices.audioInputs = new Random().Next(1, 4);
-            p.mediaDevices.audioOutputs = new Random().Next(1, 4);
-            p.mediaDevices.videoInputs = new Random().Next(1, 4);
+            p.mediaDevices.audioInputs = StaticRandom.Instance.Next(1, 4);
+            p.mediaDevices.audioOutputs = StaticRandom.Instance.Next(1, 4);
+            p.mediaDevices.videoInputs = StaticRandom.Instance.Next(1, 4);
             p.browserType = "anty";
             p.mainWebsite = "facebook";
             p.appCodeName = fp["appCodeName"];
