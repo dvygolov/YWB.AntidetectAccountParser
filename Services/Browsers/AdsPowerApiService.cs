@@ -19,7 +19,9 @@ namespace YWB.AntidetectAccountParser.Services.Browsers
         private string _token;
         private string _cpl;
         private const string FileName = "adspower.txt";
-        private List<string> _oses = new List<string> { "windows", "macos", "linux" };
+        private List<string> _oses = new List<string> { "Windows", "Mac OS X", "Linux" };
+        private List<string> _cpu = new List<string> { "2", "4", "6", "8", "16" };
+        private List<string> _memory = new List<string> { "2", "4", "6", "8" };
         public AdsPowerApiService(IAccountsParser parser, IProxyProvider proxyProvider) : base(parser, proxyProvider)
         {
         }
@@ -81,20 +83,35 @@ namespace YWB.AntidetectAccountParser.Services.Browsers
             if (p.Type == "socks") p.Type = "socks5";
             r.AddParameter("proxytype", p.Type);
             r.AddParameter("proxy", $"{p.Address}:{p.Port}:{p.Login}:{p.Password}");
+
             dynamic fp = new JObject();
             fp.automatic_timezone = "1";
             fp.webrtc = "disabled";
+            fp.hardware_concurrency = _cpu.GetRandomEntryFromList();
+            fp.device_memory = _memory.GetRandomEntryFromList();
+            fp.fonts = string.Join(",", FontsHelper.GetRandomFonts(StaticRandom.Instance.Next(70, 95)));
+            fp.screen_resolution = "random";
             fp.canvas = "0"; //real
+            fp.client_rects = "1"; //noise
             fp.webgl_image = "1"; //noise
             fp.webgl = "2"; //custom
             fp.webgl_config = new JObject();
             fp.webgl_config.unmasked_vendor = vendor;
             fp.webgl_config.unmasked_renderer = renderer;
             fp.audio = "1"; //add noise
+            fp.media_devices = "1"; //fake
+            fp.device_name_switch = "2"; //mask
+            fp.device_name = pName; //mask
             fp.ua = ua;
             fp.scan_port_type = 1; //protect
             r.AddParameter("fingerprint_config", fp.ToString());
             json = await ExecuteRequestAsync<JObject>(r);
+
+            if (json["code"].ToString() == "8619")
+                throw new Exception("This account already exists in AdsPower!");
+
+            if (json["code"].ToString() == "4006")
+                throw new Exception("You are logged in AdsPower browser, logout first and run this program again!");
             return json["data"]["id"].ToString();
         }
 
