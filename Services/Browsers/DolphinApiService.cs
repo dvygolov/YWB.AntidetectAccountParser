@@ -34,6 +34,8 @@ namespace YWB.AntidetectAccountParser.Services.Browsers
                 r.AddParameter("changeIpUrl", p.UpdateLink);
             r.AddParameter("name", DateTime.Now.ToString("G"));
             var res = await ExecuteRequestAsync<JObject>(r);
+            if (!res["success"].Value<bool>())
+                throw new Exception(res["error"].ToString());
             return res["data"]["id"].ToString();
         }
 
