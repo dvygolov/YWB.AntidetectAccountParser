@@ -41,5 +41,15 @@ namespace YWB.AntidetectAccountParser.Services.Interfaces
                 }
             }
         }
+
+        protected void ExtractToken(FacebookAccount fa, System.IO.Stream s)
+        {
+            var content = Encoding.UTF8.GetString(s.ReadAllBytes()).Trim();
+            if (content.StartsWith("EAAB"))
+            {
+                fa.Token = content;
+                Console.WriteLine("Found Facebook Access Token!");
+            }
+        }
     }
 }

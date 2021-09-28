@@ -32,6 +32,15 @@ namespace YWB.AntidetectAccountParser.Helpers
                             ExtractCookies(fa, s);
                         }
                     }
+
+                    if (entry.FullName.ToLowerInvariant().Contains("token") && entry.Length > 0)
+                    {
+                        Console.WriteLine($"Found file with access token: {entry.FullName}");
+                        using (var s = entry.Open())
+                        {
+                            ExtractToken(fa, s);
+                        }
+                    }
                 }
             }
         }
