@@ -168,6 +168,10 @@ namespace YWB.AntidetectAccountParser.Services.Browsers
             (var login, var password) = GetLoginAndPassword();
             var r = new RestRequest("api/getUniqueId", Method.GET);
             var res = await ExecuteLocalRequestAsync<JObject>(r);
+            var uniqueId = res["data"]?["unique_id"]?.ToString();
+            if (uniqueId == null)
+                throw new Exception($"Couldn't get UniqueId for AdsPower. Check, that your browser is running!Error:{res}");
+
             r = new RestRequest("sys/user/passport/login", Method.POST);
             r.AddHeader("Origin", "https://app.adspower.net");
             r.AddHeader("Sec-Fetch-Site", "same-site");
@@ -179,7 +183,7 @@ namespace YWB.AntidetectAccountParser.Services.Browsers
             r.AddParameter("password", MD5Helper.CreateMD5(password).ToLowerInvariant());
             r.AddParameter("remember", "1");
             r.AddParameter("language", "en-US");
-            r.AddParameter("unique_id", res["data"]["unique_id"]);
+            r.AddParameter("unique_id", uniqueId);
             var rc = new RestClient("https://api.adspower.net");
             rc.UserAgent = "Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) adspower/3.9.24 Chrome/87.0.4280.141 Electron/11.3.0 Safari/537.36";
 
