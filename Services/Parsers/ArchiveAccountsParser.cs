@@ -24,14 +24,16 @@ namespace YWB.AntidetectAccountParser.Services.Parsers
                 isRar = true;
             }
 
+            AbstractArchiveParser parser;
+            if (isRar)
+                parser = new RarArchiveParser();
+            else
+                parser = new ZipArchiveParser();
             foreach (var f in files)
             {
                 var fa = new FacebookAccount(Path.GetFileNameWithoutExtension(f));
                 Console.WriteLine($"Parsing file: {f}");
-                if (isRar)
-                    RarHelper.Parse(fa, f);
-                else
-                    ZipHelper.Parse(fa, f);
+                parser.Parse(fa, f);
                 if (fa.AllCookies.Any(c => CookieHelper.HasCUserCookie(c)))
                     res.Add(fa);
                 else if (fa.Login != null && fa.Password != null)
