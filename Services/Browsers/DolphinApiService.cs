@@ -21,8 +21,28 @@ namespace YWB.AntidetectAccountParser.Services.Browsers
         private string[] _oses = new[] { "windows", "linux", "macos" };
         public DolphinApiService(IAccountsParser parser, IProxyProvider proxyProvider) : base(parser, proxyProvider) { }
 
+        private async Task<List<Proxy>> GetProxiesAsync()
+        {
+            var r = new RestRequest("proxy", Method.GET);
+            var res = await ExecuteRequestAsync<JObject>(r);
+            return res["data"].Select(p => new Proxy()
+            {
+                Id = p["id"].ToString(),
+                Address = p["host"].ToString(),
+                Port = p["port"].ToString(),
+                Login = p["login"].ToString(),
+                Password = p["password"].ToString()
+            }).ToList();
+        }
+
         private async Task<string> CreateProxyAsync(Proxy p)
         {
+            var allProxies = (await GetProxiesAsync()).ToDictionary(p => p, p => p.Id);
+            if (allProxies.ContainsKey(p))
+            {
+                Console.WriteLine("Found existing proxy!");
+                return allProxies[p];
+            }
             var r = new RestRequest("proxy", Method.POST);
             if (p.Type == "socks") p.Type = "socks5";
             r.AddParameter("type", p.Type);
@@ -34,8 +54,9 @@ namespace YWB.AntidetectAccountParser.Services.Browsers
                 r.AddParameter("changeIpUrl", p.UpdateLink);
             r.AddParameter("name", DateTime.Now.ToString("G"));
             var res = await ExecuteRequestAsync<JObject>(r);
-            if (!res["success"].Value<bool>())
+            if (!res["success"]?.Value<bool>() ?? false)
                 throw new Exception(res["error"].ToString());
+            Console.WriteLine("Proxy added!");
             return res["data"]["id"].ToString();
         }
 
@@ -162,7 +183,6 @@ namespace YWB.AntidetectAccountParser.Services.Browsers
                     Console.WriteLine("Adding proxy...");
                     var proxyId = await CreateProxyAsync(p);
                     proxyIds.Add(p, proxyId);
-                    Console.WriteLine("Proxy added!");
                 }
                 var pName = string.IsNullOrEmpty(accounts[i].Name) ? $"{namePrefix}{i}" : accounts[i].Name;
                 Console.WriteLine($"Creating profile {pName}...");
@@ -233,7 +253,7 @@ namespace YWB.AntidetectAccountParser.Services.Browsers
             var fullPath = Path.Combine(dir, FileName);
             if (File.Exists(fullPath))
             {
-                var split=File.ReadAllText(fullPath).Split(':');
+                var split = File.ReadAllText(fullPath).Split(':');
                 return (split[0], split[1]);
             }
             else
