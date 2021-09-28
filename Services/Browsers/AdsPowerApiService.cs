@@ -120,9 +120,13 @@ namespace YWB.AntidetectAccountParser.Services.Browsers
             return Task.CompletedTask;
         }
 
-        protected override Task<bool> SaveItemToNoteAsync(string profileId, FacebookAccount fa)
+        protected override async Task<bool> SaveItemToNoteAsync(string profileId, FacebookAccount fa)
         {
-            return Task.FromResult(true);
+            var r = new RestRequest("fbcc/user/update-user-info", Method.POST);
+            r.AddParameter("fbcc_user_id", profileId);
+            r.AddParameter("login_user_comment", fa.ToString(false, false));
+            var json=await ExecuteRequestAsync<JObject>(r);
+            return json["msg"]?.ToString() == "Success";
         }
 
         private async Task<T> ExecuteRequestAsync<T>(RestRequest r, string url = "https://api.adspower.net")
