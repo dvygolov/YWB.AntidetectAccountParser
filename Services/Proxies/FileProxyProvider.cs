@@ -5,7 +5,7 @@ using System.Reflection;
 using YWB.AntidetectAccountParser.Model;
 using YWB.AntidetectAccountParser.Services.Interfaces;
 
-namespace YWB.AntidetectAccountParser.Services
+namespace YWB.AntidetectAccountParser.Services.Proxies
 {
     public class FileProxyProvider : IProxyProvider
     {

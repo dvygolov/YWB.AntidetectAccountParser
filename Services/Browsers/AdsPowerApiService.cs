@@ -120,9 +120,13 @@ namespace YWB.AntidetectAccountParser.Services.Browsers
             return Task.CompletedTask;
         }
 
-        protected override Task<bool> SaveItemToNoteAsync(string profileId, FacebookAccount fa)
+        protected override async Task<bool> SaveItemToNoteAsync(string profileId, FacebookAccount fa)
         {
-            return Task.FromResult(true);
+            var r = new RestRequest("fbcc/user/update-user-info", Method.POST);
+            r.AddParameter("fbcc_user_id", profileId);
+            r.AddParameter("login_user_comment", fa.ToString(false, false));
+            var json=await ExecuteRequestAsync<JObject>(r);
+            return json["msg"]?.ToString() == "Success";
         }
 
         private async Task<T> ExecuteRequestAsync<T>(RestRequest r, string url = "https://api.adspower.net")
@@ -168,6 +172,10 @@ namespace YWB.AntidetectAccountParser.Services.Browsers
             (var login, var password) = GetLoginAndPassword();
             var r = new RestRequest("api/getUniqueId", Method.GET);
             var res = await ExecuteLocalRequestAsync<JObject>(r);
+            var uniqueId = res["data"]?["unique_id"]?.ToString();
+            if (uniqueId == null)
+                throw new Exception($"Couldn't get UniqueId for AdsPower. Check, that your browser is running!Error:{res}");
+
             r = new RestRequest("sys/user/passport/login", Method.POST);
             r.AddHeader("Origin", "https://app.adspower.net");
             r.AddHeader("Sec-Fetch-Site", "same-site");
@@ -179,7 +187,7 @@ namespace YWB.AntidetectAccountParser.Services.Browsers
             r.AddParameter("password", MD5Helper.CreateMD5(password).ToLowerInvariant());
             r.AddParameter("remember", "1");
             r.AddParameter("language", "en-US");
-            r.AddParameter("unique_id", res["data"]["unique_id"]);
+            r.AddParameter("unique_id", uniqueId);
             var rc = new RestClient("https://api.adspower.net");
             rc.UserAgent = "Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) adspower/3.9.24 Chrome/87.0.4280.141 Electron/11.3.0 Safari/537.36";
 
