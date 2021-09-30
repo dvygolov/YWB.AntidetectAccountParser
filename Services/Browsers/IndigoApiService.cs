@@ -185,6 +185,8 @@ namespace YWB.AntidetectAccountParser.Services.Browsers
             var param = @$"{{""name"":""{pName}"",""group"":""{groupId}"",""os"":""{os}"",""browser"":""mimic"",""googleServices"":true,""mediaDevices"":{{""mode"":""FAKE"",""videoInputs"":""1"",""audioInputs"":""2"",""audioOutputs"":""3""}},""storage"":{{""local"":true,""extensions"":true,""bookmarks"":false,""history"":false,""passwords"":false}},""canvas"":{{""mode"":""REAL""}},""navigator"":{{""language"":""en-US,en;q=0.9,ru-RU;q=0.8""}},""audioContext"":{{""mode"":""NOISE""}},""webGL"":{{""mode"":""NOISE""}},""webGLMetadata"":{{""mode"":""MASK""}},""network"":{{""proxy"":{{""type"":""{p.Type.ToUpper()}"",""host"":""{p.Address}"",""port"":""{p.Port}"",""username"":""{p.Login}"",""password"":""{p.Password}""}}}},""extensions"":{{""enable"":true,""names"":""""}}}}";
             r.AddParameter("application/json", param, ParameterType.RequestBody);
             var res = await ExecuteLocalRequestAsync<JObject>(r);
+            if (res["uuid"] == null)
+                throw new Exception($"Can't create browser profile! Error:{res}");
             return res["uuid"].ToString();
         }
 
