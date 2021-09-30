@@ -9,24 +9,15 @@ namespace YWB.AntidetectAccountParser.Services.Interfaces
 {
     public abstract class AbstractAntidetectApiService
     {
-        protected readonly IAccountsParser _parser;
-        protected readonly IProxyProvider _proxyProvider;
-
-        public AbstractAntidetectApiService(IAccountsParser parser, IProxyProvider proxyProvider)
-        {
-            _parser = parser;
-            _proxyProvider = proxyProvider;
-        }
-
-        protected abstract Task<List<(string pName, string pId)>> GetProfilesAsync(List<FacebookAccount> accounts);
+        protected abstract Task<List<(string pName, string pId)>> CreateOrChooseProfilesAsync(
+            List<FacebookAccount> accounts);
 
         protected abstract Task ImportCookiesAsync(string profileId, string cookies);
 
         protected abstract Task<bool> SaveItemToNoteAsync(string profileId, FacebookAccount fa);
 
-        public async Task ImportAccountsAsync()
+        public async Task ImportAccountsAsync(List<FacebookAccount> accounts)
         {
-            var accounts = _parser.Parse();
             if (accounts.Count == 0)
             {
                 Console.WriteLine("Couldn't find any accounts to import! Unknown format or empty accounts.txt file!");
@@ -35,7 +26,7 @@ namespace YWB.AntidetectAccountParser.Services.Interfaces
             else
                 Console.WriteLine($"Found {accounts.Count} accounts.");
 
-            var selectedProfiles = await GetProfilesAsync(accounts);
+            var selectedProfiles = await CreateOrChooseProfilesAsync(accounts);
 
             for (int i = 0; i < accounts.Count; i++)
             {

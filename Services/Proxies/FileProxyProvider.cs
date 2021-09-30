@@ -10,7 +10,7 @@ namespace YWB.AntidetectAccountParser.Services.Proxies
     public class FileProxyProvider : IProxyProvider
     {
         private const string FileName = "proxy.txt";
-        public List<Proxy> Get()
+        private List<Proxy> Get()
         {
             var dir = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
             var fullPath = Path.Combine(dir, FileName);
@@ -26,9 +26,20 @@ namespace YWB.AntidetectAccountParser.Services.Proxies
                     Port = split[2],
                     Login = split[3],
                     Password = split[4],
-                    UpdateLink=split.Length==6?split[5]:string.Empty
+                    UpdateLink = split.Length == 6 ? split[5] : string.Empty
                 };
             }).ToList();
         }
+
+        public void SetProxies(List<FacebookAccount> accounts)
+        {
+            var proxies = Get();
+            for (int i = 0; i < accounts.Count; i++)
+            {
+                var proxyIndex = i < proxies.Count - 1 ? i : i % proxies.Count;
+                accounts[i].Proxy= proxies[proxyIndex];
+            }
+        }
+
     }
 }

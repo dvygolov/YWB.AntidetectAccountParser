@@ -5,6 +5,6 @@ namespace YWB.AntidetectAccountParser.Services.Interfaces
 {
     public interface IProxyProvider
     {
-        List<Proxy> Get();
+        void SetProxies(List<FacebookAccount> accounts);
     }
 }

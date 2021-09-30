@@ -1,11 +1,15 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using YWB.AntidetectAccountParser.Helpers;
+using YWB.AntidetectAccountParser.Model;
 using YWB.AntidetectAccountParser.Services;
 using YWB.AntidetectAccountParser.Services.Browsers;
 using YWB.AntidetectAccountParser.Services.Interfaces;
+using YWB.AntidetectAccountParser.Services.Monitoring;
 using YWB.AntidetectAccountParser.Services.Parsers;
+using YWB.AntidetectAccountParser.Services.Proxies;
 
 namespace YWB.AntidetectAccountParser
 {
@@ -13,7 +17,7 @@ namespace YWB.AntidetectAccountParser
     {
         static async Task Main(string[] args)
         {
-            Console.WriteLine("Antidetect Accounts Parser v3.8 Yellow Web (https://yellowweb.top)");
+            Console.WriteLine("Antidetect Accounts Parser v4.0a Yellow Web (https://yellowweb.top)");
             Console.WriteLine("If you like this software, please, donate!");
             Console.WriteLine("WebMoney: Z182653170916");
             Console.WriteLine("Bitcoin: bc1qqv99jasckntqnk0pkjnrjtpwu0yurm0qd0gnqv");
@@ -21,28 +25,67 @@ namespace YWB.AntidetectAccountParser
             await Task.Delay(5000);
             Console.WriteLine();
 
-            var proxyProvider = new FileProxyProvider();
             Console.WriteLine("What do you want to parse?");
-            var actions = new Dictionary<string, Func<IAccountsParser>> {
+            var parsers = new Dictionary<string, Func<IAccountsParser>> {
                 {"Accounts from text file",()=>new TextAccountsParser() },
                 {"Accounts from ZIP/RAR files",()=>new ArchiveAccountsParser() }
             };
-            var selectedParser = SelectHelper.Select(actions, a => a.Key).Value();
+            var selectedParser = SelectHelper.Select(parsers, a => a.Key).Value();
+            var accounts = selectedParser.Parse();
 
-            Console.WriteLine("Choose your antidetect browser:");
-            var browsers = new Dictionary<string, Func<AbstractAntidetectApiService>>
+            var proxyProvider = new FileProxyProvider();
+            proxyProvider.SetProxies(accounts);
+
+            Console.WriteLine("What do you want to do?");
+            Console.WriteLine("1. Create Profiles in an Antidetect Browser");
+            Console.WriteLine("2. Import accounts to FbTool/Dolphin");
+            var answer = YesNoSelector.GetMenuAnswer(2);
+
+            if (answer == 1)
             {
-                {"Indigo",()=> new IndigoApiService(selectedParser,proxyProvider) },
-                {"Dolphin Anty",()=>new DolphinApiService(selectedParser,proxyProvider) },
-                {"AdsPower",()=>new AdsPowerApiService(selectedParser,proxyProvider) }
-            };
-            var selectedBrowser = SelectHelper.Select(browsers, b => b.Key).Value();
+                Console.WriteLine("Choose your antidetect browser:");
+                var browsers = new Dictionary<string, Func<AbstractAntidetectApiService>>
+                {
+                    {"Indigo",()=> new IndigoApiService() },
+                    {"Dolphin Anty",()=>new DolphinAntyApiService() },
+                    {"AdsPower",()=>new AdsPowerApiService() }
+                };
+                var selectedBrowser = SelectHelper.Select(browsers, b => b.Key).Value();
 
-            await selectedBrowser.ImportAccountsAsync();
+                await selectedBrowser.ImportAccountsAsync(accounts);
+
+                if (accounts?.All(a => !string.IsNullOrEmpty(a.Token)) ?? false)
+                {
+                    var add = YesNoSelector.ReadAnswerEqualsYes("All accounts have access tokens! Do you wand to add them to Dolphin/FbTool?");
+                    if (add)
+                    {
+                        await ImportToMonitoringService(accounts);
+                    }
+                }
+            }
+            else if (answer == 2)
+            {
+                if (accounts?.All(a => !string.IsNullOrEmpty(a.Token)) ?? false)
+                {
+                    await ImportToMonitoringService(accounts);
+                }
+            }
 
 
             Console.WriteLine("All done! Press any key to exit... and don't forget to donate ;-)");
             Console.ReadKey();
+        }
+
+        private static async Task ImportToMonitoringService(List<FacebookAccount> accounts)
+        {
+            var monitoringServices = new Dictionary<string, Func<AbstractMonitoringService>> {
+                            {"FbTool",()=>new FbToolService() },
+                            {"Dolphin",()=>new DolphinService() }
+                        };
+            var monitoringService = SelectHelper.Select(monitoringServices, ms => ms.Key).Value();
+            await monitoringService.AddAccountsAsync(accounts);
+            Console.WriteLine("All accounts added to FbTool/Dolphin.");
+
         }
     }
 }
