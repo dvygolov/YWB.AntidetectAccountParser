@@ -14,30 +14,35 @@ namespace YWB.AntidetectAccountParser.Services.Monitoring
     {
         private const string FileName = "fbtool.txt";
 
-        public override async Task AddAccountsAsync(List<FacebookAccount> accounts)
+        protected override async Task<string> AddProxyAsync(Proxy p)
+        {
+            p.Type = p.Type == "socks" ? "socks5" : p.Type;
+            var r = new RestRequest("add-proxy", Method.POST);
+            r.AddParameter("proxy", $"{p.Address}:{p.Port}:{p.Login}:{p.Password}:{p.Type}");
+            var json = await ExecuteRequestAsync<JObject>(r);
+        }
+
+        protected override async Task<List<Proxy>> GetExistringProxiesAsync()
         {
             var r = new RestRequest("get-proxy", Method.GET);
             var json = await ExecuteRequestAsync<JObject>(r);
-            foreach (var acc in accounts)
-            {
-                var p = acc.Proxy;
-                p.Type = p.Type == "socks" ? "socks5" : p.Type;
-                r = new RestRequest("add-proxy", Method.POST);
-                r.AddParameter("proxy", $"{p.Address}:{p.Port}:{p.Login}:{p.Password}:{p.Type}");
-                json = await ExecuteRequestAsync<JObject>(r);
-
-                r = new RestRequest("add-account", Method.POST);
-                r.AddParameter("token", acc.Token);
-                r.AddParameter("name", acc.Name);
-                r.AddParameter("accept_policy", "on");
-                r.AddParameter("disable_notifications", "on");
-                json = await ExecuteRequestAsync<JObject>(r);
-            }
         }
+
+        protected override async Task AddAccountAsync(FacebookAccount acc, string proxyId)
+        {
+            var r = new RestRequest("add-account", Method.POST);
+            r.AddParameter("token", acc.Token);
+            r.AddParameter("name", acc.Name);
+            r.AddParameter("accept_policy", "on");
+            r.AddParameter("disable_notifications", "on");
+            var json = await ExecuteRequestAsync<JObject>(r);
+        }
+
         protected override void AddAuthorization(RestRequest r)
         {
             r.AddQueryParameter("key", _token);
         }
+
 
         protected override async Task SetTokenAndApiUrlAsync()
         {

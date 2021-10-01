@@ -14,6 +14,7 @@ namespace YWB.AntidetectAccountParser.Services.Monitoring
     {
         private const string FileName = "dolphin.txt";
 
+        protected override Task<List<Proxy>> GetExistringProxiesAsync() => throw new NotImplementedException();
         protected override async Task<string> AddProxyAsync(Proxy p)
         {
             var r = new RestRequest("proxy/add", Method.POST);
