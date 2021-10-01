@@ -78,10 +78,20 @@ namespace YWB.AntidetectAccountParser
 
         private static async Task ImportToMonitoringService(List<FacebookAccount> accounts)
         {
+            if (accounts.All(a=>string.IsNullOrEmpty(a.Name)))
+            {
+                Console.Write("Enter account name prefix:");
+                var namePrefix = Console.ReadLine();
+                for (int i = 0; i < accounts.Count; i++)
+                {
+                    accounts[i].Name = $"{namePrefix}{i + 1}";
+                }
+            }
             var monitoringServices = new Dictionary<string, Func<AbstractMonitoringService>> {
                             {"FbTool",()=>new FbToolService() },
                             {"Dolphin",()=>new DolphinService() }
                         };
+            Console.WriteLine("Choose your service:");
             var monitoringService = SelectHelper.Select(monitoringServices, ms => ms.Key).Value();
             await monitoringService.AddAccountsAsync(accounts);
             Console.WriteLine("All accounts added to FbTool/Dolphin.");

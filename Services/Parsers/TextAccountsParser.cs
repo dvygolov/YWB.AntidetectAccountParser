@@ -28,7 +28,7 @@ namespace YWB.AntidetectAccountParser.Services.Parsers
                 }
                 while (lines.All(l => l.StartsWith(sameStart)));
 
-                if (sameStart.Length>4) //then we are sure that it is not just random coincidence
+                if (sameStart.Length > 4) //then we are sure that it is not just random coincidence
                     lines = lines.ConvertAll(l => l.Substring(j - 2));
             }
 
@@ -63,11 +63,35 @@ namespace YWB.AntidetectAccountParser.Services.Parsers
                 }
             }
 
-            re = new Regex(@"[:;\|\s](?<Email>[a-zA-Z0-9]+@[^\:;\|\s]+)[:;\|\s](?<EmailPassword>[^\:;\|\s]+)[:;\|\s]", RegexOptions.Multiline);
+            re = new Regex(@"[:;\|\s](?<Email>[a-zA-Z0-9\.]+@[^\:;\|\s]+)[:;\|\s](?<EmailPassword>[^\:;\|\s]+)[:;\|\s]", RegexOptions.Multiline);
             matches = re.Matches(input);
             if (matches.Count == 0)
             {
                 Console.WriteLine("Didn't find emails and passwords.");
+            }
+            else if (matches.Count > lst.Count)
+            {
+                Console.WriteLine("Found duplicate emails, trying to remove...");
+                var mList = matches.ToList();
+                int i = 0;
+                while (i < mList.Count - 1)
+                {
+                    if (mList[i].Groups["Email"].Value == mList[i + 1].Groups["Email"].Value)
+                    {
+                        mList.RemoveAt(i);
+                        continue;
+                    }
+                    i++;
+                }
+                if (mList.Count == lst.Count)
+                {
+                    Console.WriteLine("Found emails with passwords!");
+                    for (int j = 0; j < mList.Count; j++)
+                    {
+                        lst[j].EmailLogin = mList[j].Groups["Email"].Value;
+                        lst[j].EmailPassword = mList[j].Groups["EmailPassword"].Value;
+                    }
+                }
             }
             else if (matches.Count != lst.Count)
             {

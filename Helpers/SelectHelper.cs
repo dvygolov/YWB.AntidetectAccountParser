@@ -21,7 +21,7 @@ namespace YWB.AntidetectAccountParser.Helpers
             return Enumerable.ElementAt(items, index);
         }
 
-        public static async Task<T> SelectWithCreateAsync<T>(IEnumerable<T> items, Func<T, string> convert = null, Func<Task<T>> create = null)
+        public static async Task<T> SelectWithCreateAsync<T>(IEnumerable<T> items, Func<T, string> convert = null, Func<Task<T>> create = null, bool addEmpty = false)
         {
             int i = 1;
             foreach (var item in items)
@@ -30,14 +30,22 @@ namespace YWB.AntidetectAccountParser.Helpers
                 Console.WriteLine($"{i}.{str}");
                 i++;
             }
+            if (addEmpty)
+            {
+                Console.WriteLine($"{i} Don't use");
+                i++;
+            }
+
             if (create != null)
             {
-                Console.WriteLine($"{i} Create new object");
+                Console.WriteLine($"{i} Create new!");
             }
             Console.Write("Your choice:");
             var index = int.Parse(Console.ReadLine()) - 1;
             var count = Enumerable.Count(items);
-            if (index >= count)
+            if (index == count)
+                return default(T);
+            else if (index == count + 1)
                 return await create();
             else
                 return Enumerable.ElementAt(items, index);
@@ -68,7 +76,7 @@ namespace YWB.AntidetectAccountParser.Helpers
                     indexes.Add(int.Parse(s) - 1);
             }
 
-            return indexes.Select(i => Enumerable.ElementAt(items,i)).ToList();
+            return indexes.Select(i => Enumerable.ElementAt(items, i)).ToList();
         }
     }
 }

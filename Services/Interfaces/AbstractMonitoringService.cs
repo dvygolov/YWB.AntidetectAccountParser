@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using YWB.AntidetectAccountParser.Helpers;
 using YWB.AntidetectAccountParser.Model;
 
 namespace YWB.AntidetectAccountParser.Services.Interfaces
@@ -16,23 +17,43 @@ namespace YWB.AntidetectAccountParser.Services.Interfaces
 
         protected abstract Task SetTokenAndApiUrlAsync();
         protected abstract void AddAuthorization(RestRequest r);
-        protected abstract Task<List<Proxy>> GetExistringProxiesAsync();
+        protected abstract Task<List<AccountsGroup>> GetExistingGroupsAsync();
+        protected abstract Task<AccountsGroup> AddNewGroupAsync();
+        protected abstract Task<List<Proxy>> GetExistingProxiesAsync();
         protected abstract Task<string> AddProxyAsync(Proxy p);
-        protected abstract Task AddAccountAsync(FacebookAccount acc, string proxyId);
+        protected abstract Task<bool> AddAccountAsync(FacebookAccount acc, AccountsGroup g, string proxyId);
         public async Task AddAccountsAsync(List<FacebookAccount> accounts)
         {
-            var existingProxies = (await GetExistringProxiesAsync()).ToDictionary(p=>p,p=>p.Id);
+            var groups = await GetExistingGroupsAsync();
+            Console.WriteLine("Do you want to add your accounts to group/tag?");
+            var group = await SelectHelper.SelectWithCreateAsync(groups, g => g.Name, AddNewGroupAsync, true);
+            Console.WriteLine("Getting existing proxies...");
+            var existingProxies = (await GetExistingProxiesAsync()).ToDictionary(p => p, p => p.Id);
             foreach (var acc in accounts)
             {
-                var proxyId = existingProxies.ContainsKey(acc.Proxy) ? 
-                    existingProxies[acc.Proxy] : await AddProxyAsync(acc.Proxy);
-                await AddAccountAsync(acc, proxyId);
+                string proxyId;
+                if (existingProxies.ContainsKey(acc.Proxy))
+                {
+                    proxyId = existingProxies[acc.Proxy];
+                    Console.WriteLine($"Found existing proxy for {acc.Proxy}!");
+                }
+                else
+                {
+                    Console.WriteLine($"Adding proxy {acc.Proxy}...");
+                    proxyId = await AddProxyAsync(acc.Proxy);
+                    existingProxies.Add(acc.Proxy, proxyId);
+                    Console.WriteLine($"Proxy {acc.Proxy} added!");
+                }
+                Console.WriteLine($"Adding account {acc.Name}...");
+                var success = await AddAccountAsync(acc, group, proxyId);
+                if (success)
+                    Console.WriteLine($"Account {acc.Name} added!");
             }
         }
 
         protected async Task<T> ExecuteRequestAsync<T>(RestRequest r)
         {
-            if (string.IsNullOrEmpty(_token)||string.IsNullOrEmpty(_apiUrl))
+            if (string.IsNullOrEmpty(_token) || string.IsNullOrEmpty(_apiUrl))
                 await SetTokenAndApiUrlAsync();
             var rc = new RestClient(_apiUrl);
             AddAuthorization(r);
