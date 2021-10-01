@@ -77,7 +77,7 @@ namespace YWB.AntidetectAccountParser.Services.Monitoring
                 rJson.password = acc.Password;
             r.AddJsonBody(rJson.ToString());
             dynamic json = await ExecuteRequestAsync<JObject>(r);
-            return true;
+            return json.success==true;
         }
 
         protected override void AddAuthorization(RestRequest r)
