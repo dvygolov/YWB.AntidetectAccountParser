@@ -22,14 +22,10 @@ namespace YWB.AntidetectAccountParser.Services.Browsers
         private List<string> _oses = new List<string> { "Windows", "Mac OS X", "Linux" };
         private List<string> _cpu = new List<string> { "2", "4", "6", "8", "16" };
         private List<string> _memory = new List<string> { "2", "4", "6", "8" };
-        public AdsPowerApiService(IAccountsParser parser, IProxyProvider proxyProvider) : base(parser, proxyProvider)
-        {
-        }
 
-        protected override async Task<List<(string pName, string pId)>> GetProfilesAsync(List<FacebookAccount> accounts)
+        protected override async Task<List<(string pName, string pId)>> CreateOrChooseProfilesAsync(List<FacebookAccount> accounts)
         {
             var profiles = new List<(string, string)>();
-            var proxies = _proxyProvider.Get();
             var namePrefix = string.Empty;
             if (!accounts.All(a => !string.IsNullOrEmpty(a.Name)))
             {
@@ -42,11 +38,10 @@ namespace YWB.AntidetectAccountParser.Services.Browsers
             var res = new List<(string, string)>();
             for (int i = 0; i < accounts.Count; i++)
             {
-                var proxyIndex = i < proxies.Count - 1 ? i : i % proxies.Count;
-                var p = proxies[proxyIndex];
                 var pName = string.IsNullOrEmpty(accounts[i].Name) ? $"{namePrefix}{i}" : accounts[i].Name;
                 Console.WriteLine($"Creating profile {pName}...");
-                var pId = await CreateNewProfileAsync(pName, os, p, accounts[i]);
+                accounts[i].Name = pName;
+                var pId = await CreateNewProfileAsync(os, accounts[i]);
                 Console.WriteLine($"Profile with ID={pId} created!");
                 res.Add((pName, pId));
             }
@@ -54,7 +49,7 @@ namespace YWB.AntidetectAccountParser.Services.Browsers
 
         }
 
-        private async Task<string> CreateNewProfileAsync(string pName, string os, Proxy p, FacebookAccount fa)
+        private async Task<string> CreateNewProfileAsync(string os,FacebookAccount fa)
         {
             var r = new RestRequest("fbcc/user/rand-get-user-agent", Method.POST);
             r.AddParameter("system", os);
@@ -69,7 +64,7 @@ namespace YWB.AntidetectAccountParser.Services.Browsers
 
             r = new RestRequest("fbcc/user/single-import-user", Method.POST);
             r.AddParameter("batch_id", "0");
-            r.AddParameter("name", pName);
+            r.AddParameter("name", fa.Name);
             r.AddParameter("domain_name", "facebook.com");
             if (!string.IsNullOrEmpty(fa.Login) && !string.IsNullOrEmpty(fa.Password))
             {
@@ -80,9 +75,9 @@ namespace YWB.AntidetectAccountParser.Services.Browsers
             if (!string.IsNullOrEmpty(fa.Cookies))
                 r.AddParameter("cookie", fa.Cookies);
 
-            if (p.Type == "socks") p.Type = "socks5";
-            r.AddParameter("proxytype", p.Type);
-            r.AddParameter("proxy", $"{p.Address}:{p.Port}:{p.Login}:{p.Password}");
+            if (fa.Proxy.Type == "socks") fa.Proxy.Type = "socks5";
+            r.AddParameter("proxytype", fa.Proxy.Type);
+            r.AddParameter("proxy", $"{fa.Proxy.Address}:{fa.Proxy.Port}:{fa.Proxy.Login}:{fa.Proxy.Password}");
 
             dynamic fp = new JObject();
             fp.automatic_timezone = "1";
@@ -101,7 +96,7 @@ namespace YWB.AntidetectAccountParser.Services.Browsers
             fp.audio = "1"; //add noise
             fp.media_devices = "1"; //fake
             fp.device_name_switch = "2"; //mask
-            fp.device_name = pName; //mask
+            fp.device_name = fa.Name; //mask
             fp.ua = ua;
             fp.scan_port_type = 1; //protect
             r.AddParameter("fingerprint_config", fp.ToString());

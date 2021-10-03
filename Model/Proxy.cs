@@ -5,6 +5,7 @@ namespace YWB.AntidetectAccountParser.Model
 {
     public class Proxy
     {
+        public string Id { get; set; }
         private List<string> _allowedTypes = new List<string> { "http", "socks", "socks5" };
         private string _type;
 
@@ -23,5 +24,9 @@ namespace YWB.AntidetectAccountParser.Model
             }
         }
         public string UpdateLink { get; set; }
+
+        public override bool Equals(object obj) => obj is Proxy proxy && Address == proxy.Address && Port == proxy.Port && Login == proxy.Login && Password == proxy.Password;
+        public override int GetHashCode() => HashCode.Combine(Address, Port, Login, Password);
+        public override string ToString() => $"{Type}:{Address}:{Port}:{Login}:{Password}";
     }
 }

@@ -21,8 +21,6 @@ namespace YWB.AntidetectAccountParser.Services.Browsers
         private Dictionary<string, IndigoProfilesGroup> _allGroups;
         private ConcurrentDictionary<string, IndigoProfileSettings> _profileSettings = new ConcurrentDictionary<string, IndigoProfileSettings>();
 
-        public IndigoApiService(IAccountsParser parser, IProxyProvider proxyProvider) : base(parser, proxyProvider) { }
-
         public IndigoPlanSettings Ips
         {
             get
@@ -103,14 +101,13 @@ namespace YWB.AntidetectAccountParser.Services.Browsers
             return await ExecuteRequestAsync<IndigoPlanSettings>(r);
         }
 
-        protected override async Task<List<(string pName, string pId)>> GetProfilesAsync(List<FacebookAccount> accounts)
+        protected override async Task<List<(string pName, string pId)>> CreateOrChooseProfilesAsync(List<FacebookAccount> accounts)
         {
             var groups = AllGroups.OrderBy(g => g.Key);
             Console.WriteLine("Choose group:");
             var selected = SelectHelper.Select(groups, g => g.Key);
             var createNew = YesNoSelector.ReadAnswerEqualsYes("Should I create new profiles? If not, then you'll choose from existing.");
             List<IndigoProfile> selectedProfiles = null;
-            var proxies = _proxyProvider.Get();
             if (createNew)
             {
                 var namePrefix = string.Empty;
@@ -126,8 +123,8 @@ namespace YWB.AntidetectAccountParser.Services.Browsers
                 {
                     var pName = string.IsNullOrEmpty(accounts[i].Name) ? $"{namePrefix}{i}" : accounts[i].Name;
                     Console.WriteLine($"Creating profile {pName}...");
-                    var proxyIndex = i < proxies.Count - 1 ? i : i % proxies.Count;
-                    var pId = await CreateNewProfileAsync($"{pName}", os, selected.Value.Sid, proxies[proxyIndex]);
+                    accounts[i].Name = pName;
+                    var pId = await CreateNewProfileAsync(pName, os, selected.Value.Sid, accounts[i].Proxy);
                     Console.WriteLine($"Profile with ID={pId} created!");
                     res.Add((pName, pId));
                 }
@@ -181,8 +178,12 @@ namespace YWB.AntidetectAccountParser.Services.Browsers
 
         public async Task<string> CreateNewProfileAsync(string pName, string os, string groupId, Proxy p)
         {
+            var vInputs = StaticRandom.Instance.Next(0, 1);
+            var aInputs = StaticRandom.Instance.Next(0, 4);
+            var aOutputs = StaticRandom.Instance.Next(0, 4);
+
             var r = new RestRequest("api/v2/profile", Method.POST);
-            var param = @$"{{""name"":""{pName}"",""group"":""{groupId}"",""os"":""{os}"",""browser"":""mimic"",""googleServices"":true,""mediaDevices"":{{""mode"":""FAKE"",""videoInputs"":""1"",""audioInputs"":""2"",""audioOutputs"":""3""}},""storage"":{{""local"":true,""extensions"":true,""bookmarks"":false,""history"":false,""passwords"":false}},""canvas"":{{""mode"":""REAL""}},""navigator"":{{""language"":""en-US,en;q=0.9,ru-RU;q=0.8""}},""audioContext"":{{""mode"":""NOISE""}},""webGL"":{{""mode"":""NOISE""}},""webGLMetadata"":{{""mode"":""MASK""}},""network"":{{""proxy"":{{""type"":""{p.Type.ToUpper()}"",""host"":""{p.Address}"",""port"":""{p.Port}"",""username"":""{p.Login}"",""password"":""{p.Password}""}}}},""extensions"":{{""enable"":true,""names"":""""}}}}";
+            var param = @$"{{""name"":""{pName}"",""group"":""{groupId}"",""os"":""{os}"",""browser"":""mimic"",""googleServices"":true,""mediaDevices"":{{""mode"":""FAKE"",""videoInputs"":""{vInputs}"",""audioInputs"":""{aInputs}"",""audioOutputs"":""{aOutputs}""}},""storage"":{{""local"":true,""extensions"":true,""bookmarks"":false,""history"":false,""passwords"":false}},""canvas"":{{""mode"":""REAL""}},""navigator"":{{""language"":""en-US,en;q=0.9,ru-RU;q=0.8""}},""audioContext"":{{""mode"":""NOISE""}},""webGL"":{{""mode"":""NOISE""}},""webGLMetadata"":{{""mode"":""MASK""}},""network"":{{""proxy"":{{""type"":""{p.Type.ToUpper()}"",""host"":""{p.Address}"",""port"":""{p.Port}"",""username"":""{p.Login}"",""password"":""{p.Password}""}}}},""extensions"":{{""enable"":true,""names"":""""}}}}";
             r.AddParameter("application/json", param, ParameterType.RequestBody);
             var res = await ExecuteLocalRequestAsync<JObject>(r);
             if (res["uuid"] == null)
