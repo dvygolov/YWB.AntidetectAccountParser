@@ -13,6 +13,7 @@ Right now this software supports 3 Antidetect browsers:
 Also you can import your accounts to monitoring services. Right now these are supported:
 - [FbTool](https://yellowweb.top/fbtool) 
 - [Dolphin](https://yellowweb.top/dolphin)
+
 **YELLOW** promocode will give you a discount for both!
 
 # How to use this software
