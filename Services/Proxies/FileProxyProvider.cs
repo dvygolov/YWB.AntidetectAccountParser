@@ -19,7 +19,7 @@ namespace YWB.AntidetectAccountParser.Services.Proxies
                 throw new FileNotFoundException("There's no proxy.txt file!!!");
             var split = File.ReadAllLines(fullPath).Where(l=>!string.IsNullOrEmpty(l));
 
-            return split.Select(l =>
+            var proxies= split.Select(l =>
             {
                 var split = l.Split(':');
                 return new Proxy()
@@ -32,6 +32,8 @@ namespace YWB.AntidetectAccountParser.Services.Proxies
                     UpdateLink = split.Length == 6 ? split[5].Trim() : string.Empty
                 };
             }).ToList();
+            Console.WriteLine($"Found {proxies.Count} proxies!");
+            return proxies;
         }
 
         public void SetProxies(List<FacebookAccount> accounts)
