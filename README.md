@@ -25,3 +25,7 @@ Also you can import your accounts to monitoring services. Right now these are su
 6. If you have multiple accounts in a text file then rename this file to **accounts.txt** and put it into the program's folder
 7. If you have accounts in archives then create **"logs"** folder and put them there. Remember, there should be 1 account per 1 zip.
 8. Start the program and follow the instructions.
+
+Btw, for Dolphin Anty browser you can create **dolphinanty.txt** file and add your login and password there separated by :. For Adspower you can create **adspower.txt** and use it the same way.
+
+Monitoring services: for FbTool you can create **fbtool.txt** and add your API token there, for Dolphin create **dolphin.txt** and add your domain (WITHOUT http://) and API token separated by :.
