@@ -6,9 +6,14 @@ This program automatically:
 - saves all account's info into profile's note
 
 Right now this software supports 3 Antidetect browsers: 
-- [Indigo](https://indigobrowser.com) - (btw, you can use **YELLOW** promocode to get 50% cashback)
+- [Indigo](https://yellowweb.top/indigo) - (btw, you can use **YELLOW** promocode to get 50% cashback)
 - [Dolphin Anty](https://yellowweb.top/dolphinanty)
-- [AdsPower](https://adspower.net)
+- [AdsPower](https://yellowweb.top/adspower)
+
+Also you can import your accounts to monitoring services. Right now these are supported:
+- [FbTool](https://yellowweb.top/fbtool) 
+- [Dolphin](https://yellowweb.top/dolphin)
+**YELLOW** promocode will give you a discount for both!
 
 # How to use this software
 1. Compile the source code
