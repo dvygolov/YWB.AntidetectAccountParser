@@ -28,20 +28,27 @@ namespace YWB.AntidetectAccountParser.Services.Interfaces
             Console.WriteLine("Do you want to add your accounts to group/tag?");
             var group = await SelectHelper.SelectWithCreateAsync(groups, g => g.Name, AddNewGroupAsync, true);
             Console.WriteLine("Getting existing proxies...");
-            var existingProxies = (await GetExistingProxiesAsync()).ToDictionary(p => p, p => p.Id);
+
+            var existingProxies = await GetExistingProxiesAsync();
+            var existingProxiesDict = new Dictionary<Proxy, string>();
+            existingProxies.ForEach(pr =>
+            {
+                if (!existingProxiesDict.ContainsKey(pr))
+                    existingProxiesDict.Add(pr, pr.Id);
+            });
             foreach (var acc in accounts)
             {
                 string proxyId;
-                if (existingProxies.ContainsKey(acc.Proxy))
+                if (existingProxiesDict.ContainsKey(acc.Proxy))
                 {
-                    proxyId = existingProxies[acc.Proxy];
+                    proxyId = existingProxiesDict[acc.Proxy];
                     Console.WriteLine($"Found existing proxy for {acc.Proxy}!");
                 }
                 else
                 {
                     Console.WriteLine($"Adding proxy {acc.Proxy}...");
                     proxyId = await AddProxyAsync(acc.Proxy);
-                    existingProxies.Add(acc.Proxy, proxyId);
+                    existingProxiesDict.Add(acc.Proxy, proxyId);
                     Console.WriteLine($"Proxy {acc.Proxy} added!");
                 }
                 Console.WriteLine($"Adding account {acc.Name}...");
