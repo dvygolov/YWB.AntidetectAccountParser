@@ -16,12 +16,13 @@ namespace YWB.AntidetectAccountParser.Services.Interfaces
 
         protected abstract Task<bool> SaveItemToNoteAsync(string profileId, FacebookAccount fa);
 
-        public async Task ImportAccountsAsync(List<FacebookAccount> accounts)
+        public async Task<Dictionary<string,FacebookAccount>> ImportAccountsAsync(List<FacebookAccount> accounts)
         {
+            var res = new Dictionary<string, FacebookAccount>();
             if (accounts.Count == 0)
             {
                 Console.WriteLine("Couldn't find any accounts to import! Unknown format or empty accounts.txt file!");
-                return;
+                return null;
             }
             else
                 Console.WriteLine($"Found {accounts.Count} accounts.");
@@ -46,7 +47,9 @@ namespace YWB.AntidetectAccountParser.Services.Interfaces
 
                 await SaveItemToNoteAsync(pId, accounts[i]);
                 Console.WriteLine("Note saved!");
+                res.Add(selectedProfiles[i].pId, accounts[i]);
             }
+            return res;
         }
     }
 }

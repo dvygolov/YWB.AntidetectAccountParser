@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using YWB.AntidetectAccountParser.Helpers;
 using YWB.AntidetectAccountParser.Model;
+using YWB.AntidetectAccountParser.Services;
 using YWB.AntidetectAccountParser.Services.Browsers;
 using YWB.AntidetectAccountParser.Services.Interfaces;
 using YWB.AntidetectAccountParser.Services.Monitoring;
@@ -16,7 +17,7 @@ namespace YWB.AntidetectAccountParser
     {
         static async Task Main(string[] args)
         {
-            Console.WriteLine("Antidetect Accounts Parser v4.1b Yellow Web (https://yellowweb.top)");
+            Console.WriteLine("Yellow FB Accounts Parser v5.0a by Yellow Web (https://yellowweb.top)");
             Console.WriteLine("If you like this software, please, donate!");
             Console.WriteLine("WebMoney: Z182653170916");
             Console.WriteLine("Bitcoin: bc1qqv99jasckntqnk0pkjnrjtpwu0yurm0qd0gnqv");
@@ -51,7 +52,7 @@ namespace YWB.AntidetectAccountParser
                 };
                 var selectedBrowser = SelectHelper.Select(browsers, b => b.Key).Value();
 
-                await selectedBrowser.ImportAccountsAsync(accounts);
+                var profiles = await selectedBrowser.ImportAccountsAsync(accounts);
 
                 if (accounts?.All(a => !string.IsNullOrEmpty(a.Token)) ?? false)
                 {
@@ -60,6 +61,11 @@ namespace YWB.AntidetectAccountParser
                     {
                         await ImportToMonitoringService(accounts);
                     }
+                }
+                else
+                {
+                    var ipws = new IndigoPlaywrightService();
+                    await ipws.GetTokensAsync(profiles);
                 }
             }
             else if (answer == 2)
@@ -77,7 +83,7 @@ namespace YWB.AntidetectAccountParser
 
         private static async Task ImportToMonitoringService(List<FacebookAccount> accounts)
         {
-            if (accounts.All(a=>string.IsNullOrEmpty(a.Name)))
+            if (accounts.All(a => string.IsNullOrEmpty(a.Name)))
             {
                 Console.Write("Enter account name prefix:");
                 var namePrefix = Console.ReadLine();
