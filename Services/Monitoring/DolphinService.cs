@@ -67,7 +67,8 @@ namespace YWB.AntidetectAccountParser.Services.Monitoring
             dynamic rJson = new JObject();
             rJson.name = acc.Name;
             rJson.access_token = acc.Token;
-            //rJson.business_access_token = acc.BmToken; //TODO
+            if (!string.IsNullOrEmpty(acc.BmToken))
+                rJson.business_access_token = acc.BmToken; 
             rJson.tags = new JArray();
             if (g != null) rJson.tags.Add(g.Name);
             rJson.cookies = JArray.Parse(acc.Cookies);

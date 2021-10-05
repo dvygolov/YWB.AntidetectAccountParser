@@ -63,6 +63,25 @@ namespace YWB.AntidetectAccountParser.Services.Parsers
                 }
             }
 
+            re = new Regex(@"(?<Token>EAAG[^\s:;\|]+)", RegexOptions.Multiline);
+            matches = re.Matches(input);
+            if (matches.Count == 0)
+            {
+                Console.WriteLine("Didn't find BM tokens!");
+            }
+            else if (matches.Count != lst.Count)
+            {
+                Console.WriteLine("Found BM tokens count does not match accounts count!");
+            }
+            else
+            {
+                Console.WriteLine("Found BM access tokens!");
+                for (int i = 0; i < matches.Count; i++)
+                {
+                    lst[i].BmToken = matches[i].Groups["Token"].Value;
+                }
+            }
+
             re = new Regex(@"[:;\|\s](?<Email>[a-zA-Z0-9\.]+@[^\:;\|\s]+)[:;\|\s](?<EmailPassword>[^\:;\|\s]+)[:;\|\s]", RegexOptions.Multiline);
             matches = re.Matches(input);
             if (matches.Count == 0)

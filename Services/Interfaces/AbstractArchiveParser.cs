@@ -50,6 +50,11 @@ namespace YWB.AntidetectAccountParser.Services.Interfaces
                 fa.Token = content;
                 Console.WriteLine("Found Facebook Access Token!");
             }
+            if (content.StartsWith("EAAG"))
+            {
+                fa.BmToken = content;
+                Console.WriteLine("Found Business Manager Access Token!");
+            }
         }
     }
 }

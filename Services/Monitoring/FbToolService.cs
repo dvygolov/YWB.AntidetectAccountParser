@@ -46,18 +46,27 @@ namespace YWB.AntidetectAccountParser.Services.Monitoring
             var json = await ExecuteRequestAsync<JObject>(r);
             return json.Children().Select(t => t.First).Where(t => t.HasValues).Select(t =>
             {
-                var s = t["proxy"].ToString().Split(":");
-                var p = new Proxy()
+                var pStr = t["proxy"].ToString();
+                try
                 {
-                    Id = t["id"].ToString(),
-                    Address=s[0],
-                    Port=s[1],
-                    Login=s[2],
-                    Password=s[3],
-                    Type=(t["type"].ToString()==string.Empty?"http":(t["type"].ToString()=="https"?"http":t["type"].ToString()))
-                };
-                return p;
-            }).ToList();
+                    var s = pStr.Split(":");
+                    var p = new Proxy()
+                    {
+                        Id = t["id"].ToString(),
+                        Address = s[0],
+                        Port = s[1],
+                        Login = s[2],
+                        Password = s[3],
+                        Type = (t["type"].ToString() == string.Empty ? "http" : (t["type"].ToString() == "https" ? "http" : t["type"].ToString()))
+                    };
+                    return p;
+                }
+                catch
+                {
+                    Console.WriteLine($"Couldn't parse proxy string:{pStr}");
+                    return null;
+                }
+            }).Where(p => p != null).ToList();
         }
 
         protected override async Task<bool> AddAccountAsync(FacebookAccount acc, AccountsGroup g, string proxyId)
@@ -71,7 +80,7 @@ namespace YWB.AntidetectAccountParser.Services.Monitoring
             r.AddParameter("comment_status", "on");
             r.AddParameter("deleteOrHide", 0);
             dynamic json = await ExecuteRequestAsync<JObject>(r);
-            if (json.success==false)
+            if (json.success == false)
             {
                 Console.WriteLine($"Couldn't add account {acc.Name} to FbTool. Error:{json.message}");
                 return false;
