@@ -54,6 +54,7 @@ namespace YWB.AntidetectAccountParser.Model
         public string TwoFactor { get; set; }
         public string BmLinks { get; set; }
         public string Token { get; set; }
+        public string BmToken { get; set; }
         public string Cookies
         {
             get
@@ -124,6 +125,10 @@ namespace YWB.AntidetectAccountParser.Model
             if (!string.IsNullOrEmpty(Token))
             {
                 str += $"{sd}Token: {Token} {ed}";
+            }
+            if (!string.IsNullOrEmpty(BmToken))
+            {
+                str += $"{sd}BmToken: {BmToken} {ed}";
             }
             if (!string.IsNullOrEmpty(BmLinks))
             {
