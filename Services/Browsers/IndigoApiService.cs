@@ -28,6 +28,10 @@ namespace YWB.AntidetectAccountParser.Services.Browsers
                 if (_ips == null)
                 {
                     _ips = GetCurrentPlanSettingsAsync().Result;
+                    if (!_ips.AutomatitonApi)
+                        throw new Exception("Your tarification plan does not support automation!");
+                    if (_ips.CollaborationMember)
+                        throw new Exception("Your should use Indigo's master-account not sub-account to run this software!");
                 }
                 return _ips;
             }
