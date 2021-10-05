@@ -1,4 +1,5 @@
 # Antidetect Accounts Parser by [Yellow Web](https://yellowweb.top)
+Статья по софту на русском языке [находится тут](https://yellowweb.top/massovyj-import-akkauntov-facebook-v-profili-indigo-na-izi/)
 This program automatically: 
 - parses a file with Facebook accounts (or zip/rar-files with 1 FB account for each file)
 - creates a profile for each account in your Antidetect browser
@@ -26,6 +27,17 @@ Also you can import your accounts to monitoring services. Right now these are su
 7. If you have accounts in archives then create **"logs"** folder and put them there. Remember, there should be 1 account per 1 zip.
 8. Start the program and follow the instructions.
 
-Btw, for Dolphin Anty browser you can create **dolphinanty.txt** file and add your login and password there separated by :. For Adspower you can create **adspower.txt** and use it the same way.
+# Browsers
+## Dolphin Anty
+You can create **dolphinanty.txt** file and add your login and password there separated by :. 
+## AdsPower
+For Adspower you can create **adspower.txt** and add your login and password there separated by :. 
 
-Monitoring services: for FbTool you can create **fbtool.txt** and add your API token there, for Dolphin create **dolphin.txt** and add your domain (WITHOUT http://) and API token separated by :.
+# Monitoring services 
+## FbTool 
+You can create **fbtool.txt** and add your API token there, 
+## Dolphin
+You can create **dolphin.txt** and add your domain (WITHOUT http://) and API token separated by :. How to get API token? [Read here](https://documenter.getpostman.com/view/15402503/TzJrBJdk) or just run this script in your browser's console on your Dolphin's website:
+*const cookie=document.cookie.split(";").map(function(o){return o.trim().split("=").map(decodeURIComponent)}).reduce(function(o,e){try{o[e[0]]=JSON.parse(e[1])}catch(c){o[e[0]]=e[1]}return o},{});console.log(cookie.user_id+"-"+cookie.hash);*
+
+
