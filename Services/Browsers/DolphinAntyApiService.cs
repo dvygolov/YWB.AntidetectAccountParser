@@ -36,11 +36,18 @@ namespace YWB.AntidetectAccountParser.Services.Browsers
 
         private async Task<string> CreateOrGetProxyAsync(Proxy p)
         {
-            var allProxies = (await GetExistingProxiesAsync()).ToDictionary(p => p, p => p.Id);
-            if (allProxies.ContainsKey(p))
+            var allProxies = await GetExistingProxiesAsync();
+            var allProxiesDict = new Dictionary<Proxy, string>();
+            allProxies.ForEach(pr =>
+            {
+                if (!allProxiesDict.ContainsKey(pr))
+                    allProxiesDict.Add(pr, pr.Id);
+            });
+
+            if (allProxiesDict.ContainsKey(p))
             {
                 Console.WriteLine("Found existing proxy!");
-                return allProxies[p];
+                return allProxiesDict[p];
             }
             var r = new RestRequest("proxy", Method.POST);
             if (p.Type == "socks") p.Type = "socks5";
