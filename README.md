@@ -1,5 +1,6 @@
 # Antidetect Accounts Parser by [Yellow Web](https://yellowweb.top)
 Статья по софту на русском языке [находится тут](https://yellowweb.top/massovyj-import-akkauntov-facebook-v-profili-indigo-na-izi/)
+
 This program automatically: 
 - parses a file with Facebook accounts (or zip/rar-files with 1 FB account for each file)
 - creates a profile for each account in your Antidetect browser
