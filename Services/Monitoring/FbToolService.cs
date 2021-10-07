@@ -74,6 +74,10 @@ namespace YWB.AntidetectAccountParser.Services.Monitoring
             var r = new RestRequest("add-account", Method.POST);
             r.AddParameter("token", acc.Token);
             r.AddParameter("name", acc.Name);
+            if (!string.IsNullOrEmpty(acc.Password))
+                r.AddParameter("pass", acc.Password);
+            if (!string.IsNullOrEmpty(acc.Cookies))
+                r.AddParameter("cookie", acc.Cookies);
             r.AddParameter("accept_policy", "on");
             r.AddParameter("disable_notifications", "on");
             r.AddParameter("autopublish_fp", "on");
