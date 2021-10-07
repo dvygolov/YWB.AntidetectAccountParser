@@ -78,6 +78,8 @@ namespace YWB.AntidetectAccountParser.Services.Monitoring
                 r.AddParameter("pass", acc.Password);
             if (!string.IsNullOrEmpty(acc.Cookies))
                 r.AddParameter("cookie", acc.Cookies);
+            if (!string.IsNullOrEmpty(acc.BmToken))
+                r.AddParameter("bm_token", acc.BmToken);
             r.AddParameter("accept_policy", "on");
             r.AddParameter("disable_notifications", "on");
             r.AddParameter("autopublish_fp", "on");
