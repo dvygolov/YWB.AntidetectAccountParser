@@ -18,9 +18,10 @@ namespace YWB.AntidetectAccountParser.Model
             get => _type;
             set 
             {
-                if (!_allowedTypes.Contains(value))
-                    throw new Exception($"{value} is not a valid Proxy Type! Check your proxy.txt file.");
-                _type = value;
+                var t = value.TrimEnd(':');
+                if (!_allowedTypes.Contains(t))
+                    throw new Exception($"{t} is not a valid Proxy Type! Check your proxy.txt file.");
+                _type = t;
             }
         }
         public string UpdateLink { get; set; }
