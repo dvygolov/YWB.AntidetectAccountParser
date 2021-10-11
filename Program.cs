@@ -16,7 +16,7 @@ namespace YWB.AntidetectAccountParser
     {
         static async Task Main(string[] args)
         {
-            Console.WriteLine("Antidetect Accounts Parser v4.1c Yellow Web (https://yellowweb.top)");
+            Console.WriteLine("Antidetect Accounts Parser v4.1e Yellow Web (https://yellowweb.top)");
             Console.WriteLine("If you like this software, please, donate!");
             Console.WriteLine("WebMoney: Z182653170916");
             Console.WriteLine("Bitcoin: bc1qqv99jasckntqnk0pkjnrjtpwu0yurm0qd0gnqv");
@@ -68,6 +68,14 @@ namespace YWB.AntidetectAccountParser
                 {
                     await ImportToMonitoringService(accounts);
                 }
+                else if (accounts.Any(a=>!string.IsNullOrEmpty(a.Token)))
+                {
+                    var anwser = YesNoSelector.ReadAnswerEqualsYes("Not all accounts have Facebook Access Tokens! Import only those, that have tokens?");
+                    if (anwser)
+                        await ImportToMonitoringService(accounts.Where(a=>!string.IsNullOrEmpty(a.Token)).ToList());
+                }
+                else
+                    Console.WriteLine("No accounts with access tokens found!((");
             }
 
 

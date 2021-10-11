@@ -38,6 +38,7 @@ namespace YWB.AntidetectAccountParser.Services.Interfaces
                 {
                     if (fa.AddLoginPassword(login, password))
                         Console.WriteLine("Found Facebook login/password!");
+                    index += 2;
                 }
             }
         }
