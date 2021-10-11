@@ -47,6 +47,8 @@ namespace YWB.AntidetectAccountParser.Services.Monitoring
             dynamic container = new JObject();
             container.proxy = new JArray();
 
+            if (p.Type == "socks") p.Type = "socks5";
+
             dynamic pJson = new JObject();
             pJson.name = DateTime.Now.ToString("G");
             pJson.host = p.Address;
