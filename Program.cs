@@ -16,6 +16,8 @@ namespace YWB.AntidetectAccountParser
     {
         static async Task Main(string[] args)
         {
+            Console.InputEncoding = System.Text.Encoding.UTF8;
+            Console.OutputEncoding = System.Text.Encoding.UTF8;
             Console.WriteLine("Antidetect Accounts Parser v4.1f Yellow Web (https://yellowweb.top)");
             Console.WriteLine("If you like this software, please, donate!");
             Console.WriteLine("WebMoney: Z182653170916");
