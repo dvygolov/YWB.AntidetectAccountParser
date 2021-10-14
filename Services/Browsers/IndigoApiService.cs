@@ -241,14 +241,25 @@ namespace YWB.AntidetectAccountParser.Services.Browsers
         private async Task<T> ExecuteLocalRequestAsync<T>(RestRequest r, bool addToken = true)
         {
             string url = $"http://127.0.0.1:35000";
-            var rc = new RestClient(url);
             if (addToken)
             {
                 if (string.IsNullOrEmpty(_token))
                     _token = await GetIndigoApiTokenAsync();
                 r.AddHeader("token", _token);
             }
-            var resp = await rc.ExecuteAsync(r, new CancellationToken());
+            IRestResponse resp;
+            int tryCount = 0;
+            do
+            {
+                var rc = new RestClient(url);
+                resp = await rc.ExecuteAsync(r, new CancellationToken());
+                tryCount++;
+                if (resp.StatusCode != System.Net.HttpStatusCode.OK) await Task.Delay(1000);
+            }
+            while (resp.StatusCode != System.Net.HttpStatusCode.OK && tryCount < 3);
+            if (tryCount >= 3)
+                throw new Exception($"Got error {resp.Content} of {resp.StatusCode}");
+
             T res = default(T);
             try
             {
