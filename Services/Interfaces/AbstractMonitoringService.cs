@@ -36,7 +36,10 @@ namespace YWB.AntidetectAccountParser.Services.Interfaces
                 if (!existingProxiesDict.ContainsKey(pr))
                     existingProxiesDict.Add(pr, pr.Id);
             });
-            foreach (var acc in accounts)
+
+            //We should add accounts with the same token only once
+            var distinct = accounts.GroupBy(a => a.Token).Select(g => g.First()).ToList();
+            foreach (var acc in distinct)
             {
                 string proxyId;
                 if (existingProxiesDict.ContainsKey(acc.Proxy))
