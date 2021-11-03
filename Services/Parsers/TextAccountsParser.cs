@@ -34,7 +34,7 @@ namespace YWB.AntidetectAccountParser.Services.Parsers
 
             var input = string.Join("\r\n", lines);
 
-            var re = new Regex(@"^(?<Login>[^\:;\|\s]+)[:;\|\s](?<Password>[^\:;\|\s]+)[:;\|\s]", RegexOptions.Multiline);
+            var re = new Regex(@"^(?<Login>[^\:;\|\s]+)\s*[:;\|\s]\s*(?<Password>[^\:;\|\s]+)\s*[:;\|\s]", RegexOptions.Multiline);
             var matches = re.Matches(input);
             Console.WriteLine($"Found {matches.Count} logins/passwords!");
 

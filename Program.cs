@@ -18,12 +18,12 @@ namespace YWB.AntidetectAccountParser
         {
             Console.InputEncoding = System.Text.Encoding.UTF8;
             Console.OutputEncoding = System.Text.Encoding.UTF8;
-            Console.WriteLine("Antidetect Accounts Parser v4.1f Yellow Web (https://yellowweb.top)");
+            Console.WriteLine("Antidetect Accounts Parser v4.2 Yellow Web (https://yellowweb.top)");
             Console.WriteLine("If you like this software, please, donate!");
             Console.WriteLine("WebMoney: Z182653170916");
             Console.WriteLine("Bitcoin: bc1qqv99jasckntqnk0pkjnrjtpwu0yurm0qd0gnqv");
             Console.WriteLine("Ethereum: 0xBC118D3FDE78eE393A154C29A4545c575506ad6B");
-            await Task.Delay(5000);
+            await Task.Delay(3000);
             Console.WriteLine();
 
             Console.WriteLine("What do you want to parse?");
@@ -33,6 +33,11 @@ namespace YWB.AntidetectAccountParser
             };
             var selectedParser = SelectHelper.Select(parsers, a => a.Key).Value();
             var accounts = selectedParser.Parse();
+            if (accounts.Count == 0)
+            {
+                Console.WriteLine("Couldn't find any accounts to import(((");
+                return;
+            }
 
             var proxyProvider = new FileProxyProvider();
             proxyProvider.SetProxies(accounts);

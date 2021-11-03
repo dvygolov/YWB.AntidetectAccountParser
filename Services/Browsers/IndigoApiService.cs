@@ -257,8 +257,6 @@ namespace YWB.AntidetectAccountParser.Services.Browsers
                 if (resp.StatusCode != System.Net.HttpStatusCode.OK) await Task.Delay(1000);
             }
             while (resp.StatusCode != System.Net.HttpStatusCode.OK && tryCount < 3);
-            if (tryCount >= 3)
-                throw new Exception($"Got error {resp.Content} of {resp.StatusCode}");
 
             T res = default(T);
             try
