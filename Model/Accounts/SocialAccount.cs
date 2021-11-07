@@ -5,18 +5,22 @@ using System.Linq;
 using System.Text.RegularExpressions;
 using YWB.AntidetectAccountParser.Helpers;
 
-namespace YWB.AntidetectAccountParser.Model
+namespace YWB.AntidetectAccountParser.Model.Accounts
 {
-    public class FacebookAccount
+    public class SocialAccount
     {
-        private List<string> _logins = new List<string>();
-        private List<string> _passwords = new List<string>();
+        public SocialAccount() { }
+        public SocialAccount(string name)
+        {
+            Name = name;
+        }
+
+        protected List<string> _logins = new List<string>();
+        protected List<string> _passwords = new List<string>();
         private List<string> _cookies = new List<string>();
 
-        public FacebookAccount() { }
-        public FacebookAccount(string name) => Name = name;
-
         public string Name { get; set; }
+        public string Domain { get; set; } = "google.com";
         public string Login
         {
             get
@@ -47,14 +51,6 @@ namespace YWB.AntidetectAccountParser.Model
                     _passwords.Add(value);
             }
         }
-        public string UserAgent { get; set; }
-        public string Birthday { get; set; }
-        public string EmailLogin { get; set; }
-        public string EmailPassword { get; set; }
-        public string TwoFactor { get; set; }
-        public string BmLinks { get; set; }
-        public string Token { get; set; }
-        public string BmToken { get; set; }
         public string Cookies
         {
             get
@@ -70,12 +66,9 @@ namespace YWB.AntidetectAccountParser.Model
                     _cookies.Add(value);
             }
         }
-
         public List<string> AllCookies => _cookies;
-
         public List<string> Logins { get => _logins; set => _logins = value; }
         public List<string> Passwords { get => _passwords; set => _passwords = value; }
-
         public Proxy Proxy { get; set; }
 
         public bool AddCookies(string cookies)
@@ -92,7 +85,6 @@ namespace YWB.AntidetectAccountParser.Model
             _cookies.Add(cookies);
             return true;
         }
-
         public bool AddLoginPassword(string login, string password)
         {
             for (int i = 0; i < _logins.Count; i++)
@@ -104,54 +96,39 @@ namespace YWB.AntidetectAccountParser.Model
             return true;
         }
 
-        public string ToString(bool toHtml = false, bool withCookies = true)
+        public virtual string ToString(bool toHtml = false, bool withCookies = true)
         {
             var sd = toHtml ? "<p>" : "\n"; //start delimiter
             var ed = toHtml ? "</p>" : string.Empty; //end delimiter
             string str = string.Empty;
             for (int i = 0; i < _logins.Count; i++)
             {
-                str += $"{sd}Facebook: {_logins[i]}:{_passwords[i]}{ed}";
-            }
-            if (!string.IsNullOrEmpty(Birthday))
-                str += $"{sd}Birthday: {Birthday}{ed}";
-            if (!string.IsNullOrEmpty(TwoFactor))
-                str += $"{sd}2FA: {TwoFactor}{ed}";
-            if (!string.IsNullOrEmpty(EmailPassword))
-            {
-                var eLogin = EmailLogin ?? Login;
-                str += $"{sd}Email: {eLogin}:{EmailPassword}{ed}";
-            }
-            if (!string.IsNullOrEmpty(Token))
-            {
-                str += $"{sd}Token: {Token} {ed}";
-            }
-            if (!string.IsNullOrEmpty(BmToken))
-            {
-                str += $"{sd}BmToken: {BmToken} {ed}";
-            }
-            if (!string.IsNullOrEmpty(BmLinks))
-            {
-                str += $"{sd}BmLinks: {BmLinks} {ed}";
+                str += $"{sd}{Domain}: {_logins[i]}:{_passwords[i]}{ed}";
             }
             if (withCookies)
             {
-                if (!string.IsNullOrEmpty(Cookies))
-                {
-                    var cookies = $"{sd}Cookies: {Regex.Replace(Cookies.Replace("\r\n", ""), "[ ]+", "")}{ed}";
-                    if ((str + cookies).Length > 5000)
-                    {
-                        var fbCookies = CookieHelper.GetFacebookCookies(Cookies);
-                        cookies = $"{sd}Cookies: {fbCookies}{ed}";
+                str = CookiesToString(str, sd, ed);
+            }
+            return str;
+        }
 
-                        if ((str + cookies).Length > 5000)
-                            Console.WriteLine("Length is more then 5000 symbols, skipping cookies...");
-                        else
-                            str += cookies;
-                    }
+        protected string CookiesToString(string str,string sd,string ed)
+        {
+            if (!string.IsNullOrEmpty(Cookies))
+            {
+                var cookies = $"{sd}Cookies: {Regex.Replace(Cookies.Replace("\r\n", ""), "[ ]+", "")}{ed}";
+                if ((str + cookies).Length > 5000)
+                {
+                    var domainCookies = CookieHelper.GetDomainCookies(Cookies, Domain);
+                    cookies = $"{sd}Cookies: {domainCookies}{ed}";
+
+                    if ((str + cookies).Length > 5000)
+                        Console.WriteLine("Length is more then 5000 symbols, skipping cookies...");
                     else
                         str += cookies;
                 }
+                else
+                    str += cookies;
             }
             return str;
         }

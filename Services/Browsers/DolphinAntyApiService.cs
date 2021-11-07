@@ -10,7 +10,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using YWB.AntidetectAccountParser.Helpers;
 using YWB.AntidetectAccountParser.Model;
-using YWB.AntidetectAccountParser.Services.Interfaces;
+using YWB.AntidetectAccountParser.Model.Accounts;
 
 namespace YWB.AntidetectAccountParser.Services.Browsers
 {
@@ -165,7 +165,7 @@ namespace YWB.AntidetectAccountParser.Services.Browsers
             return res["data"].ToString();
         }
 
-        protected override async Task<List<(string pName, string pId)>> CreateOrChooseProfilesAsync(List<FacebookAccount> accounts)
+        protected override async Task<List<(string pName, string pId)>> CreateOrChooseProfilesAsync(IList<SocialAccount> accounts)
         {
             var profiles = new List<(string, string)>();
             var namePrefix = string.Empty;
@@ -207,7 +207,7 @@ namespace YWB.AntidetectAccountParser.Services.Browsers
             var res = await ExecuteRequestAsync<JObject>(request);
         }
 
-        protected override async Task<bool> SaveItemToNoteAsync(string profileId, FacebookAccount fa)
+        protected override async Task<bool> SaveItemToNoteAsync(string profileId, SocialAccount fa)
         {
             var request = new RestRequest($"browser_profiles/{profileId}", Method.PATCH);
             request.AddParameter("notes[content]", fa.ToString(true));

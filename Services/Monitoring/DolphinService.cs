@@ -7,7 +7,7 @@ using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
 using YWB.AntidetectAccountParser.Model;
-using YWB.AntidetectAccountParser.Services.Interfaces;
+using YWB.AntidetectAccountParser.Model.Accounts;
 
 namespace YWB.AntidetectAccountParser.Services.Monitoring
 {
@@ -15,16 +15,16 @@ namespace YWB.AntidetectAccountParser.Services.Monitoring
     {
         private const string FileName = "dolphin.txt";
 
-        protected override Task<List<AccountsGroup>> GetExistingGroupsAsync()
+        protected override Task<List<AccountGroup>> GetExistingGroupsAsync()
         {
-            return Task.FromResult(new List<AccountsGroup>());
+            return Task.FromResult(new List<AccountGroup>());
         }
 
-        protected override Task<AccountsGroup> AddNewGroupAsync()
+        protected override Task<AccountGroup> AddNewGroupAsync()
         {
             Console.Write("Enter tag name:");
             var tagName = Console.ReadLine();
-            return Task.FromResult(new AccountsGroup() { Name = tagName });
+            return Task.FromResult(new AccountGroup() { Name = tagName });
         }
         protected override async Task<List<Proxy>> GetExistingProxiesAsync()
         {
@@ -63,7 +63,7 @@ namespace YWB.AntidetectAccountParser.Services.Monitoring
             return json["data"]["proxy_id"].ToString();
         }
 
-        protected override async Task<bool> AddAccountAsync(FacebookAccount acc, AccountsGroup g, string proxyId)
+        protected override async Task<bool> AddAccountAsync(FacebookAccount acc, AccountGroup g, string proxyId)
         {
             var r = new RestRequest("accounts/add", Method.POST);
             dynamic rJson = new JObject();

@@ -4,11 +4,11 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using YWB.AntidetectAccountParser.Model;
-using YWB.AntidetectAccountParser.Services.Interfaces;
+using YWB.AntidetectAccountParser.Model.Accounts;
 
 namespace YWB.AntidetectAccountParser.Services.Proxies
 {
-    public class FileProxyProvider : IProxyProvider
+    public class FileProxyProvider : IProxyProvider<SocialAccount>
     {
         private const string FileName = "proxy.txt";
         private List<Proxy> Get()
@@ -36,13 +36,15 @@ namespace YWB.AntidetectAccountParser.Services.Proxies
             return proxies;
         }
 
-        public void SetProxies(List<FacebookAccount> accounts)
+        public void SetProxies(IEnumerable<SocialAccount> accounts)
         {
             var proxies = Get();
-            for (int i = 0; i < accounts.Count; i++)
+            int i = 0;
+            foreach (var acc in accounts)
             {
                 var proxyIndex = i < proxies.Count - 1 ? i : i % proxies.Count;
-                accounts[i].Proxy = proxies[proxyIndex];
+                acc.Proxy = proxies[proxyIndex];
+                i++;
             }
         }
 

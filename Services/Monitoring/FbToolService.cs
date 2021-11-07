@@ -7,7 +7,7 @@ using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
 using YWB.AntidetectAccountParser.Model;
-using YWB.AntidetectAccountParser.Services.Interfaces;
+using YWB.AntidetectAccountParser.Model.Accounts;
 
 namespace YWB.AntidetectAccountParser.Services.Monitoring
 {
@@ -15,21 +15,21 @@ namespace YWB.AntidetectAccountParser.Services.Monitoring
     {
         private const string FileName = "fbtool.txt";
 
-        protected override async Task<List<AccountsGroup>> GetExistingGroupsAsync()
+        protected override async Task<List<AccountGroup>> GetExistingGroupsAsync()
         {
             var r = new RestRequest("get-groups", Method.GET);
             var json = await ExecuteRequestAsync<JObject>(r);
-            return json.Children().Select(t => t.First).Where(t => t.HasValues).Select(t => new AccountsGroup()
+            return json.Children().Select(t => t.First).Where(t => t.HasValues).Select(t => new AccountGroup()
             {
                 Id = t["id"].ToString(),
                 Name = t["name"].ToString()
             }).ToList();
         }
-        protected override Task<AccountsGroup> AddNewGroupAsync()
+        protected override Task<AccountGroup> AddNewGroupAsync()
         {
             Console.Write("Enter group name:");
             var tagName = Console.ReadLine();
-            return Task.FromResult(new AccountsGroup() { Id = "new", Name = tagName });
+            return Task.FromResult(new AccountGroup() { Id = "new", Name = tagName });
         }
         protected override async Task<string> AddProxyAsync(Proxy p)
         {
@@ -69,7 +69,7 @@ namespace YWB.AntidetectAccountParser.Services.Monitoring
             }).Where(p => p != null).ToList();
         }
 
-        protected override async Task<bool> AddAccountAsync(FacebookAccount acc, AccountsGroup g, string proxyId)
+        protected override async Task<bool> AddAccountAsync(FacebookAccount acc, AccountGroup g, string proxyId)
         {
             var r = new RestRequest("add-account", Method.POST);
             r.AddParameter("token", acc.Token);

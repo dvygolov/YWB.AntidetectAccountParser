@@ -7,8 +7,9 @@ using System.Threading;
 using System.Threading.Tasks;
 using YWB.AntidetectAccountParser.Helpers;
 using YWB.AntidetectAccountParser.Model;
+using YWB.AntidetectAccountParser.Model.Accounts;
 
-namespace YWB.AntidetectAccountParser.Services.Interfaces
+namespace YWB.AntidetectAccountParser.Services.Monitoring
 {
     public abstract class AbstractMonitoringService
     {
@@ -17,11 +18,11 @@ namespace YWB.AntidetectAccountParser.Services.Interfaces
 
         protected abstract Task SetTokenAndApiUrlAsync();
         protected abstract void AddAuthorization(RestRequest r);
-        protected abstract Task<List<AccountsGroup>> GetExistingGroupsAsync();
-        protected abstract Task<AccountsGroup> AddNewGroupAsync();
+        protected abstract Task<List<AccountGroup>> GetExistingGroupsAsync();
+        protected abstract Task<AccountGroup> AddNewGroupAsync();
         protected abstract Task<List<Proxy>> GetExistingProxiesAsync();
         protected abstract Task<string> AddProxyAsync(Proxy p);
-        protected abstract Task<bool> AddAccountAsync(FacebookAccount acc, AccountsGroup g, string proxyId);
+        protected abstract Task<bool> AddAccountAsync(FacebookAccount acc, AccountGroup g, string proxyId);
         public async Task AddAccountsAsync(List<FacebookAccount> accounts)
         {
             var groups = await GetExistingGroupsAsync();

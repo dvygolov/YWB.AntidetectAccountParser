@@ -3,9 +3,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using YWB.AntidetectAccountParser.Helpers;
-using YWB.AntidetectAccountParser.Model;
+using YWB.AntidetectAccountParser.Model.Accounts;
 using YWB.AntidetectAccountParser.Services.Browsers;
-using YWB.AntidetectAccountParser.Services.Interfaces;
 using YWB.AntidetectAccountParser.Services.Monitoring;
 using YWB.AntidetectAccountParser.Services.Parsers;
 using YWB.AntidetectAccountParser.Services.Proxies;
@@ -18,7 +17,7 @@ namespace YWB.AntidetectAccountParser
         {
             Console.InputEncoding = System.Text.Encoding.UTF8;
             Console.OutputEncoding = System.Text.Encoding.UTF8;
-            Console.WriteLine("Antidetect Accounts Parser v4.2 Yellow Web (https://yellowweb.top)");
+            Console.WriteLine("Antidetect Accounts Parser v5.0a Yellow Web (https://yellowweb.top)");
             Console.WriteLine("If you like this software, please, donate!");
             Console.WriteLine("WebMoney: Z182653170916");
             Console.WriteLine("Bitcoin: bc1qqv99jasckntqnk0pkjnrjtpwu0yurm0qd0gnqv");
@@ -26,14 +25,10 @@ namespace YWB.AntidetectAccountParser
             await Task.Delay(3000);
             Console.WriteLine();
 
-            Console.WriteLine("What do you want to parse?");
-            var parsers = new Dictionary<string, Func<IAccountsParser>> {
-                {"Accounts from text file",()=>new TextAccountsParser() },
-                {"Accounts from ZIP/RAR files",()=>new ArchiveAccountsParser() }
-            };
-            var selectedParser = SelectHelper.Select(parsers, a => a.Key).Value();
-            var accounts = selectedParser.Parse();
-            if (accounts.Count == 0)
+            var apf = new AccountsParserFactory();
+            var parser = apf.CreateParser();
+            var accounts = parser.Parse();
+            if (accounts.Count() == 0)
             {
                 Console.WriteLine("Couldn't find any accounts to import(((");
                 return;
@@ -42,10 +37,16 @@ namespace YWB.AntidetectAccountParser
             var proxyProvider = new FileProxyProvider();
             proxyProvider.SetProxies(accounts);
 
-            Console.WriteLine("What do you want to do?");
-            Console.WriteLine("1. Create Profiles in an Antidetect Browser");
-            Console.WriteLine("2. Import accounts to FbTool/Dolphin");
-            var answer = YesNoSelector.GetMenuAnswer(2);
+            int answer = 0;
+            if (accounts.All(a => a is FacebookAccount))
+            {
+                Console.WriteLine("What do you want to do?");
+                Console.WriteLine("1. Create Profiles in an Antidetect Browser");
+                Console.WriteLine("2. Import accounts to FbTool/Dolphin");
+                answer = YesNoSelector.GetMenuAnswer(2);
+            }
+            else
+                answer = 1;
 
             if (answer == 1)
             {
@@ -58,28 +59,30 @@ namespace YWB.AntidetectAccountParser
                 };
                 var selectedBrowser = SelectHelper.Select(browsers, b => b.Key).Value();
 
-                await selectedBrowser.ImportAccountsAsync(accounts);
+                await selectedBrowser.ImportAccountsAsync(accounts.ToList());
 
-                if (accounts?.All(a => !string.IsNullOrEmpty(a.Token)) ?? false)
+                if (accounts?.All(a => a is FacebookAccount && !string.IsNullOrEmpty((a as FacebookAccount).Token)) ?? false)
                 {
-                    var add = YesNoSelector.ReadAnswerEqualsYes("All accounts have access tokens! Do you wand to add them to Dolphin/FbTool?");
+                    var add = YesNoSelector.ReadAnswerEqualsYes(
+                        "All accounts have access tokens! Do you wand to add them to Dolphin/FbTool?");
                     if (add)
                     {
-                        await ImportToMonitoringService(accounts);
+                        await ImportToMonitoringService(accounts.Cast<FacebookAccount>().ToList());
                     }
                 }
             }
             else if (answer == 2)
             {
-                if (accounts?.All(a => !string.IsNullOrEmpty(a.Token)) ?? false)
+                var fbAccounts = accounts.Cast<FacebookAccount>().ToList();
+                if (fbAccounts.All(a => !string.IsNullOrEmpty(a.Token)))
                 {
-                    await ImportToMonitoringService(accounts);
+                    await ImportToMonitoringService(fbAccounts);
                 }
-                else if (accounts.Any(a=>!string.IsNullOrEmpty(a.Token)))
+                else if (fbAccounts.Any(a => !string.IsNullOrEmpty(a.Token)))
                 {
                     var anwser = YesNoSelector.ReadAnswerEqualsYes("Not all accounts have Facebook Access Tokens! Import only those, that have tokens?");
                     if (anwser)
-                        await ImportToMonitoringService(accounts.Where(a=>!string.IsNullOrEmpty(a.Token)).ToList());
+                        await ImportToMonitoringService(fbAccounts.Where(a => !string.IsNullOrEmpty(a.Token)).ToList());
                 }
                 else
                     Console.WriteLine("No accounts with access tokens found!((");
@@ -92,7 +95,7 @@ namespace YWB.AntidetectAccountParser
 
         private static async Task ImportToMonitoringService(List<FacebookAccount> accounts)
         {
-            if (accounts.All(a=>string.IsNullOrEmpty(a.Name)))
+            if (accounts.All(a => string.IsNullOrEmpty(a.Name)))
             {
                 Console.Write("Enter account name prefix:");
                 var namePrefix = Console.ReadLine();

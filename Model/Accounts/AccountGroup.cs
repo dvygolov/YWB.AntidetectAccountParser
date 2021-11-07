@@ -4,9 +4,9 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace YWB.AntidetectAccountParser.Model
+namespace YWB.AntidetectAccountParser.Model.Accounts
 {
-    public class AccountsGroup
+    public class AccountGroup
     {
         public string Id { get; set; }
         public string Name { get; set; }

@@ -1,48 +1,38 @@
 ﻿using SharpCompress.Archives.Rar;
 using System;
+using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using YWB.AntidetectAccountParser.Model;
-using YWB.AntidetectAccountParser.Services.Interfaces;
+using YWB.AntidetectAccountParser.Model.Accounts;
+using YWB.AntidetectAccountParser.Model.Accounts.Actions;
 
-namespace YWB.AntidetectAccountParser.Helpers
+namespace YWB.AntidetectAccountParser.Services.Archives
 {
-    public class RarArchiveParser:AbstractArchiveParser
+    public class RarArchiveParser<T>:IArchiveParser<T> where T:SocialAccount
     {
-        public override void Parse(FacebookAccount fa,string filePath)
+        public List<string> Archives { get; set; }
+
+        public RarArchiveParser(List<string> archives) => Archives = archives;
+
+        public T Parse(ActionsFacade<T> af, string filePath) 
         {
             using (var archive = RarArchive.Open(filePath))
             {
-                foreach (var entry in archive.Entries.Where(e=>!e.IsDirectory))
+                foreach (var entry in archive.Entries.Where(e => !e.IsDirectory))
                 {
-                    if (entry.Key.ToLowerInvariant().Contains("password"))
+                    foreach (var a in af.AccountActions)
                     {
-                        Console.WriteLine($"Found file with passwords: {entry.Key}");
-                        using (var s = entry.OpenEntryStream())
+                        if (a.Condition(entry.Key.ToLowerInvariant()))
                         {
-                            ExtractLoginAndPassword(fa, s);
-                        }
-                    }
-
-                    if (entry.Key.ToLowerInvariant().Contains("cookie"))
-                    {
-                        Console.WriteLine($"Found file with cookies: {entry.Key}");
-                        using (var s = entry.OpenEntryStream())
-                        {
-                            ExtractCookies(fa, s);
-                        }
-                    }
-
-                    if (entry.Key.ToLowerInvariant().Contains("token"))
-                    {
-                        Console.WriteLine($"Found file with access token: {entry.Key}");
-                        using (var s = entry.OpenEntryStream())
-                        {
-                            ExtractToken(fa, s);
+                            Console.WriteLine($"{a.Message}{entry.Key}");
+                            using (var s = entry.OpenEntryStream())
+                            {
+                                a.Action(s,af.Account);
+                            }
                         }
                     }
                 }
             }
+            return af.Account;
         }
 
     }

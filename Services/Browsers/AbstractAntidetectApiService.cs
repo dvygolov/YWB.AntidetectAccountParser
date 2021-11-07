@@ -3,20 +3,20 @@ using System.Collections.Generic;
 using System.Text;
 using System.Threading.Tasks;
 using YWB.AntidetectAccountParser.Helpers;
-using YWB.AntidetectAccountParser.Model;
+using YWB.AntidetectAccountParser.Model.Accounts;
 
-namespace YWB.AntidetectAccountParser.Services.Interfaces
+namespace YWB.AntidetectAccountParser.Services.Browsers
 {
     public abstract class AbstractAntidetectApiService
     {
         protected abstract Task<List<(string pName, string pId)>> CreateOrChooseProfilesAsync(
-            List<FacebookAccount> accounts);
+            IList<SocialAccount> accounts);
 
         protected abstract Task ImportCookiesAsync(string profileId, string cookies);
 
-        protected abstract Task<bool> SaveItemToNoteAsync(string profileId, FacebookAccount fa);
+        protected abstract Task<bool> SaveItemToNoteAsync(string profileId, SocialAccount sa);
 
-        public async Task ImportAccountsAsync(List<FacebookAccount> accounts)
+        public async Task ImportAccountsAsync(IList<SocialAccount> accounts)
         {
             if (accounts.Count == 0)
             {
