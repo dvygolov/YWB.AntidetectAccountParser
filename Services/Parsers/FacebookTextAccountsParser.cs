@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
+using YWB.AntidetectAccountParser.Helpers;
 using YWB.AntidetectAccountParser.Model.Accounts;
 
 namespace YWB.AntidetectAccountParser.Services.Parsers
@@ -122,7 +123,7 @@ namespace YWB.AntidetectAccountParser.Services.Parsers
                 Console.WriteLine("Found cookies!");
                 for (int i = 0; i < matches.Count; i++)
                 {
-                    lst[i].Cookies = matches[i].Groups["Cookies"].Value;
+                    lst[i].Cookies = CookieHelper.GetDomainCookies(matches[i].Groups["Cookies"].Value,lst[i].Domain);
                 }
             }
 
