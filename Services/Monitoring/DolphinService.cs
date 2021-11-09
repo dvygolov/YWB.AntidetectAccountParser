@@ -29,7 +29,7 @@ namespace YWB.AntidetectAccountParser.Services.Monitoring
         protected override async Task<List<Proxy>> GetExistingProxiesAsync()
         {
             var r = new RestRequest("proxy", Method.GET);
-            dynamic json = await ExecuteRequestAsync<JObject>(r);
+            dynamic json = await ExecuteDolphinRequestAsync(r);
             return (json.data as JArray).Select((dynamic j) => new Proxy
             {
                 Id = j.id,
@@ -59,7 +59,7 @@ namespace YWB.AntidetectAccountParser.Services.Monitoring
             container.proxy.Add(pJson);
 
             r.AddJsonBody(container.ToString());
-            var json = await ExecuteRequestAsync<JObject>(r);
+            var json = await ExecuteDolphinRequestAsync(r);
             return json["data"]["proxy_id"].ToString();
         }
 
@@ -70,7 +70,7 @@ namespace YWB.AntidetectAccountParser.Services.Monitoring
             rJson.name = acc.Name;
             rJson.access_token = acc.Token;
             if (!string.IsNullOrEmpty(acc.BmToken))
-                rJson.business_access_token = acc.BmToken; 
+                rJson.business_access_token = acc.BmToken;
             rJson.tags = new JArray();
             if (g != null) rJson.tags.Add(g.Name);
             rJson.cookies = JArray.Parse(acc.Cookies);
@@ -79,8 +79,8 @@ namespace YWB.AntidetectAccountParser.Services.Monitoring
             if (!string.IsNullOrEmpty(acc.Password))
                 rJson.password = acc.Password;
             r.AddJsonBody(rJson.ToString());
-            dynamic json = await ExecuteRequestAsync<JObject>(r);
-            return json.success==true;
+            dynamic json = await ExecuteDolphinRequestAsync(r);
+            return json.success == true;
         }
 
         protected override void AddAuthorization(RestRequest r)
@@ -105,6 +105,19 @@ namespace YWB.AntidetectAccountParser.Services.Monitoring
                 _token = Console.ReadLine();
             }
             _apiUrl = $"http://{_apiUrl}/new/";
+        }
+
+        private async Task<dynamic> ExecuteDolphinRequestAsync(RestRequest r)
+        {
+            dynamic res = await ExecuteRequestAsync<JObject>(r);
+            if (res.success == false)
+            {
+                string errors = string.Empty;
+                foreach (var e in res.errors)
+                    errors += $"{e} ";
+                throw new Exception(errors);
+            }
+            return res;
         }
     }
 }
