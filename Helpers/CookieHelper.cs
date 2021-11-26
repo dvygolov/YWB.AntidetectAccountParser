@@ -11,7 +11,7 @@ namespace YWB.AntidetectAccountParser.Helpers
         {
             var cookieArray = JArray.Parse(cookies);
             var domainCookies = cookieArray
-                .Where(c => c["domain"]?.ToString() == $".{domain}")
+                .Where(c => c["domain"]?.ToString().Contains(domain)??false)
                 .Select(c => c.ToString()).ToList();
             if (domainCookies.Count == 0) return string.Empty;
             var lstStr = '[' + string.Join(',', domainCookies) + ']';
