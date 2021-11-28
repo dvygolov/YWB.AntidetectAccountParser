@@ -31,13 +31,14 @@ namespace YWB.AntidetectAccountParser.Services.Monitoring
             var tagName = Console.ReadLine();
             return Task.FromResult(new AccountGroup() { Id = "new", Name = tagName });
         }
+
         protected override async Task<string> AddProxyAsync(Proxy p)
         {
             p.Type = p.Type == "socks" ? "socks5" : p.Type;
             var r = new RestRequest("add-proxy", Method.POST);
             r.AddParameter("proxy", $"{p.Address}:{p.Port}:{p.Login}:{p.Password}:{p.Type}");
             dynamic json = await ExecuteRequestAsync<JObject>(r);
-            return "";
+            return json.id;
         }
 
         protected override async Task<List<Proxy>> GetExistingProxiesAsync()
@@ -73,6 +74,7 @@ namespace YWB.AntidetectAccountParser.Services.Monitoring
         {
             var r = new RestRequest("add-account", Method.POST);
             r.AddParameter("token", acc.Token);
+            r.AddParameter("proxy", proxyId);
             r.AddParameter("name", acc.Name);
             if (!string.IsNullOrEmpty(acc.Password))
                 r.AddParameter("pass", acc.Password);
