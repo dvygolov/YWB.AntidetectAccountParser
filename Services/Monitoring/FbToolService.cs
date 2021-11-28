@@ -75,6 +75,9 @@ namespace YWB.AntidetectAccountParser.Services.Monitoring
             var r = new RestRequest("add-account", Method.POST);
             r.AddParameter("token", acc.Token);
             r.AddParameter("proxy", proxyId);
+            r.AddParameter("group", g.Id);
+            if (g.Id=="new")
+                r.AddParameter("groupName", g.Name);
             r.AddParameter("name", acc.Name);
             if (!string.IsNullOrEmpty(acc.Password))
                 r.AddParameter("pass", acc.Password);
