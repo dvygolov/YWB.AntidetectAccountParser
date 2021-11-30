@@ -74,6 +74,7 @@ namespace YWB.AntidetectAccountParser.Services.Browsers
             if (!string.IsNullOrEmpty(sa.Cookies))
                 r.AddParameter("cookie", sa.Cookies);
 
+            r.AddParameter("repeat_config", 0); //allow username/password duplicates
             if (sa.Proxy.Type == "socks") sa.Proxy.Type = "socks5";
             r.AddParameter("proxytype", sa.Proxy.Type);
             r.AddParameter("proxy", $"{sa.Proxy.Address}:{sa.Proxy.Port}:{sa.Proxy.Login}:{sa.Proxy.Password}");
