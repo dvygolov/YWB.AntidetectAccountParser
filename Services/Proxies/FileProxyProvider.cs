@@ -16,22 +16,22 @@ namespace YWB.AntidetectAccountParser.Services.Proxies
             var dir = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
             var fullPath = Path.Combine(dir, FileName);
             if (!File.Exists(fullPath))
-                throw new FileNotFoundException("There's no proxy.txt file!!!");
-            var split = File.ReadAllLines(fullPath).Where(l=>!string.IsNullOrEmpty(l));
+                throw new FileNotFoundException("There's no proxy.txt file!!!", fullPath);
+            var split = File.ReadAllLines(fullPath).Where(l => !string.IsNullOrEmpty(l));
 
-            var proxies= split.Select(l =>
-            {
-                var split = l.Split(':');
-                return new Proxy()
-                {
-                    Type = split[0].Trim(),
-                    Address = split[1].Trim(),
-                    Port = split[2].Trim(),
-                    Login = split[3].Trim(),
-                    Password = split[4].Trim(),
-                    UpdateLink = split.Length == 6 ? split[5].Trim() : string.Empty
-                };
-            }).ToList();
+            var proxies = split.Select(l =>
+             {
+                 var split = l.Split(':');
+                 return new Proxy()
+                 {
+                     Type = split[0].Trim(),
+                     Address = split[1].Trim(),
+                     Port = split[2].Trim(),
+                     Login = split[3].Trim(),
+                     Password = split[4].Trim(),
+                     UpdateLink = split.Length == 6 ? split[5].Trim() : string.Empty
+                 };
+             }).ToList();
             Console.WriteLine($"Found {proxies.Count} proxies!");
             return proxies;
         }
