@@ -23,8 +23,12 @@ namespace YWB.AntidetectAccountParser.Model.Accounts.Actions
             while ((index = lines.FindIndex(index + 1, l => l.ToLowerInvariant().Contains(needle))) != -1)
             {
                 if (index + 2 >= lines.Count) continue;
-                var login = lines[index + 1].Split(' ')[1];
-                var password = lines[index + 2].Split(' ')[1];
+                var split = lines[index + 1].Split(' ');
+                if (split.Length!=2) continue;
+                var login = split[1];
+                split = lines[index + 2].Split(' ');
+                if (split.Length!=2) continue;
+                var password = split[1];
                 if (!string.IsNullOrEmpty(login) && !string.IsNullOrEmpty(password))
                 {
                     if (sa.AddLoginPassword(login, password))
