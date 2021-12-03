@@ -146,25 +146,29 @@ namespace YWB.AntidetectAccountParser.Services.Browsers
         {
             var r = new RestRequest($"api/v1/profile/cookies/import/webext?profileId={profileId}", Method.POST);
             r.AddParameter("text/plain", cookies, ParameterType.RequestBody);
-            var json = await ExecuteLocalRequestAsync<JObject>(r);
+            dynamic json = await ExecuteLocalRequestAsync<JObject>(r);
 
-            if (json != null && json["status"].ToString() == "OK")
+            if (json != null && json.status == "OK")
                 Console.WriteLine("Cookies imported! Adding all data to note...");
             else
             {
-                if (json["message"].ToString() == "Can't enable Google services")
+                switch (json.message)
                 {
-                    Console.WriteLine("Couldn't enable Google services, switching them off...");
-                    var settings = await GetProfileSettingsAsync(profileId);
-                    settings.googleServices = false;
-                    settings.loadCustomExtensions = false;
-                    await SaveProfileSettingsAsync(settings);
+                    case "Can't enable Google services":
+                    {
+                        Console.WriteLine("Couldn't enable Google services, switching them off...");
+                        var settings = await GetProfileSettingsAsync(profileId);
+                        settings.googleServices = false;
+                        settings.loadCustomExtensions = false;
+                        await SaveProfileSettingsAsync(settings);
 
-                    json = await ExecuteLocalRequestAsync<JObject>(r);
-                    if (json != null && json["status"].ToString() == "OK")
-                        Console.WriteLine("Cookies imported! Adding all data to note...");
-                    else
-                        Console.WriteLine($"Cookies were NOT imported!!!{json} Adding all data to note...");
+                        dynamic json2 = await ExecuteLocalRequestAsync<JObject>(r);
+                        if (json2 != null && json2.status == "OK")
+                            Console.WriteLine("Cookies imported! Adding all data to note...");
+                        else
+                            Console.WriteLine($"Cookies were NOT imported!!!{json} Adding all data to note...");
+                        break;
+                    }
                 }
             }
         }
