@@ -100,7 +100,7 @@ namespace YWB.AntidetectAccountParser.Services
         //    return cookiesJson;
         //}
 
-        private async Task<bool> ProfileIsActiveAsync(string profileId)
+        /*private async Task<bool> ProfileIsActiveAsync(string profileId)
         {
             try
             {
@@ -145,7 +145,7 @@ namespace YWB.AntidetectAccountParser.Services
             if (string.IsNullOrEmpty(address)) return null;
             using var playwright = await Playwright.CreateAsync();
             var chromium = playwright.Chromium;
-            await chromium.
+            await chromium.LaunchAsync(new BrowserTypeLaunchOptions { });
                 var op = new ChromeOptions();
 
                 if (headless)
@@ -190,6 +190,6 @@ namespace YWB.AntidetectAccountParser.Services
         internal Task GetTokensAsync(Dictionary<string, FacebookAccount> profiles)
         {
 
-        }
+        }*/
     }
 }
