@@ -7,14 +7,14 @@ namespace YWB.AntidetectAccountParser.Helpers
 {
     public class CookieHelper
     {
-        public static string GetFacebookCookies(string cookies)
+        public static string GetDomainCookies(string cookies,string domain)
         {
             var cookieArray = JArray.Parse(cookies);
-            var fbCookies = cookieArray
-                .Where(c => c["domain"]?.ToString() == ".facebook.com")
+            var domainCookies = cookieArray
+                .Where(c => c["domain"]?.ToString().Contains(domain)??false)
                 .Select(c => c.ToString()).ToList();
-            if (fbCookies.Count == 0) return string.Empty;
-            var lstStr = '[' + string.Join(',', fbCookies) + ']';
+            if (domainCookies.Count == 0) return string.Empty;
+            var lstStr = '[' + string.Join(',', domainCookies) + ']';
             lstStr = Regex.Replace(lstStr.Replace("\r\n", ""), "[ ]+", "");
             return lstStr;
         }

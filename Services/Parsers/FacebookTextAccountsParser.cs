@@ -1,40 +1,17 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
-using System.Reflection;
 using System.Text.RegularExpressions;
-using YWB.AntidetectAccountParser.Model;
-using YWB.AntidetectAccountParser.Services.Interfaces;
+using YWB.AntidetectAccountParser.Helpers;
+using YWB.AntidetectAccountParser.Model.Accounts;
 
 namespace YWB.AntidetectAccountParser.Services.Parsers
 {
-    public class TextAccountsParser : IAccountsParser
+    public class FacebookTextAccountsParser : AbstractTextAccountsParser<FacebookAccount>
     {
-        private const string FileName = "accounts.txt";
-        public List<FacebookAccount> Parse()
+        protected override IEnumerable<FacebookAccount> Process(string input)
         {
-            var lines = File.ReadAllLines(Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), FileName)).ToList();
-
-            if (lines.Count > 1)
-            {
-                //If all accounts lines start with the same shit - we must remove it!
-                string sameStart;
-                int j = 1;
-                do
-                {
-                    sameStart = lines[0].Substring(0, j);
-                    j++;
-                }
-                while (lines.All(l => l.StartsWith(sameStart)));
-
-                if (sameStart.Length > 4) //then we are sure that it is not just random coincidence
-                    lines = lines.ConvertAll(l => l.Substring(j - 2));
-            }
-
-            var input = string.Join("\r\n", lines);
-
-            var re = new Regex(@"^(?<Login>[^\:;\|\s]+)[:;\|\s](?<Password>[^\:;\|\s]+)[:;\|\s]", RegexOptions.Multiline);
+            var re = new Regex(@"^(?<Login>[^\:;\|\s]+)\s*[:;\|\s]\s*(?<Password>[^\:;\|\s]+)\s*[:;\|\s]", RegexOptions.Multiline);
             var matches = re.Matches(input);
             Console.WriteLine($"Found {matches.Count} logins/passwords!");
 
@@ -146,7 +123,7 @@ namespace YWB.AntidetectAccountParser.Services.Parsers
                 Console.WriteLine("Found cookies!");
                 for (int i = 0; i < matches.Count; i++)
                 {
-                    lst[i].Cookies = matches[i].Groups["Cookies"].Value;
+                    lst[i].Cookies = CookieHelper.GetDomainCookies(matches[i].Groups["Cookies"].Value,lst[i].Domain);
                 }
             }
 
@@ -176,6 +153,5 @@ namespace YWB.AntidetectAccountParser.Services.Parsers
 
             return lst;
         }
-
     }
 }

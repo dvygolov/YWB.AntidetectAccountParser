@@ -3,22 +3,22 @@ using System.Collections.Generic;
 using System.Text;
 using System.Threading.Tasks;
 using YWB.AntidetectAccountParser.Helpers;
-using YWB.AntidetectAccountParser.Model;
+using YWB.AntidetectAccountParser.Model.Accounts;
 
-namespace YWB.AntidetectAccountParser.Services.Interfaces
+namespace YWB.AntidetectAccountParser.Services.Browsers
 {
     public abstract class AbstractAntidetectApiService
     {
         protected abstract Task<List<(string pName, string pId)>> CreateOrChooseProfilesAsync(
-            List<FacebookAccount> accounts);
+            IList<SocialAccount> accounts);
 
         protected abstract Task ImportCookiesAsync(string profileId, string cookies);
 
-        protected abstract Task<bool> SaveItemToNoteAsync(string profileId, FacebookAccount fa);
+        protected abstract Task<bool> SaveItemToNoteAsync(string profileId, SocialAccount sa);
 
-        public async Task<Dictionary<string,FacebookAccount>> ImportAccountsAsync(List<FacebookAccount> accounts)
+        public async Task<Dictionary<string, SocialAccount>> ImportAccountsAsync(IList<SocialAccount> accounts)
         {
-            var res = new Dictionary<string, FacebookAccount>();
+            var res = new Dictionary<string, SocialAccount>();
             if (accounts.Count == 0)
             {
                 Console.WriteLine("Couldn't find any accounts to import! Unknown format or empty accounts.txt file!");

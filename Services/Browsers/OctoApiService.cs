@@ -14,23 +14,25 @@ using YWB.AntidetectAccountParser.Model.Accounts;
 
 namespace YWB.AntidetectAccountParser.Services.Browsers
 {
-    public class DolphinAntyApiService : AbstractAntidetectApiService
+    public class OctoApiService : AbstractAntidetectApiService
     {
-        private const string FileName = "dolphinanty.txt";
+        private const string FileName = "octo.txt";
+        private const string ApiUrl = "https://app.octobrowser.net/api/v2/automation/";
         private string _token;
         private string[] _oses = new[] { "windows", "linux", "macos" };
 
         private async Task<List<Proxy>> GetExistingProxiesAsync()
         {
-            var r = new RestRequest("proxy", Method.GET);
-            var res = await ExecuteRequestAsync<JObject>(r);
-            return res["data"].Select(p => new Proxy()
+            var r = new RestRequest("proxies", Method.GET);
+            JObject res = await ExecuteRequestAsync<JObject>(r);
+            return res["data"].Select((dynamic p) => new Proxy()
             {
-                Id = p["id"].ToString(),
-                Address = p["host"].ToString(),
-                Port = p["port"].ToString(),
-                Login = p["login"].ToString(),
-                Password = p["password"].ToString()
+                Id = p.uuid,
+                Type = p.type,
+                Address = p.host,
+                Port = p.port,
+                Login = p.login,
+                Password = p.password
             }).ToList();
         }
 
@@ -49,21 +51,22 @@ namespace YWB.AntidetectAccountParser.Services.Browsers
                 Console.WriteLine("Found existing proxy!");
                 return allProxiesDict[p];
             }
-            var r = new RestRequest("proxy", Method.POST);
-            if (p.Type == "socks") p.Type = "socks5";
-            r.AddParameter("type", p.Type);
-            r.AddParameter("host", p.Address);
-            r.AddParameter("port", p.Port);
-            r.AddParameter("login", p.Login);
-            r.AddParameter("password", p.Password);
-            if (!string.IsNullOrEmpty(p.UpdateLink))
-                r.AddParameter("changeIpUrl", p.UpdateLink);
-            r.AddParameter("name", DateTime.Now.ToString("G"));
+            var r = new RestRequest("proxies", Method.POST);
+            if (p.Type == "socks5" || p.Type == "socks4") p.Type = "socks";
+            dynamic pjson = new JObject();
+            pjson.type = p.Type;
+            pjson.host = p.Address;
+            pjson.port = int.Parse(p.Port);
+            pjson.login = p.Login;
+            pjson.password = p.Password;
+            pjson.title = DateTime.Now.ToString("G");
+            r.AddParameter("application/json", pjson, ParameterType.RequestBody);
+
             var res = await ExecuteRequestAsync<JObject>(r);
             if (!res["success"]?.Value<bool>() ?? false)
                 throw new Exception(res["error"].ToString());
             Console.WriteLine("Proxy added!");
-            return res["data"]["id"].ToString();
+            return res["data"]["uuid"].ToString();
         }
 
         public async Task<string> CreateNewProfileAsync(string pName, string os, string proxyId)
@@ -200,11 +203,12 @@ namespace YWB.AntidetectAccountParser.Services.Browsers
 
         protected override async Task ImportCookiesAsync(string profileId, string cookies)
         {
-            var request = new RestRequest($"sync/{profileId}/cookies", Method.POST);
+            var request = new RestRequest($"{profileId}/import_cookies", Method.POST);
             var body = @$"{{""cookies"":{cookies}}}";
-            request.AddParameter("text/plain", body, ParameterType.RequestBody);
-            request.AddHeader("Content-Type", "application/json");
+            request.AddParameter("application/json", body, ParameterType.RequestBody);
             var res = await ExecuteRequestAsync<JObject>(request);
+            if (!res["success"]?.Value<bool>() ?? false)
+                throw new Exception(res["error"].ToString());
         }
 
         protected override async Task<bool> SaveItemToNoteAsync(string profileId, SocialAccount fa)
@@ -218,12 +222,12 @@ namespace YWB.AntidetectAccountParser.Services.Browsers
             return true;
         }
 
-        private async Task<T> ExecuteRequestAsync<T>(RestRequest r, string url = "https://anty-api.com")
+        private async Task<T> ExecuteRequestAsync<T>(RestRequest r)
         {
-            var rc = new RestClient(url);
-            if (string.IsNullOrEmpty(_token))
-                _token = await GetDolphinApiTokenAsync();
-            r.AddHeader("Authorization", $"Bearer {_token}");
+            var rc = new RestClient(ApiUrl);
+            if (string.IsNullOrEmpty(_token)) _token = GetOctoApiToken();
+            r.AddHeader("Content-Type", "application/json");
+            r.AddHeader("X-Octo-Api-Token", _token);
             var resp = await rc.ExecuteAsync(r, new CancellationToken());
             T res = default(T);
             try
@@ -238,35 +242,19 @@ namespace YWB.AntidetectAccountParser.Services.Browsers
             return res;
         }
 
-        private async Task<string> GetDolphinApiTokenAsync()
-        {
-            (string login, string password) = GetLoginAndPassword();
-            var client = new RestClient("https://anty-api.com/auth/login");
-            client.Timeout = -1;
-            var request = new RestRequest(Method.POST);
-            request.AddParameter("username", login);
-            request.AddParameter("password", password);
-            var response = await client.ExecuteAsync(request, new CancellationToken());
-            var res = JObject.Parse(response.Content);
-            return res["token"].ToString();
-        }
-
-        private (string login, string password) GetLoginAndPassword()
+        private string GetOctoApiToken()
         {
             var dir = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
             var fullPath = Path.Combine(dir, FileName);
             if (File.Exists(fullPath))
             {
-                var split = File.ReadAllText(fullPath).Split(':');
-                return (split[0], split[1]);
+                return File.ReadAllText(fullPath);
             }
             else
             {
-                Console.Write("Enter your Dolphin Anty login:");
-                var login = Console.ReadLine();
-                Console.Write("Enter your Dolphin Anty password:");
-                var password = Console.ReadLine();
-                return (login, password);
+                Console.Write("Enter your Octo browsers' API Token:");
+                var token = Console.ReadLine();
+                return token;
             }
         }
     }

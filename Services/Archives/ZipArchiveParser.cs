@@ -1,48 +1,37 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO.Compression;
-using System.Linq;
-using System.Text;
-using YWB.AntidetectAccountParser.Model;
-using YWB.AntidetectAccountParser.Services.Interfaces;
+using YWB.AntidetectAccountParser.Model.Accounts;
+using YWB.AntidetectAccountParser.Model.Accounts.Actions;
 
-namespace YWB.AntidetectAccountParser.Helpers
+namespace YWB.AntidetectAccountParser.Services.Archives
 {
-    public class ZipArchiveParser:AbstractArchiveParser
+    public class ZipArchiveParser<T>:IArchiveParser<T> where T:SocialAccount
     {
-        public override void Parse(FacebookAccount fa,string filePath)
+        public List<string> Containers { get; set; }
+
+        public ZipArchiveParser(List<string> archives) => Containers = archives;
+
+        public T Parse(ActionsFacade<T> af, string filePath)
         {
             using (var archive = ZipFile.OpenRead(filePath))
             {
                 foreach (var entry in archive.Entries)
                 {
-                    if (entry.FullName.ToLowerInvariant().Contains("password"))
+                    foreach (var a in af.AccountActions)
                     {
-                        Console.WriteLine($"Found file with passwords: {entry.FullName}");
-                        using (var s = entry.Open())
+                        if (a.Condition(entry.FullName.ToLowerInvariant()))
                         {
-                            ExtractLoginAndPassword(fa, s);
-                        }
-                    }
-
-                    if (entry.FullName.ToLowerInvariant().Contains("cookie") && entry.Length > 0)
-                    {
-                        Console.WriteLine($"Found file with cookies: {entry.FullName}");
-                        using (var s = entry.Open())
-                        {
-                            ExtractCookies(fa, s);
-                        }
-                    }
-
-                    if (entry.FullName.ToLowerInvariant().Contains("token") && entry.Length > 0)
-                    {
-                        Console.WriteLine($"Found file with access token: {entry.FullName}");
-                        using (var s = entry.Open())
-                        {
-                            ExtractToken(fa, s);
+                            Console.WriteLine($"{a.Message}{entry.FullName}");
+                            using (var s = entry.Open())
+                            {
+                                a.Action(s,af.Account);
+                            }
                         }
                     }
                 }
             }
+            return af.Account;
         }
     }
 }

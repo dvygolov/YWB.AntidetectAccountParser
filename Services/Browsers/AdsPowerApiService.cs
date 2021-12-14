@@ -9,8 +9,7 @@ using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 using YWB.AntidetectAccountParser.Helpers;
-using YWB.AntidetectAccountParser.Model;
-using YWB.AntidetectAccountParser.Services.Interfaces;
+using YWB.AntidetectAccountParser.Model.Accounts;
 
 namespace YWB.AntidetectAccountParser.Services.Browsers
 {
@@ -23,7 +22,7 @@ namespace YWB.AntidetectAccountParser.Services.Browsers
         private List<string> _cpu = new List<string> { "2", "4", "6", "8", "16" };
         private List<string> _memory = new List<string> { "2", "4", "6", "8" };
 
-        protected override async Task<List<(string pName, string pId)>> CreateOrChooseProfilesAsync(List<FacebookAccount> accounts)
+        protected override async Task<List<(string pName, string pId)>> CreateOrChooseProfilesAsync(IList<SocialAccount> accounts)
         {
             var profiles = new List<(string, string)>();
             var namePrefix = string.Empty;
@@ -49,7 +48,7 @@ namespace YWB.AntidetectAccountParser.Services.Browsers
 
         }
 
-        private async Task<string> CreateNewProfileAsync(string os,FacebookAccount fa)
+        private async Task<string> CreateNewProfileAsync(string os,SocialAccount sa)
         {
             var r = new RestRequest("fbcc/user/rand-get-user-agent", Method.POST);
             r.AddParameter("system", os);
@@ -64,20 +63,21 @@ namespace YWB.AntidetectAccountParser.Services.Browsers
 
             r = new RestRequest("fbcc/user/single-import-user", Method.POST);
             r.AddParameter("batch_id", "0");
-            r.AddParameter("name", fa.Name);
-            r.AddParameter("domain_name", "facebook.com");
-            if (!string.IsNullOrEmpty(fa.Login) && !string.IsNullOrEmpty(fa.Password))
+            r.AddParameter("name", sa.Name);
+            r.AddParameter("domain_name", sa.Domain);
+            if (!string.IsNullOrEmpty(sa.Login) && !string.IsNullOrEmpty(sa.Password))
             {
-                r.AddParameter("username", fa.Login);
-                r.AddParameter("password", fa.Password);
+                r.AddParameter("username", sa.Login);
+                r.AddParameter("password", sa.Password);
             }
 
-            if (!string.IsNullOrEmpty(fa.Cookies))
-                r.AddParameter("cookie", fa.Cookies);
+            if (!string.IsNullOrEmpty(sa.Cookies))
+                r.AddParameter("cookie", sa.Cookies);
 
-            if (fa.Proxy.Type == "socks") fa.Proxy.Type = "socks5";
-            r.AddParameter("proxytype", fa.Proxy.Type);
-            r.AddParameter("proxy", $"{fa.Proxy.Address}:{fa.Proxy.Port}:{fa.Proxy.Login}:{fa.Proxy.Password}");
+            r.AddParameter("repeat_config", 0); //allow username/password duplicates
+            if (sa.Proxy.Type == "socks") sa.Proxy.Type = "socks5";
+            r.AddParameter("proxytype", sa.Proxy.Type);
+            r.AddParameter("proxy", $"{sa.Proxy.Address}:{sa.Proxy.Port}:{sa.Proxy.Login}:{sa.Proxy.Password}");
 
             dynamic fp = new JObject();
             fp.automatic_timezone = "1";
@@ -96,7 +96,7 @@ namespace YWB.AntidetectAccountParser.Services.Browsers
             fp.audio = "1"; //add noise
             fp.media_devices = "1"; //fake
             fp.device_name_switch = "2"; //mask
-            fp.device_name = fa.Name; //mask
+            fp.device_name = sa.Name; //mask
             fp.ua = ua;
             fp.scan_port_type = 1; //protect
             r.AddParameter("fingerprint_config", fp.ToString());
@@ -115,7 +115,7 @@ namespace YWB.AntidetectAccountParser.Services.Browsers
             return Task.CompletedTask;
         }
 
-        protected override async Task<bool> SaveItemToNoteAsync(string profileId, FacebookAccount fa)
+        protected override async Task<bool> SaveItemToNoteAsync(string profileId, SocialAccount fa)
         {
             var r = new RestRequest("fbcc/user/update-user-info", Method.POST);
             r.AddParameter("fbcc_user_id", profileId);

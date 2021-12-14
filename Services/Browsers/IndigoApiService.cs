@@ -9,8 +9,8 @@ using System.Threading;
 using System.Threading.Tasks;
 using YWB.AntidetectAccountParser.Helpers;
 using YWB.AntidetectAccountParser.Model;
+using YWB.AntidetectAccountParser.Model.Accounts;
 using YWB.AntidetectAccountParser.Model.Indigo;
-using YWB.AntidetectAccountParser.Services.Interfaces;
 
 namespace YWB.AntidetectAccountParser.Services.Browsers
 {
@@ -105,7 +105,7 @@ namespace YWB.AntidetectAccountParser.Services.Browsers
             return await ExecuteRequestAsync<IndigoPlanSettings>(r);
         }
 
-        protected override async Task<List<(string pName, string pId)>> CreateOrChooseProfilesAsync(List<FacebookAccount> accounts)
+        protected override async Task<List<(string pName, string pId)>> CreateOrChooseProfilesAsync(IList<SocialAccount> accounts)
         {
             var groups = AllGroups.OrderBy(g => g.Key);
             Console.WriteLine("Choose group:");
@@ -146,36 +146,29 @@ namespace YWB.AntidetectAccountParser.Services.Browsers
         {
             var r = new RestRequest($"api/v1/profile/cookies/import/webext?profileId={profileId}", Method.POST);
             r.AddParameter("text/plain", cookies, ParameterType.RequestBody);
-            var json = await ExecuteLocalRequestAsync<JObject>(r);
+            dynamic json = await ExecuteLocalRequestAsync<JObject>(r);
 
-            if (json != null && json["status"].ToString() == "OK")
+            if (json != null && json.status == "OK")
                 Console.WriteLine("Cookies imported! Adding all data to note...");
             else
             {
-                if (json["message"].ToString() == "Can't enable Google services")
+                switch (json.message)
                 {
-                    Console.WriteLine("Couldn't enable Google services, switching them off...");
-                    var settings = await GetProfileSettingsAsync(profileId);
-                    settings.googleServices = false;
-                    settings.loadCustomExtensions = false;
-                    await SaveProfileSettingsAsync(settings);
+                    case "Can't enable Google services":
+                    {
+                        Console.WriteLine("Couldn't enable Google services, switching them off...");
+                        var settings = await GetProfileSettingsAsync(profileId);
+                        settings.googleServices = false;
+                        settings.loadCustomExtensions = false;
+                        await SaveProfileSettingsAsync(settings);
 
-                    json = await ExecuteLocalRequestAsync<JObject>(r);
-                    if (json != null && json["status"].ToString() == "OK")
-                        Console.WriteLine("Cookies imported! Adding all data to note...");
-                    else
-                        Console.WriteLine($"Cookies were NOT imported!!!{json} Adding all data to note...");
-                }
-                else
-                {
-                    Console.WriteLine($"Couldn't import all cookies:{json}, trying to import only Facebook...");
-                    r = new RestRequest($"api/v1/profile/cookies/import/webext?profileId={profileId}", Method.POST);
-                    r.AddParameter("text/plain", CookieHelper.GetFacebookCookies(cookies), ParameterType.RequestBody);
-                    json = await ExecuteLocalRequestAsync<JObject>(r);
-                    if (json != null && json["status"].ToString() == "OK")
-                        Console.WriteLine("Facebook cookies imported! Adding all data to note...");
-                    else
-                        Console.WriteLine($"Facebook cookies were NOT imported!!!{json} Adding all data to note...");
+                        dynamic json2 = await ExecuteLocalRequestAsync<JObject>(r);
+                        if (json2 != null && json2.status == "OK")
+                            Console.WriteLine("Cookies imported! Adding all data to note...");
+                        else
+                            Console.WriteLine($"Cookies were NOT imported!!!{json} Adding all data to note...");
+                        break;
+                    }
                 }
             }
         }
@@ -195,7 +188,7 @@ namespace YWB.AntidetectAccountParser.Services.Browsers
             return res["uuid"].ToString();
         }
 
-        protected override async Task<bool> SaveItemToNoteAsync(string profileId, FacebookAccount fa)
+        protected override async Task<bool> SaveItemToNoteAsync(string profileId, SocialAccount fa)
         {
             var j = await GetProfileSettingsAsync(profileId);
             if (j == null) { return false; }
@@ -241,14 +234,23 @@ namespace YWB.AntidetectAccountParser.Services.Browsers
         private async Task<T> ExecuteLocalRequestAsync<T>(RestRequest r, bool addToken = true)
         {
             string url = $"http://127.0.0.1:35000";
-            var rc = new RestClient(url);
             if (addToken)
             {
                 if (string.IsNullOrEmpty(_token))
                     _token = await GetIndigoApiTokenAsync();
                 r.AddHeader("token", _token);
             }
-            var resp = await rc.ExecuteAsync(r, new CancellationToken());
+            IRestResponse resp;
+            int tryCount = 0;
+            do
+            {
+                var rc = new RestClient(url);
+                resp = await rc.ExecuteAsync(r, new CancellationToken());
+                tryCount++;
+                if (resp.StatusCode != System.Net.HttpStatusCode.OK) await Task.Delay(1000);
+            }
+            while (resp.StatusCode != System.Net.HttpStatusCode.OK && tryCount < 3);
+
             T res = default(T);
             try
             {

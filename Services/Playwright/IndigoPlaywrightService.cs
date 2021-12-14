@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 using System.Web;
 using YWB.AntidetectAccountParser.Model;
 
-namespace YWB.AntidetectAccountParser.Services
+namespace YWB.AntidetectAccountParser.Services.Playwright
 {
     public class IndigoPlaywrightService
     {
