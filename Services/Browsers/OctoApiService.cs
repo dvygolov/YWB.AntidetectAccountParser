@@ -19,7 +19,7 @@ namespace YWB.AntidetectAccountParser.Services.Browsers
         private const string FileName = "octo.txt";
         private const string ApiUrl = "https://app.octobrowser.net/api/v2/automation/";
         private string _token;
-        private string[] _oses = new[] { "windows", "linux", "macos" };
+        private string[] _oses =new[] {"win", "mac"};
 
         private async Task<List<Proxy>> GetExistingProxiesAsync()
         {
@@ -62,11 +62,10 @@ namespace YWB.AntidetectAccountParser.Services.Browsers
             pjson.title = DateTime.Now.ToString("G");
             r.AddParameter("application/json", pjson, ParameterType.RequestBody);
 
-            var res = await ExecuteRequestAsync<JObject>(r);
-            if (!res["success"]?.Value<bool>() ?? false)
-                throw new Exception(res["error"].ToString());
+            dynamic res = await ExecuteRequestAsync<JObject>(r);
+            if (res.success!=true) throw new Exception(res.ToString());
             Console.WriteLine("Proxy added!");
-            return res["data"]["uuid"].ToString();
+            return res.data.uuid;
         }
 
         private async Task<List<AccountGroup>> GetExistingTagsAsync()
@@ -80,91 +79,29 @@ namespace YWB.AntidetectAccountParser.Services.Browsers
             }).ToList();
         }
 
-        protected override Task<AccountGroup> AddNewGroupAsync()
+        private Task<AccountGroup> AddNewTag()
         {
             Console.Write("Enter tag name:");
             var tagName = Console.ReadLine();
             return Task.FromResult(new AccountGroup() { Id = "new", Name = tagName });
         }
 
-        public async Task<string> CreateNewProfileAsync(string pName, string os, string proxyId)
+        public async Task<string> CreateNewProfileAsync(string pName, string os, string proxyId,string tag=null)
         {
-            var fp = await GetNewFingerprintAsync(os);
-            var ua = await GetNewUseragentAsync(os);
-            var memory = int.Parse(fp["deviceMemory"].ToString());
-            if (memory == 0) memory++;
-            var cpu = int.Parse(fp["hardwareConcurrency"].ToString());
-            if (cpu == 0) cpu++;
-            var request = new RestRequest("browser_profiles", Method.POST);
-            request.AddHeader("Content-Type", "application/json;charset=UTF-8");
+            var request = new RestRequest("profiles", Method.POST);
             dynamic p = new JObject();
-            p.name = pName;
-            p.screen = new JObject();
-            p.screen.mode = "manual";
-            p.screen.resolution = $"{fp["screen"]["width"]}x{fp["screen"]["height"]}";
-            p.platform = os;
-            p.platformName = fp["platform"];
-            p.osVersion = fp["os"]["version"];
-            p.proxy = new JObject();
-            p.proxy.id = proxyId;
-            p.useragent = new JObject();
-            p.useragent.mode = "manual";
-            p.useragent.value = ua;
-            p.webrtc = new JObject();
-            p.webrtc.mode = "altered";
-            p.webrtc.ipAddress = "";
-            p.canvas = new JObject();
-            p.canvas.mode = "real";
-            p.webgl = new JObject();
-            p.webgl.mode = "noise";
-            p.webglInfo = new JObject();
-            p.webglInfo.mode = "manual";
-            p.webglInfo.vendor = fp["webgl"]["unmaskedVendor"];
-            p.webglInfo.renderer = fp["webgl"]["unmaskedRenderer"];
-            p.clientRect = new JObject();
-            p.clientRect.mode = "real";
-            p.geolocation = new JObject();
-            p.geolocation.mode = "auto";
-            p.timezone = new JObject();
-            p.timezone.mode = "auto";
-            p.timezone.value = "";
-            p.locale = new JObject();
-            p.locale.mode = "auto";
-            p.locale.value = "";
-            p.cpu = new JObject();
-            p.cpu.mode = "manual";
-            p.cpu.value = cpu.ToString();
-            p.memory = new JObject();
-            p.memory.mode = "manual";
-            p.memory.value = memory.ToString();
-            p.doNotTrack = fp["donottrack"];
-            p.fonts = fp["fonts"];
-            p.mediaDevices = new JObject();
-            p.mediaDevices.mode = "manual";
-            p.mediaDevices.audioInputs = StaticRandom.Instance.Next(1, 4);
-            p.mediaDevices.audioOutputs = StaticRandom.Instance.Next(1, 4);
-            p.mediaDevices.videoInputs = StaticRandom.Instance.Next(1, 4);
-            p.browserType = "anty";
-            p.mainWebsite = "facebook";
-            p.appCodeName = fp["appCodeName"];
-            p.cpuArchitecture = fp["cpu"]["architecture"];
-            p.vendor = fp["vendor"];
-            p.vendorSub = fp["vendorSub"];
-            p.product = fp["product"];
-            p.productSub = fp["productSub"];
-            p.connectionDownlink = fp["connection"]["downlink"];
-            p.connectionRtt = fp["connection"]["rtt"];
-            p.connectionEffectiveType = fp["connection"]["effectiveType"];
-            p.connectionSaveData = fp["connection"]["saveData"];
-            p.ports = new JObject();
-            p.ports.mode = "protect";
-            p.ports.blacklist = "3389,5900,5800,7070,6568,5938";
-            p.statusId = 0;
-            p.tags = new JArray();
+            p.title = pName;
+            p.fingerprint=new JObject();
+            p.fingerprint.os = os;
+            p.proxy=new JObject();
+            p.proxy.uuid= proxyId;
+            p.tags=new JArray();
+            if (tag!=null) p.tags.Add(tag);
 
             request.AddParameter("application/json", p.ToString(), ParameterType.RequestBody);
-            var res = await ExecuteRequestAsync<JObject>(request);
-            return res["browserProfileId"].ToString();
+            dynamic res = await ExecuteRequestAsync<dynamic>(request);
+            if (res.success!=true) throw new Exception(res.ToString());
+            return res.data.uuid;
         }
 
 
@@ -180,6 +117,10 @@ namespace YWB.AntidetectAccountParser.Services.Browsers
             Console.WriteLine("Choose operating system:");
             var os = SelectHelper.Select(_oses);
 
+            var tags = await GetExistingTagsAsync();
+            Console.WriteLine("Choose a tag for all of these profiles, if needed:");
+            var tag=await SelectHelper.SelectWithCreateAsync(tags, t => t.Name, AddNewTag, true);
+
             var proxyIds = new Dictionary<Proxy, string>();
             var res = new List<(string, string)>();
             for (int i = 0; i < accounts.Count; i++)
@@ -193,7 +134,7 @@ namespace YWB.AntidetectAccountParser.Services.Browsers
                 var pName = string.IsNullOrEmpty(accounts[i].Name) ? $"{namePrefix}{i}" : accounts[i].Name;
                 accounts[i].Name = pName;
                 Console.WriteLine($"Creating profile {pName}...");
-                var pId = await CreateNewProfileAsync(pName, os, proxyIds[accounts[i].Proxy]);
+                var pId = await CreateNewProfileAsync(pName, os, proxyIds[accounts[i].Proxy],tag.Name);
                 Console.WriteLine($"Profile with ID={pId} created!");
                 res.Add((pName, pId));
             }
@@ -203,22 +144,21 @@ namespace YWB.AntidetectAccountParser.Services.Browsers
 
         protected override async Task ImportCookiesAsync(string profileId, string cookies)
         {
-            var request = new RestRequest($"{profileId}/import_cookies", Method.POST);
+            var request = new RestRequest($"profiles/{profileId}/import_cookies", Method.POST);
             var body = @$"{{""cookies"":{cookies}}}";
             request.AddParameter("application/json", body, ParameterType.RequestBody);
-            var res = await ExecuteRequestAsync<JObject>(request);
-            if (!res["success"]?.Value<bool>() ?? false)
-                throw new Exception(res["error"].ToString());
+            dynamic res = await ExecuteRequestAsync<JObject>(request);
+            if (res.success!=true) throw new Exception(res.ToString());
         }
 
         protected override async Task<bool> SaveItemToNoteAsync(string profileId, SocialAccount fa)
         {
-            var request = new RestRequest($"browser_profiles/{profileId}", Method.PATCH);
-            request.AddParameter("notes[content]", fa.ToString(true));
-            request.AddParameter("notes[color]", "blue");
-            request.AddParameter("notes[style]", "text");
-            request.AddParameter("notes[icon]", null);
-            var res = await ExecuteRequestAsync<JObject>(request);
+            var request = new RestRequest($"profiles/{profileId}", Method.PATCH);
+            dynamic body = new JObject();
+            body.description = fa.ToString(false,false);
+            request.AddParameter("application/json", body.ToString(), ParameterType.RequestBody);
+            dynamic res = await ExecuteRequestAsync<JObject>(request);
+            if (res.success!=true) throw new Exception(res.ToString());
             return true;
         }
 
