@@ -69,6 +69,24 @@ namespace YWB.AntidetectAccountParser.Services.Browsers
             return res["data"]["uuid"].ToString();
         }
 
+        private async Task<List<AccountGroup>> GetExistingTagsAsync()
+        {
+            var r = new RestRequest("tags", Method.GET);
+            var json = await ExecuteRequestAsync<JObject>(r);
+            return json["data"].Select((dynamic g)=> new AccountGroup()
+            {
+                Id = g.uuid,
+                Name = g.name
+            }).ToList();
+        }
+
+        protected override Task<AccountGroup> AddNewGroupAsync()
+        {
+            Console.Write("Enter tag name:");
+            var tagName = Console.ReadLine();
+            return Task.FromResult(new AccountGroup() { Id = "new", Name = tagName });
+        }
+
         public async Task<string> CreateNewProfileAsync(string pName, string os, string proxyId)
         {
             var fp = await GetNewFingerprintAsync(os);
@@ -149,24 +167,6 @@ namespace YWB.AntidetectAccountParser.Services.Browsers
             return res["browserProfileId"].ToString();
         }
 
-
-        public async Task<JObject> GetNewFingerprintAsync(string os)
-        {
-            var request = new RestRequest("fingerprints/fingerprint", Method.GET);
-            request.AddQueryParameter("platform", os);
-            request.AddQueryParameter("browser_type", "anty");
-            request.AddQueryParameter("browser_version", "undefined");
-            var res = await ExecuteRequestAsync<JObject>(request);
-            return res;
-        }
-
-        public async Task<string> GetNewUseragentAsync(string os)
-        {
-            var request = new RestRequest("fingerprints/useragent", Method.GET);
-            request.AddQueryParameter("platform", os);
-            var res = await ExecuteRequestAsync<JObject>(request);
-            return res["data"].ToString();
-        }
 
         protected override async Task<List<(string pName, string pId)>> CreateOrChooseProfilesAsync(IList<SocialAccount> accounts)
         {
