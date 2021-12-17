@@ -134,7 +134,7 @@ namespace YWB.AntidetectAccountParser.Services.Browsers
                 var pName = string.IsNullOrEmpty(accounts[i].Name) ? $"{namePrefix}{i}" : accounts[i].Name;
                 accounts[i].Name = pName;
                 Console.WriteLine($"Creating profile {pName}...");
-                var pId = await CreateNewProfileAsync(pName, os, proxyIds[accounts[i].Proxy],tag.Name);
+                var pId = await CreateNewProfileAsync(pName, os, proxyIds[accounts[i].Proxy],tag?.Name);
                 Console.WriteLine($"Profile with ID={pId} created!");
                 res.Add((pName, pId));
             }

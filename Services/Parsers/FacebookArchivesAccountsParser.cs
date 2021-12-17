@@ -29,7 +29,12 @@ namespace YWB.AntidetectAccountParser.Services.Parsers
         public override AccountValidity IsValid(FacebookAccount fa)
         {
             if (fa.AllCookies.Any(c => CookieHelper.HasCUserCookie(c)))
+            {
+                var uid=CookieHelper.GetCUserCookie(fa.AllCookies);
+                var ch=FbHeadersChecker.Check(uid);
+                if (!ch) return AccountValidity.Invalid;
                 return AccountValidity.Valid;
+            }
             else if (fa.Login != null && fa.Password != null)
                 return AccountValidity.PasswordOnly;
             else

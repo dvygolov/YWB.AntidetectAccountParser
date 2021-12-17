@@ -105,6 +105,7 @@ namespace YWB.AntidetectAccountParser.Services.Parsers
 
             re = new Regex(@"[\:;\|\s](?<Cookies>\[\s*\{.*?\}\s*\]\s*)($|[\:;\|\s])", RegexOptions.Multiline);
             matches = re.Matches(input);
+            var invalid = new List<int>();
             if (matches.Count == 0)
             {
                 re = new Regex(@"[:;\|](?<Cookies>W[A-Za-z0-9+/=]{300,})", RegexOptions.Multiline);
@@ -123,7 +124,10 @@ namespace YWB.AntidetectAccountParser.Services.Parsers
                 Console.WriteLine("Found cookies!");
                 for (int i = 0; i < matches.Count; i++)
                 {
-                    lst[i].Cookies = CookieHelper.GetDomainCookies(matches[i].Groups["Cookies"].Value,lst[i].Domain);
+                    lst[i].Cookies = CookieHelper.GetDomainCookies(matches[i].Groups["Cookies"].Value, lst[i].Domain);
+                    var cUser = CookieHelper.GetCUserCookie(lst[i].AllCookies);
+                    var ch = FbHeadersChecker.Check(cUser);
+                    if (!ch) invalid.Add(i);
                 }
             }
 
@@ -148,6 +152,15 @@ namespace YWB.AntidetectAccountParser.Services.Parsers
                 for (int i = 0; i < matches.Count; i++)
                 {
                     lst[i].Birthday = matches[i].Groups["Birthday"].Value;
+                }
+            }
+
+            if (invalid.Count > 0)
+            {
+                Console.WriteLine("Invalid accounts were found! Removing them...");
+                for (int i = invalid.Count - 1; i >= 0; i--)
+                {
+                    lst.RemoveAt(invalid[i]);
                 }
             }
 

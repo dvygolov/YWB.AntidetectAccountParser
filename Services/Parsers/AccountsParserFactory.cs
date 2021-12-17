@@ -22,7 +22,7 @@ namespace YWB.AntidetectAccountParser.Services.Parsers
                     Console.WriteLine("What do you want to parse?");
                     var parsers = new Dictionary<string, Func<IAccountsParser<FacebookAccount>>> {
                         {"Accounts from text file",()=>new FacebookTextAccountsParser() },
-                        {"Accounts from ZIP/RAR files",()=>new FacebookArchivesAccountsParser() }
+                        {"Accounts from ZIP/RAR files or Folders",()=>new FacebookArchivesAccountsParser() }
                     };
                     parser = SelectHelper.Select(parsers, a => a.Key).Value();
                     break;

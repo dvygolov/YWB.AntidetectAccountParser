@@ -1,5 +1,6 @@
 ﻿using Newtonsoft.Json.Linq;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
 
@@ -25,6 +26,17 @@ namespace YWB.AntidetectAccountParser.Helpers
             var cookieArray = JArray.Parse(cookies);
             return cookieArray
                 .Any(c => c["name"].ToString().ToLowerInvariant() == "c_user");
+        }
+
+        internal static string GetCUserCookie(List<string> allCookies)
+        {
+            foreach(var cookies in allCookies)
+            {
+                var json = JArray.Parse(cookies);
+                dynamic cUser=json.FirstOrDefault(c => c["name"].ToString().ToLowerInvariant() == "c_user");
+                if (cUser!=null) return cUser.value;
+            }
+            return null;
         }
 
         public static string NetscapeCookiesToJSON(string text)
@@ -73,7 +85,6 @@ namespace YWB.AntidetectAccountParser.Helpers
             }
             return cookies.ToString();
         }
-
 
 
         public static bool AreCookiesInBase64(string base64String)
