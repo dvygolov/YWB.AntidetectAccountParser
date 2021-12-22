@@ -59,7 +59,7 @@ namespace YWB.AntidetectAccountParser.Services.Parsers
                 }
             }
 
-            re = new Regex(@"[:;\|\s](?<Email>[a-zA-Z0-9\.]+@[^\:;\|\s]+)[:;\|\s](?<EmailPassword>[^\:;\|\s]+)[:;\|\s]", RegexOptions.Multiline);
+            re = new Regex(@"[:;\|\s](?<Email>[a-zA-Z0-9\._]+@[^\:;\|\s]+)[:;\|\s](?<EmailPassword>[^\:;\|\s]+)[:;\|\s]", RegexOptions.Multiline);
             matches = re.Matches(input);
             if (matches.Count == 0)
             {
