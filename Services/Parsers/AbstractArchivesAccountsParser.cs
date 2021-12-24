@@ -3,6 +3,7 @@ using System.IO;
 using YWB.AntidetectAccountParser.Model.Accounts;
 using YWB.AntidetectAccountParser.Model.Accounts.Actions;
 using YWB.AntidetectAccountParser.Services.Archives;
+using YWB.AntidetectAccountParser.Services.Proxies;
 
 namespace YWB.AntidetectAccountParser.Services.Parsers
 {
@@ -14,17 +15,23 @@ namespace YWB.AntidetectAccountParser.Services.Parsers
             var apf = new ArchiveParserFactory<T>();
             var ap = apf.GetArchiveParser();
             List<T> accounts = new List<T>();
-            foreach (var archive in ap.Containers)
+            var proxyProvider = new FileProxyProvider();
+            var proxies=proxyProvider.Get();
+
+            for (int i = 0; i < ap.Containers.Count; i++)
             {
+                string archive = ap.Containers[i];
                 var actions = GetActions(archive);
                 var acc = ap.Parse(actions, archive);
                 var validity = IsValid(acc);
                 switch (validity)
                 {
                     case AccountValidity.Valid:
+                        if (proxies.Count==ap.Containers.Count) acc.Proxy=proxies[i];
                         accounts.Add(acc);
                         break;
                     case AccountValidity.PasswordOnly:
+                        if (proxies.Count==ap.Containers.Count) acc.Proxy=proxies[i];
                         acc.Name = $"PasswordOnly_{acc.Name}";
                         accounts.Add(acc);
                         break;

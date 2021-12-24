@@ -20,6 +20,7 @@ namespace YWB.AntidetectAccountParser.Services.Browsers
         private IndigoPlanSettings _ips;
         private Dictionary<string, IndigoProfilesGroup> _allGroups;
         private ConcurrentDictionary<string, IndigoProfileSettings> _profileSettings = new ConcurrentDictionary<string, IndigoProfileSettings>();
+        protected override string FileName { get; set; }
 
         public IndigoPlanSettings Ips
         {
@@ -114,23 +115,15 @@ namespace YWB.AntidetectAccountParser.Services.Browsers
             List<IndigoProfile> selectedProfiles = null;
             if (createNew)
             {
-                var namePrefix = string.Empty;
-                if (!accounts.All(a => !string.IsNullOrEmpty(a.Name)))
-                {
-                    Console.Write("Enter profile name prefix:");
-                    namePrefix = Console.ReadLine();
-                }
                 Console.WriteLine("Choose operating system:");
                 var os = SelectHelper.Select(new[] { "win", "mac" });
                 var res = new List<(string, string)>();
                 for (int i = 0; i < accounts.Count; i++)
                 {
-                    var pName = string.IsNullOrEmpty(accounts[i].Name) ? $"{namePrefix}{i}" : accounts[i].Name;
-                    Console.WriteLine($"Creating profile {pName}...");
-                    accounts[i].Name = pName;
-                    var pId = await CreateNewProfileAsync(pName, os, selected.Value.Sid, accounts[i].Proxy);
+                    Console.WriteLine($"Creating profile {accounts[i].Name}...");
+                    var pId = await CreateNewProfileAsync(accounts[i].Name, os, selected.Value.Sid, accounts[i].Proxy);
                     Console.WriteLine($"Profile with ID={pId} created!");
-                    res.Add((pName, pId));
+                    res.Add((accounts[i].Name, pId));
                 }
                 return res;
             }

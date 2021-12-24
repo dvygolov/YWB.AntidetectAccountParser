@@ -7,13 +7,14 @@ namespace YWB.AntidetectAccountParser.Services.Parsers
 {
     public class AccountsParserFactory
     {
-        enum AccountTypes { Google, Facebook };
+        public enum AccountTypes { Google, Facebook };
+        public AccountTypes AccountType { get; private set; }
         public IAccountsParser<SocialAccount> CreateParser()
         {
             Console.WriteLine("Which type of account do you want to parse?");
-            var aType = SelectHelper.Select(new[] { AccountTypes.Google, AccountTypes.Facebook });
+            AccountType= SelectHelper.Select(new[] { AccountTypes.Google, AccountTypes.Facebook });
             IAccountsParser<SocialAccount> parser = null;
-            switch (aType)
+            switch (AccountType)
             {
                 case AccountTypes.Google:
                     parser = new GoogleArchivesAccountsParser();

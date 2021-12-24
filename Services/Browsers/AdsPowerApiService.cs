@@ -17,7 +17,7 @@ namespace YWB.AntidetectAccountParser.Services.Browsers
     {
         private string _token;
         private string _cpl;
-        private const string FileName = "adspower.txt";
+        protected override string FileName { get; set; } = "adspower.txt";
         private List<string> _oses = new List<string> { "Windows", "Mac OS X", "Linux" };
         private List<string> _cpu = new List<string> { "2", "4", "6", "8", "16" };
         private List<string> _memory = new List<string> { "2", "4", "6", "8" };
@@ -25,24 +25,16 @@ namespace YWB.AntidetectAccountParser.Services.Browsers
         protected override async Task<List<(string pName, string pId)>> CreateOrChooseProfilesAsync(IList<SocialAccount> accounts)
         {
             var profiles = new List<(string, string)>();
-            var namePrefix = string.Empty;
-            if (!accounts.All(a => !string.IsNullOrEmpty(a.Name)))
-            {
-                Console.Write("Enter profile name prefix:");
-                namePrefix = Console.ReadLine();
-            }
             Console.WriteLine("Choose operating system:");
             var os = SelectHelper.Select(_oses);
 
             var res = new List<(string, string)>();
             for (int i = 0; i < accounts.Count; i++)
             {
-                var pName = string.IsNullOrEmpty(accounts[i].Name) ? $"{namePrefix}{i}" : accounts[i].Name;
-                Console.WriteLine($"Creating profile {pName}...");
-                accounts[i].Name = pName;
+                Console.WriteLine($"Creating profile {accounts[i].Name}...");
                 var pId = await CreateNewProfileAsync(os, accounts[i]);
                 Console.WriteLine($"Profile with ID={pId} created!");
-                res.Add((pName, pId));
+                res.Add((accounts[i].Name, pId));
             }
             return res;
 
