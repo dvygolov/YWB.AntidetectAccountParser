@@ -1,5 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using System.Reflection;
 using YWB.AntidetectAccountParser.Helpers;
 using YWB.AntidetectAccountParser.Model.Accounts;
 
@@ -21,7 +24,12 @@ namespace YWB.AntidetectAccountParser.Services.Parsers
                 case AccountTypes.Facebook:
                     Console.WriteLine("What do you want to parse?");
                     var parsers = new Dictionary<string, Func<IAccountsParser<FacebookAccount>>> {
-                        {"Accounts from text file",()=>new FacebookTextAccountsParser() },
+                        {"Accounts from text file",
+                            ()=>new FacebookTextAccountsParser(() =>
+                             File.ReadAllLines(
+                                 Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "accounts.txt")).ToList()
+                        ) 
+                        },
                         {"Accounts from ZIP/RAR files or Folders",()=>new FacebookArchivesAccountsParser() }
                     };
                     parser = SelectHelper.Select(parsers, a => a.Key).Value();

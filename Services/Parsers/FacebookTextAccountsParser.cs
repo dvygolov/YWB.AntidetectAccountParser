@@ -9,6 +9,8 @@ namespace YWB.AntidetectAccountParser.Services.Parsers
 {
     public class FacebookTextAccountsParser : AbstractTextAccountsParser<FacebookAccount>
     {
+        public FacebookTextAccountsParser(Func<List<string>> get) : base(get) { }
+
         protected override IEnumerable<FacebookAccount> Process(string input)
         {
             var re = new Regex(@"^(?<Login>[^\:;\|\s]+)\s*[:;\|\s]\s*(?<Password>[^\:;\|\s]+)\s*[:;\|\s]", RegexOptions.Multiline);

@@ -1,17 +1,20 @@
-﻿using System.Collections.Generic;
-using System.IO;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
-using System.Reflection;
 using YWB.AntidetectAccountParser.Model.Accounts;
 
 namespace YWB.AntidetectAccountParser.Services.Parsers
 {
     public abstract class AbstractTextAccountsParser<T> : IAccountsParser<T> where T : SocialAccount
     {
-        private const string FileName = "accounts.txt";
+        private readonly Func<List<string>> _get;
+        public AbstractTextAccountsParser(Func<List<string>> get)
+        {
+            _get = get;
+        }
         public string Preprocess()
         {
-            var lines = File.ReadAllLines(Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), FileName)).ToList();
+            var lines = _get();
 
             if (lines.Count > 1)
             {
@@ -26,7 +29,7 @@ namespace YWB.AntidetectAccountParser.Services.Parsers
                 while (lines.All(l => l.StartsWith(sameStart)));
 
                 if (sameStart.Length > 4) //then we are sure that it is not just random coincidence
-                    lines = lines.ConvertAll(l => l.Substring(j - 2));
+                    lines = lines.ToList().ConvertAll(l => l.Substring(j - 2));
             }
 
             var input = string.Join("\r\n", lines);
