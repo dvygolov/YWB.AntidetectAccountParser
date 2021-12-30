@@ -10,8 +10,7 @@ namespace YWB.AntidetectAccountParser.Services.Browsers
     public abstract class AbstractAntidetectApiService
     {
         protected abstract string FileName { get; set; }
-        protected abstract Task<List<(string pName, string pId)>> CreateOrChooseProfilesAsync(
-            IList<SocialAccount> accounts);
+        protected abstract Task<List<(string pName, string pId)>> CreateOrChooseProfilesAsync(IList<SocialAccount> accounts);
 
         protected abstract Task ImportCookiesAsync(string profileId, string cookies);
 
