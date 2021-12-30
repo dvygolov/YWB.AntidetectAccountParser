@@ -17,87 +17,88 @@ namespace YWB.AntidetectAccountParser
     {
         static async Task Main(string[] args)
         {
-            var bot = new AccountsBot();
             Console.InputEncoding = System.Text.Encoding.UTF8;
             Console.OutputEncoding = System.Text.Encoding.UTF8;
-            Console.WriteLine("Antidetect Accounts Parser v5.8 Yellow Web (https://yellowweb.top)");
-            Console.WriteLine("If you like this software, please, donate!");
-            Console.WriteLine("WebMoney: Z182653170916");
-            Console.WriteLine("Bitcoin: bc1qqv99jasckntqnk0pkjnrjtpwu0yurm0qd0gnqv");
-            Console.WriteLine("Ethereum: 0xBC118D3FDE78eE393A154C29A4545c575506ad6B");
-            await Task.Delay(3000);
-            Console.WriteLine();
+            var isBot = args.Length == 1 && args[0] == "bot";
+            await Copyright.ShowAsync(isBot);
 
-            var apf = new AccountsParserFactory();
-            var parser = apf.CreateParser();
-            var accounts = parser.Parse();
-            if (accounts.Count() == 0)
+            if (isBot)
             {
-                Console.WriteLine("Couldn't find any accounts to import(((");
-                return;
+                var bot = new AccountsBot();
             }
-
-            if (accounts.All(a => a.Proxy == null))
+            else
             {
-                var proxyProvider = new FileProxyProvider();
-                proxyProvider.SetProxies(accounts);
-            }
+                var apf = new AccountsParserFactory();
+                var parser = apf.CreateParser();
+                var accounts = parser.Parse();
+                if (accounts.Count() == 0)
+                {
+                    Console.WriteLine("Couldn't find any accounts to import(((");
+                    return;
+                }
 
-            int answer = 0;
-            if (apf.AccountType==AccountsParserFactory.AccountTypes.Facebook)
-            {
-                Console.WriteLine("What do you want to do?");
-                Console.WriteLine("1. Create Profiles in an Antidetect Browser");
-                Console.WriteLine("2. Import accounts to FbTool/Dolphin");
-                answer = YesNoSelector.GetMenuAnswer(2);
-            }
-            else if (apf.AccountType==AccountsParserFactory.AccountTypes.Google)
-                answer = 1;
+                if (accounts.All(a => a.Proxy == null))
+                {
+                    var proxyProvider = new FileProxyProvider();
+                    proxyProvider.SetProxies(accounts);
+                }
 
-            if (answer == 1)
-            {
-                Console.WriteLine("Choose your antidetect browser:");
-                var browsers = new Dictionary<string, Func<AbstractAntidetectApiService>>
+                int answer = 0;
+                if (apf.AccountType == AccountsParserFactory.AccountTypes.Facebook)
+                {
+                    Console.WriteLine("What do you want to do?");
+                    Console.WriteLine("1. Create Profiles in an Antidetect Browser");
+                    Console.WriteLine("2. Import accounts to FbTool/Dolphin");
+                    answer = YesNoSelector.GetMenuAnswer(2);
+                }
+                else if (apf.AccountType == AccountsParserFactory.AccountTypes.Google)
+                    answer = 1;
+
+                if (answer == 1)
+                {
+                    Console.WriteLine("Choose your antidetect browser:");
+                    var browsers = new Dictionary<string, Func<AbstractAntidetectApiService>>
                 {
                     {"AdsPower",()=>new AdsPowerApiService() },
                     {"Dolphin Anty",()=>new DolphinAntyApiService() },
                     {"Indigo",()=> new IndigoApiService() },
                     {"Octo",()=>new OctoApiService() }
                 };
-                var selectedBrowser = SelectHelper.Select(browsers, b => b.Key).Value();
+                    var selectedBrowser = SelectHelper.Select(browsers, b => b.Key).Value();
 
-                var profiles = await selectedBrowser.ImportAccountsAsync(accounts.ToList());
+                    var profiles = await selectedBrowser.ImportAccountsAsync(accounts.ToList());
 
-                if (accounts?.All(a => a is FacebookAccount && !string.IsNullOrEmpty((a as FacebookAccount).Token)) ?? false)
-                {
-                    var add = YesNoSelector.ReadAnswerEqualsYes(
-                        "All accounts have access tokens! Do you wand to add them to Dolphin/FbTool?");
-                    if (add)
+                    if (accounts?.All(a => a is FacebookAccount && !string.IsNullOrEmpty((a as FacebookAccount).Token)) ?? false)
                     {
-                        await ImportToMonitoringService(accounts.Cast<FacebookAccount>().ToList());
+                        var add = YesNoSelector.ReadAnswerEqualsYes(
+                            "All accounts have access tokens! Do you wand to add them to Dolphin/FbTool?");
+                        if (add)
+                        {
+                            await ImportToMonitoringService(accounts.Cast<FacebookAccount>().ToList());
+                        }
+                    }
+                    else
+                    {
+                        var ipws = new IndigoPlaywrightService();
+                        //await ipws.GetTokensAsync(profiles);
                     }
                 }
-                else
+                else if (answer == 2)
                 {
-                    var ipws = new IndigoPlaywrightService();
-                    //await ipws.GetTokensAsync(profiles);
+                    var fbAccounts = accounts.Cast<FacebookAccount>().ToList();
+                    if (fbAccounts.All(a => !string.IsNullOrEmpty(a.Token)))
+                    {
+                        await ImportToMonitoringService(fbAccounts);
+                    }
+                    else if (fbAccounts.Any(a => !string.IsNullOrEmpty(a.Token)))
+                    {
+                        var anwser = YesNoSelector.ReadAnswerEqualsYes("Not all accounts have Facebook Access Tokens! Import only those, that have tokens?");
+                        if (anwser)
+                            await ImportToMonitoringService(fbAccounts.Where(a => !string.IsNullOrEmpty(a.Token)).ToList());
+                    }
+                    else
+                        Console.WriteLine("No accounts with access tokens found!((");
                 }
-            }
-            else if (answer == 2)
-            {
-                var fbAccounts = accounts.Cast<FacebookAccount>().ToList();
-                if (fbAccounts.All(a => !string.IsNullOrEmpty(a.Token)))
-                {
-                    await ImportToMonitoringService(fbAccounts);
-                }
-                else if (fbAccounts.Any(a => !string.IsNullOrEmpty(a.Token)))
-                {
-                    var anwser = YesNoSelector.ReadAnswerEqualsYes("Not all accounts have Facebook Access Tokens! Import only those, that have tokens?");
-                    if (anwser)
-                        await ImportToMonitoringService(fbAccounts.Where(a => !string.IsNullOrEmpty(a.Token)).ToList());
-                }
-                else
-                    Console.WriteLine("No accounts with access tokens found!((");
             }
 
             Console.WriteLine("All done! Press any key to exit... and don't forget to donate ;-)");

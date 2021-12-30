@@ -1,0 +1,17 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+
+namespace YWB.AntidetectAccountParser.Services.Proxies
+{
+    public class TextProxyProvider : AbstractProxyProvider
+    {
+        private readonly string _input;
+
+        public TextProxyProvider(string input)
+        {
+            _input = input;
+        }
+        public override List<string> GetLines() => _input.Split(Environment.NewLine, StringSplitOptions.RemoveEmptyEntries).ToList();
+    }
+}

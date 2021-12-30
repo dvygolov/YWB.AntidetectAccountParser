@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Concurrent;
-using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -14,12 +13,13 @@ using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
 using YWB.AntidetectAccountParser.Services.Logging;
 using YWB.AntidetectAccountParser.Services.Parsers;
+using YWB.AntidetectAccountParser.Services.Proxies;
 
 namespace YWB.AntidetectAccountParser.Services.Telegram
 {
     internal class AccountsBot
     {
-        ConcurrentDictionary<string, Dictionary<string, string>> _flows = new ConcurrentDictionary<string, Dictionary<string, string>>();
+        ConcurrentDictionary<long, BotFlow> _flows = new ConcurrentDictionary<long, BotFlow>();
         private const string FileName = "bot.txt";
         private TelegramBotClient _bot;
 
@@ -61,8 +61,26 @@ namespace YWB.AntidetectAccountParser.Services.Telegram
                     var content = Encoding.UTF8.GetString(ms.ToArray());
                     var logger = new BufferAccountsLogger();
                     var p = new FacebookTextAccountsParser(logger, content.Split(Environment.NewLine, StringSplitOptions.RemoveEmptyEntries).ToList());
-                    p.Parse();
+                    var accounts = p.Parse();
+                    _flows.AddOrUpdate(m.From.Id, new BotFlow { Accounts = accounts }, (id, bf) => bf);
                     await b.SendTextMessageAsync(m.Chat.Id, logger.Flush());
+                    await b.SendTextMessageAsync(m.Chat.Id, "Enter your proxy or proxies line by line\n Format http(socks):192.168.0.1:6666:xxxx:yyyy");
+                    break;
+                case MessageType.Text:
+                    if (!_flows.ContainsKey(m.From.Id))
+                    {
+                        await b.SendTextMessageAsync(m.Chat.Id, "Flow not found! Send your accounts file first!");
+                        break;
+                    }
+                    var flow = _flows[m.From.Id];
+                    if (flow.Proxies==null)
+                    {
+                        var pp = new TextProxyProvider(m.Text);
+                        flow.Proxies = pp.Get();
+                        pp.SetProxies(flow.Accounts);
+                        await b.SendTextMessageAsync(m.Chat.Id, "Choose, where to import your accounts:");
+
+                    }
                     break;
             }
         }

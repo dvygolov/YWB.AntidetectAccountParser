@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "YWB.AntidetectAccountParser": {
+      "commandName": "Project",
+      "commandLineArgs": "bot"
+    }
+  }
+}
