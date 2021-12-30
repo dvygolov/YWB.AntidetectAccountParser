@@ -25,6 +25,7 @@ namespace YWB.AntidetectAccountParser.Services.Monitoring
         protected abstract Task<bool> AddAccountAsync(FacebookAccount acc, AccountGroup g, string proxyId);
         public async Task AddAccountsAsync(List<FacebookAccount> accounts)
         {
+            AccountNamesHelper.Process(accounts);
             var groups = await GetExistingGroupsAsync();
             Console.WriteLine("Do you want to add your accounts to group/tag?");
             var group = await SelectHelper.SelectWithCreateAsync(groups, g => g.Name, AddNewGroupAsync, true);
@@ -69,14 +70,14 @@ namespace YWB.AntidetectAccountParser.Services.Monitoring
             var rc = new RestClient(_apiUrl);
             AddAuthorization(r);
             var resp = await rc.ExecuteAsync(r, new CancellationToken());
-            T res = default(T);
+            T res;
             try
             {
                 res = JsonConvert.DeserializeObject<T>(resp.Content);
             }
-            catch (Exception)
+            catch (Exception e)
             {
-                Console.WriteLine($"Error deserializing {resp.Content} to {typeof(T)}");
+                Console.WriteLine($"Error deserializing {resp.Content} to {typeof(T)}: {e}");
                 throw;
             }
             return res;

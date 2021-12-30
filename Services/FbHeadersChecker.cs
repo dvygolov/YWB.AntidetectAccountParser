@@ -15,17 +15,21 @@ namespace YWB.AntidetectAccountParser.Services
                 case System.Net.HttpStatusCode.Redirect:
                     if (resp.Headers.Contains("X-XSS-Protection"))
                     {
-                        System.Console.WriteLine("Account is blocked in Facebook!");
+                        System.Console.WriteLine($"Account {id} is blocked in Facebook!");
                         return false;
                     }
+                    System.Console.WriteLine($"Account {id} is OK!");
                     return true;
                 case System.Net.HttpStatusCode.OK:
                     if (resp.Headers.Contains("X-XSS-Protection"))
+                    {
+                        System.Console.WriteLine($"Account {id} is OK!");
                         return true;
-                    System.Console.WriteLine("Account doesn't exist in Facebook!");
+                    }
+                    System.Console.WriteLine($"Account {id} doesn't exist in Facebook!");
                     return false;
                 default:
-                    System.Console.WriteLine("Error getting account status from Facebook!");
+                    System.Console.WriteLine($"Error getting account's {id} status from Facebook!");
                     return false;
             }
         }

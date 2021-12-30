@@ -16,7 +16,7 @@ namespace YWB.AntidetectAccountParser.Services.Browsers
 {
     public class DolphinAntyApiService : AbstractAntidetectApiService
     {
-        private const string FileName = "dolphinanty.txt";
+        protected override string FileName { get; set; } = "dolphinanty.txt";
         private string _token;
         private string[] _oses = new[] { "windows", "linux", "macos" };
 
@@ -168,12 +168,6 @@ namespace YWB.AntidetectAccountParser.Services.Browsers
         protected override async Task<List<(string pName, string pId)>> CreateOrChooseProfilesAsync(IList<SocialAccount> accounts)
         {
             var profiles = new List<(string, string)>();
-            var namePrefix = string.Empty;
-            if (!accounts.All(a => !string.IsNullOrEmpty(a.Name)))
-            {
-                Console.Write("Enter profile name prefix:");
-                namePrefix = Console.ReadLine();
-            }
             Console.WriteLine("Choose operating system:");
             var os = SelectHelper.Select(_oses);
 
@@ -187,12 +181,10 @@ namespace YWB.AntidetectAccountParser.Services.Browsers
                     var proxyId = await CreateOrGetProxyAsync(accounts[i].Proxy);
                     proxyIds.Add(accounts[i].Proxy, proxyId);
                 }
-                var pName = string.IsNullOrEmpty(accounts[i].Name) ? $"{namePrefix}{i}" : accounts[i].Name;
-                accounts[i].Name = pName;
-                Console.WriteLine($"Creating profile {pName}...");
-                var pId = await CreateNewProfileAsync(pName, os, proxyIds[accounts[i].Proxy]);
+                Console.WriteLine($"Creating profile {accounts[i].Name}...");
+                var pId = await CreateNewProfileAsync(accounts[i].Name, os, proxyIds[accounts[i].Proxy]);
                 Console.WriteLine($"Profile with ID={pId} created!");
-                res.Add((pName, pId));
+                res.Add((accounts[i].Name, pId));
             }
             return res;
         }

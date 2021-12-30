@@ -9,8 +9,8 @@ namespace YWB.AntidetectAccountParser.Services.Browsers
 {
     public abstract class AbstractAntidetectApiService
     {
-        protected abstract Task<List<(string pName, string pId)>> CreateOrChooseProfilesAsync(
-            IList<SocialAccount> accounts);
+        protected abstract string FileName { get; set; }
+        protected abstract Task<List<(string pName, string pId)>> CreateOrChooseProfilesAsync(IList<SocialAccount> accounts);
 
         protected abstract Task ImportCookiesAsync(string profileId, string cookies);
 
@@ -26,6 +26,9 @@ namespace YWB.AntidetectAccountParser.Services.Browsers
             }
             else
                 Console.WriteLine($"Found {accounts.Count} accounts.");
+
+
+            AccountNamesHelper.Process(accounts);
 
             var selectedProfiles = await CreateOrChooseProfilesAsync(accounts);
 

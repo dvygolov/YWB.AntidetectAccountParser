@@ -11,7 +11,7 @@ namespace YWB.AntidetectAccountParser.Services.Proxies
     public class FileProxyProvider : IProxyProvider<SocialAccount>
     {
         private const string FileName = "proxy.txt";
-        private List<Proxy> Get()
+        public List<Proxy> Get()
         {
             var dir = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
             var fullPath = Path.Combine(dir, FileName);
