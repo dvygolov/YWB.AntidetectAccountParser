@@ -18,7 +18,6 @@ namespace YWB.AntidetectAccountParser
         static async Task Main(string[] args)
         {
             var bot = new AccountsBot();
-            await bot.Listen();
             Console.InputEncoding = System.Text.Encoding.UTF8;
             Console.OutputEncoding = System.Text.Encoding.UTF8;
             Console.WriteLine("Antidetect Accounts Parser v5.7 Yellow Web (https://yellowweb.top)");

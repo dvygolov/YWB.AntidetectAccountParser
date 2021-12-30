@@ -2,37 +2,40 @@
 using System.Collections.Generic;
 using System.Linq;
 using YWB.AntidetectAccountParser.Model.Accounts;
+using YWB.AntidetectAccountParser.Services.Logging;
 
 namespace YWB.AntidetectAccountParser.Services.Parsers
 {
     public abstract class AbstractTextAccountsParser<T> : IAccountsParser<T> where T : SocialAccount
     {
-        private readonly Func<List<string>> _get;
-        public AbstractTextAccountsParser(Func<List<string>> get)
-        {
-            _get = get;
-        }
-        public string Preprocess()
-        {
-            var lines = _get();
+        protected readonly IAccountsLogger _logger;
+        private List<string> _input;
 
-            if (lines.Count > 1)
+        public AbstractTextAccountsParser(IAccountsLogger logger,List<string> input)
+        {
+            _logger = logger;
+            _input = input;
+        }
+
+        protected string Preprocess()
+        {
+            if (_input.Count > 1)
             {
                 //If all accounts lines start with the same shit - we must remove it!
                 string sameStart;
                 int j = 1;
                 do
                 {
-                    sameStart = lines[0].Substring(0, j);
+                    sameStart = _input[0].Substring(0, j);
                     j++;
                 }
-                while (lines.All(l => l.StartsWith(sameStart)));
+                while (_input.All(l => l.StartsWith(sameStart)));
 
                 if (sameStart.Length > 4) //then we are sure that it is not just random coincidence
-                    lines = lines.ToList().ConvertAll(l => l.Substring(j - 2));
+                    _input = _input.ConvertAll(l => l.Substring(j - 2));
             }
 
-            var input = string.Join("\r\n", lines);
+            var input = string.Join("\r\n", _input);
             return input;
         }
 

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -11,12 +12,14 @@ using Telegram.Bot.Exceptions;
 using Telegram.Bot.Extensions.Polling;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
+using YWB.AntidetectAccountParser.Services.Logging;
 using YWB.AntidetectAccountParser.Services.Parsers;
 
 namespace YWB.AntidetectAccountParser.Services.Telegram
 {
     internal class AccountsBot
     {
+        ConcurrentDictionary<string, Dictionary<string, string>> _flows = new ConcurrentDictionary<string, Dictionary<string, string>>();
         private const string FileName = "bot.txt";
         private TelegramBotClient _bot;
 
@@ -24,10 +27,10 @@ namespace YWB.AntidetectAccountParser.Services.Telegram
         {
             var dir = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
             var fullPath = Path.Combine(dir, FileName);
+            if (!System.IO.File.Exists(fullPath)) return;
             _bot = new TelegramBotClient(System.IO.File.ReadAllText(fullPath));
             using var cts = new CancellationTokenSource();
 
-            // StartReceiving does not block the caller thread. Receiving is done on the ThreadPool.
             var receiverOptions = new ReceiverOptions
             {
                 AllowedUpdates = { } // receive all update types
@@ -37,12 +40,6 @@ namespace YWB.AntidetectAccountParser.Services.Telegram
                 HandleErrorAsync,
                 receiverOptions,
                 cancellationToken: cts.Token);
-        }
-
-        public async Task Listen()
-        {
-            var me = await _bot.GetMeAsync();
-            Console.WriteLine($"Hello, World! I am user {me.Id} and my name is {me.FirstName}.");
         }
 
         async Task HandleUpdateAsync(ITelegramBotClient b, Update update, CancellationToken cancellationToken)
@@ -58,10 +55,14 @@ namespace YWB.AntidetectAccountParser.Services.Telegram
                         break;
                     }
 
-                    var ms=new MemoryStream();
+                    await b.SendTextMessageAsync(m.Chat.Id, "Received file with accounts! Parsing...");
+                    var ms = new MemoryStream();
                     await _bot.GetInfoAndDownloadFileAsync(m.Document.FileId, ms);
-                    var content=Encoding.UTF8.GetString(ms.ToArray());
-                    //var p = new FacebookTextAccountsParser(()=>m.Document.);
+                    var content = Encoding.UTF8.GetString(ms.ToArray());
+                    var logger = new BufferAccountsLogger();
+                    var p = new FacebookTextAccountsParser(logger, content.Split(Environment.NewLine, StringSplitOptions.RemoveEmptyEntries).ToList());
+                    p.Parse();
+                    await b.SendTextMessageAsync(m.Chat.Id, logger.Flush());
                     break;
             }
         }
