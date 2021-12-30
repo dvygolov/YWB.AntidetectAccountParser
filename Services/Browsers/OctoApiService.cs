@@ -62,7 +62,7 @@ namespace YWB.AntidetectAccountParser.Services.Browsers
         }
 
 
-        protected override async Task<List<(string pName, string pId)>> CreateOrChooseProfilesAsync(IEnumerable<SocialAccount> accounts)
+        protected override async Task<List<(string pName, string pId)>> CreateProfilesAsync(IEnumerable<SocialAccount> accounts)
         {
             var profiles = new List<(string, string)>();
             Console.WriteLine("Choose operating system:");

@@ -160,7 +160,7 @@ namespace YWB.AntidetectAccountParser.Services.Parsers
 
             if (invalid.Count > 0)
             {
-                _logger.Log("Invalid accounts were found! Removing them...");
+                _logger.Log($"{invalid.Count} invalid accounts were found! Removing them...");
                 for (int i = invalid.Count - 1; i >= 0; i--)
                 {
                     lst.RemoveAt(invalid[i]);

@@ -48,24 +48,6 @@ namespace YWB.AntidetectAccountParser.Services.Browsers
             }
         }
 
-
-        public async Task<List<IndigoProfile>> GetAllProfilesByGroupAsync(string groupName)
-        {
-            try
-            {
-                if (!AllGroups.ContainsKey(groupName)) return null;
-                var groupId = AllGroups[groupName];
-                var allProfiles = await GetAllProfilesAsync();
-                var bProfiles = allProfiles[groupId.Sid];
-                return bProfiles.OrderBy(b => b.Name).ToList();
-            }
-            catch (Exception e)
-            {
-                AddToLog(e, $"Error while trying to get profiles from group {groupName}!");
-                return null;
-            }
-        }
-
         private async Task<IndigoProfileSettings> GetProfileSettingsAsync(string profileId)
         {
             if (_profileSettings.ContainsKey(profileId)) return _profileSettings[profileId];
@@ -106,33 +88,22 @@ namespace YWB.AntidetectAccountParser.Services.Browsers
             return await ExecuteRequestAsync<IndigoPlanSettings>(r);
         }
 
-        protected override async Task<List<(string pName, string pId)>> CreateOrChooseProfilesAsync(IEnumerable<SocialAccount> accounts)
+        protected override async Task<List<(string pName, string pId)>> CreateProfilesAsync(IEnumerable<SocialAccount> accounts)
         {
             var groups = AllGroups.OrderBy(g => g.Key);
             Console.WriteLine("Choose group:");
             var selected = SelectHelper.Select(groups, g => g.Key);
-            var createNew = YesNoSelector.ReadAnswerEqualsYes("Should I create new profiles? If not, then you'll choose from existing.");
-            List<IndigoProfile> selectedProfiles = null;
-            if (createNew)
+            Console.WriteLine("Choose operating system:");
+            var os = SelectHelper.Select(new[] { "win", "mac" });
+            var res = new List<(string, string)>();
+            foreach (SocialAccount account in accounts)
             {
-                Console.WriteLine("Choose operating system:");
-                var os = SelectHelper.Select(new[] { "win", "mac" });
-                var res = new List<(string, string)>();
-                foreach (SocialAccount account in accounts)
-                {
-                    Console.WriteLine($"Creating profile {account.Name}...");
-                    var pId = await CreateNewProfileAsync(account.Name, os, selected.Value.Sid, account.Proxy);
-                    Console.WriteLine($"Profile with ID={pId} created!");
-                    res.Add((account.Name, pId));
-                }
-                return res;
+                Console.WriteLine($"Creating profile {account.Name}...");
+                var pId = await CreateNewProfileAsync(account.Name, os, selected.Value.Sid, account.Proxy);
+                Console.WriteLine($"Profile with ID={pId} created!");
+                res.Add((account.Name, pId));
             }
-            else
-            {
-                var allProfiles = await GetAllProfilesByGroupAsync(selected.Key);
-                selectedProfiles = SelectHelper.SelectMultiple(allProfiles, p => p.Name);
-                return selectedProfiles.Select(p => (p.Name, p.Uuid)).ToList();
-            }
+            return res;
         }
 
         protected override async Task ImportCookiesAsync(string profileId, string cookies)
@@ -148,20 +119,20 @@ namespace YWB.AntidetectAccountParser.Services.Browsers
                 switch (json.message)
                 {
                     case "Can't enable Google services":
-                    {
-                        Console.WriteLine("Couldn't enable Google services, switching them off...");
-                        var settings = await GetProfileSettingsAsync(profileId);
-                        settings.googleServices = false;
-                        settings.loadCustomExtensions = false;
-                        await SaveProfileSettingsAsync(settings);
+                        {
+                            Console.WriteLine("Couldn't enable Google services, switching them off...");
+                            var settings = await GetProfileSettingsAsync(profileId);
+                            settings.googleServices = false;
+                            settings.loadCustomExtensions = false;
+                            await SaveProfileSettingsAsync(settings);
 
-                        dynamic json2 = await ExecuteLocalRequestAsync<JObject>(r);
-                        if (json2 != null && json2.status == "OK")
-                            Console.WriteLine("Cookies imported! Adding all data to note...");
-                        else
-                            Console.WriteLine($"Cookies were NOT imported!!!{json} Adding all data to note...");
-                        break;
-                    }
+                            dynamic json2 = await ExecuteLocalRequestAsync<JObject>(r);
+                            if (json2 != null && json2.status == "OK")
+                                Console.WriteLine("Cookies imported! Adding all data to note...");
+                            else
+                                Console.WriteLine($"Cookies were NOT imported!!!{json} Adding all data to note...");
+                            break;
+                        }
                 }
             }
         }

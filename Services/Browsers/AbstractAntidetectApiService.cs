@@ -11,7 +11,7 @@ namespace YWB.AntidetectAccountParser.Services.Browsers
     public abstract class AbstractAntidetectApiService:IAccountsImporter
     {
         protected abstract string FileName { get; set; }
-        protected abstract Task<List<(string pName, string pId)>> CreateOrChooseProfilesAsync(IEnumerable<SocialAccount> accounts);
+        protected abstract Task<List<(string pName, string pId)>> CreateProfilesAsync(IEnumerable<SocialAccount> accounts);
 
         protected abstract Task ImportCookiesAsync(string profileId, string cookies);
 
@@ -32,7 +32,7 @@ namespace YWB.AntidetectAccountParser.Services.Browsers
 
             AccountNamesHelper.Process(accounts);
 
-            var selectedProfiles = await CreateOrChooseProfilesAsync(accounts);
+            var selectedProfiles = await CreateProfilesAsync(accounts);
 
             int i = 0;
             foreach(var account in accounts)
