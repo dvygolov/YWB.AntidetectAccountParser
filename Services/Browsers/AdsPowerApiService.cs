@@ -22,19 +22,19 @@ namespace YWB.AntidetectAccountParser.Services.Browsers
         private List<string> _cpu = new List<string> { "2", "4", "6", "8", "16" };
         private List<string> _memory = new List<string> { "2", "4", "6", "8" };
 
-        protected override async Task<List<(string pName, string pId)>> CreateOrChooseProfilesAsync(IList<SocialAccount> accounts)
+        protected override async Task<List<(string pName, string pId)>> CreateOrChooseProfilesAsync(IEnumerable<SocialAccount> accounts)
         {
             var profiles = new List<(string, string)>();
             Console.WriteLine("Choose operating system:");
             var os = SelectHelper.Select(_oses);
 
             var res = new List<(string, string)>();
-            for (int i = 0; i < accounts.Count; i++)
+            foreach (SocialAccount account in accounts)
             {
-                Console.WriteLine($"Creating profile {accounts[i].Name}...");
-                var pId = await CreateNewProfileAsync(os, accounts[i]);
+                Console.WriteLine($"Creating profile {account.Name}...");
+                var pId = await CreateNewProfileAsync(os, account);
                 Console.WriteLine($"Profile with ID={pId} created!");
-                res.Add((accounts[i].Name, pId));
+                res.Add((account.Name, pId));
             }
             return res;
 

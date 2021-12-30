@@ -11,7 +11,7 @@ using YWB.AntidetectAccountParser.Model.Accounts;
 
 namespace YWB.AntidetectAccountParser.Services.Monitoring
 {
-    public abstract class AbstractMonitoringService
+    public abstract class AbstractMonitoringService:IAccountsImporter
     {
         protected string _token;
         protected string _apiUrl;
@@ -23,7 +23,7 @@ namespace YWB.AntidetectAccountParser.Services.Monitoring
         protected abstract Task<List<Proxy>> GetExistingProxiesAsync();
         protected abstract Task<string> AddProxyAsync(Proxy p);
         protected abstract Task<bool> AddAccountAsync(FacebookAccount acc, AccountGroup g, string proxyId);
-        public async Task AddAccountsAsync(List<FacebookAccount> accounts)
+        public async Task<Dictionary<string, SocialAccount>> ImportAccountsAsync(IEnumerable<SocialAccount> accounts)
         {
             AccountNamesHelper.Process(accounts);
             var groups = await GetExistingGroupsAsync();
@@ -40,7 +40,7 @@ namespace YWB.AntidetectAccountParser.Services.Monitoring
             });
 
             //We should add accounts with the same token only once
-            var distinct = accounts.GroupBy(a => a.Token).Select(g => g.First()).ToList();
+            var distinct = accounts.GroupBy(a => (a as FacebookAccount).Token).Select(g => g.First()).ToList();
             foreach (var acc in distinct)
             {
                 string proxyId;
@@ -57,10 +57,11 @@ namespace YWB.AntidetectAccountParser.Services.Monitoring
                     Console.WriteLine($"Proxy {acc.Proxy} added!");
                 }
                 Console.WriteLine($"Adding account {acc.Name}...");
-                var success = await AddAccountAsync(acc, group, proxyId);
+                var success = await AddAccountAsync(acc as FacebookAccount, group, proxyId);
                 if (success)
                     Console.WriteLine($"Account {acc.Name} added!");
             }
+            return null;
         }
 
         protected async Task<T> ExecuteRequestAsync<T>(RestRequest r)

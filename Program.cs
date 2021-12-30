@@ -113,7 +113,7 @@ namespace YWB.AntidetectAccountParser
             };
             Console.WriteLine("Choose your service:");
             var monitoringService = SelectHelper.Select(monitoringServices, ms => ms.Key).Value();
-            await monitoringService.AddAccountsAsync(accounts);
+            await monitoringService.ImportAccountsAsync(accounts);
             Console.WriteLine("All accounts added to FbTool/Dolphin.");
         }
     }

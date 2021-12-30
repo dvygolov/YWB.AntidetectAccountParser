@@ -62,7 +62,7 @@ namespace YWB.AntidetectAccountParser.Services.Browsers
         }
 
 
-        protected override async Task<List<(string pName, string pId)>> CreateOrChooseProfilesAsync(IList<SocialAccount> accounts)
+        protected override async Task<List<(string pName, string pId)>> CreateOrChooseProfilesAsync(IEnumerable<SocialAccount> accounts)
         {
             var profiles = new List<(string, string)>();
             Console.WriteLine("Choose operating system:");
@@ -73,12 +73,12 @@ namespace YWB.AntidetectAccountParser.Services.Browsers
             var tag = await SelectHelper.SelectWithCreateAsync(tags, t => t.Name, AddNewTag, true);
 
             var res = new List<(string, string)>();
-            for (int i = 0; i < accounts.Count; i++)
+            foreach (SocialAccount account in accounts)
             {
-                Console.WriteLine($"Creating profile {accounts[i].Name}...");
-                var pId = await CreateNewProfileAsync(accounts[i].Name, os, accounts[i].Proxy, tag?.Name);
+                Console.WriteLine($"Creating profile {account.Name}...");
+                var pId = await CreateNewProfileAsync(account.Name, os, account.Proxy, tag?.Name);
                 Console.WriteLine($"Profile with ID={pId} created!");
-                res.Add((accounts[i].Name, pId));
+                res.Add((account.Name, pId));
             }
             return res;
         }

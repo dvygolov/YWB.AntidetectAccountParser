@@ -8,9 +8,9 @@ namespace YWB.AntidetectAccountParser
         public static async Task ShowAsync(bool isBot)
         {
             if (isBot)
-            Console.WriteLine(@"            Antidetect Accounts Parser Telegram Bot v5.8 ");
+            Console.WriteLine(@"            Antidetect Accounts Parser Telegram Bot v6.0 ");
             else
-            Console.WriteLine(@"                Antidetect Accounts Parser v5.8 ");
+            Console.WriteLine(@"                Antidetect Accounts Parser v6.0 ");
             Console.WriteLine(@"   _            __     __  _ _             __          __  _     ");
             Console.WriteLine(@"  | |           \ \   / / | | |            \ \        / / | |    ");
             Console.WriteLine(@"  | |__  _   _   \ \_/ /__| | | _____      _\ \  /\  / /__| |__  ");

@@ -11,6 +11,7 @@ using Telegram.Bot.Exceptions;
 using Telegram.Bot.Extensions.Polling;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
+using Telegram.Bot.Types.ReplyMarkups;
 using YWB.AntidetectAccountParser.Services.Logging;
 using YWB.AntidetectAccountParser.Services.Parsers;
 using YWB.AntidetectAccountParser.Services.Proxies;
@@ -73,13 +74,42 @@ namespace YWB.AntidetectAccountParser.Services.Telegram
                         break;
                     }
                     var flow = _flows[m.From.Id];
-                    if (flow.Proxies==null)
+                    if (flow.Proxies == null)
                     {
                         var pp = new TextProxyProvider(m.Text);
                         flow.Proxies = pp.Get();
                         pp.SetProxies(flow.Accounts);
-                        await b.SendTextMessageAsync(m.Chat.Id, "Choose, where to import your accounts:");
-
+                        ReplyKeyboardMarkup replyKeyboardMarkup = new(new[] { new KeyboardButton[] { "Antidetect Browser", "Dolphin/FbTool" } }) { ResizeKeyboard = true };
+                        Message sentMessage = await b.SendTextMessageAsync(
+                            chatId: m.Chat.Id,
+                            text: "Choose, where to import your accounts:",
+                            replyMarkup: replyKeyboardMarkup,
+                            cancellationToken: cancellationToken);
+                        break;
+                    }
+                    if (string.IsNullOrEmpty(flow.WhereToImport))
+                    {
+                        break;
+                    }
+                    if (string.IsNullOrEmpty(flow.Group))
+                    {
+                        break;
+                    }
+                    if (string.IsNullOrEmpty(flow.Group))
+                    {
+                        break;
+                    }
+                    if (string.IsNullOrEmpty(flow.NamingPrefix))
+                    {
+                        break;
+                    }
+                    if (flow.NamingIndex==null)
+                    {
+                        break;
+                    }
+                    if (flow.IsFilled())
+                    {
+                        break;
                     }
                     break;
             }

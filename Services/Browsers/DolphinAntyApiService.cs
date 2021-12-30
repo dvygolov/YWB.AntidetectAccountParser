@@ -165,7 +165,7 @@ namespace YWB.AntidetectAccountParser.Services.Browsers
             return res["data"].ToString();
         }
 
-        protected override async Task<List<(string pName, string pId)>> CreateOrChooseProfilesAsync(IList<SocialAccount> accounts)
+        protected override async Task<List<(string pName, string pId)>> CreateOrChooseProfilesAsync(IEnumerable<SocialAccount> accounts)
         {
             var profiles = new List<(string, string)>();
             Console.WriteLine("Choose operating system:");
@@ -173,18 +173,18 @@ namespace YWB.AntidetectAccountParser.Services.Browsers
 
             var proxyIds = new Dictionary<Proxy, string>();
             var res = new List<(string, string)>();
-            for (int i = 0; i < accounts.Count; i++)
+            foreach (SocialAccount account in accounts)
             {
-                if (!proxyIds.ContainsKey(accounts[i].Proxy))
+                if (!proxyIds.ContainsKey(account.Proxy))
                 {
                     Console.WriteLine("Adding proxy...");
-                    var proxyId = await CreateOrGetProxyAsync(accounts[i].Proxy);
-                    proxyIds.Add(accounts[i].Proxy, proxyId);
+                    var proxyId = await CreateOrGetProxyAsync(account.Proxy);
+                    proxyIds.Add(account.Proxy, proxyId);
                 }
-                Console.WriteLine($"Creating profile {accounts[i].Name}...");
-                var pId = await CreateNewProfileAsync(accounts[i].Name, os, proxyIds[accounts[i].Proxy]);
+                Console.WriteLine($"Creating profile {account.Name}...");
+                var pId = await CreateNewProfileAsync(account.Name, os, proxyIds[account.Proxy]);
                 Console.WriteLine($"Profile with ID={pId} created!");
-                res.Add((accounts[i].Name, pId));
+                res.Add((account.Name, pId));
             }
             return res;
         }

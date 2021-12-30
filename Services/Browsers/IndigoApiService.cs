@@ -106,7 +106,7 @@ namespace YWB.AntidetectAccountParser.Services.Browsers
             return await ExecuteRequestAsync<IndigoPlanSettings>(r);
         }
 
-        protected override async Task<List<(string pName, string pId)>> CreateOrChooseProfilesAsync(IList<SocialAccount> accounts)
+        protected override async Task<List<(string pName, string pId)>> CreateOrChooseProfilesAsync(IEnumerable<SocialAccount> accounts)
         {
             var groups = AllGroups.OrderBy(g => g.Key);
             Console.WriteLine("Choose group:");
@@ -118,12 +118,12 @@ namespace YWB.AntidetectAccountParser.Services.Browsers
                 Console.WriteLine("Choose operating system:");
                 var os = SelectHelper.Select(new[] { "win", "mac" });
                 var res = new List<(string, string)>();
-                for (int i = 0; i < accounts.Count; i++)
+                foreach (SocialAccount account in accounts)
                 {
-                    Console.WriteLine($"Creating profile {accounts[i].Name}...");
-                    var pId = await CreateNewProfileAsync(accounts[i].Name, os, selected.Value.Sid, accounts[i].Proxy);
+                    Console.WriteLine($"Creating profile {account.Name}...");
+                    var pId = await CreateNewProfileAsync(account.Name, os, selected.Value.Sid, account.Proxy);
                     Console.WriteLine($"Profile with ID={pId} created!");
-                    res.Add((accounts[i].Name, pId));
+                    res.Add((account.Name, pId));
                 }
                 return res;
             }
