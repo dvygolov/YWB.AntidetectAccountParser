@@ -25,6 +25,7 @@ namespace YWB.AntidetectAccountParser
             if (isBot)
             {
                 var bot = new AccountsBot();
+                while (true) ;
             }
             else
             {

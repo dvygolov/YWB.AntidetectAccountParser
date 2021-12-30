@@ -8,13 +8,13 @@ namespace YWB.AntidetectAccountParser.Services.Telegram
     {
         public IEnumerable<SocialAccount> Accounts { get; set; }
         public List<Proxy> Proxies { get; set; }
-        public string WhereToImport { get; set; }
+        public IAccountsImporter Importer { get; set; }
         public string Group { get; set; }
         public string NamingPrefix { get; set; }
         public int? NamingIndex { get; set; }
 
         public bool IsFilled() => 
-            Accounts != null && Proxies != null && !string.IsNullOrEmpty(WhereToImport) && !string.IsNullOrEmpty(Group) && 
+            Accounts != null && Proxies != null && Importer!=null && !string.IsNullOrEmpty(Group) && 
             !string.IsNullOrEmpty(NamingPrefix) && NamingIndex != null;
     }
 }
