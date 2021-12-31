@@ -19,6 +19,19 @@ namespace YWB.AntidetectAccountParser.Services.Browsers
         protected override string FileName { get; set; } = "dolphinanty.txt";
         private string _token;
         private string[] _oses = new[] { "windows", "linux", "macos" };
+        private Dictionary<Proxy, string> _proxyIds;
+
+        public override List<string> GetOSes() => _oses.ToList();
+
+        public override Task<List<AccountGroup>> GetExistingGroupsAsync()
+        {
+            throw new NotImplementedException();
+        }
+
+        public override Task<AccountGroup> AddNewGroupAsync(string groupName)
+        {
+            throw new NotImplementedException();
+        }
 
         private async Task<List<Proxy>> GetExistingProxiesAsync()
         {
@@ -34,21 +47,8 @@ namespace YWB.AntidetectAccountParser.Services.Browsers
             }).ToList();
         }
 
-        private async Task<string> CreateOrGetProxyAsync(Proxy p)
+        private async Task<string> CreateProxyAsync(Proxy p)
         {
-            var allProxies = await GetExistingProxiesAsync();
-            var allProxiesDict = new Dictionary<Proxy, string>();
-            allProxies.ForEach(pr =>
-            {
-                if (!allProxiesDict.ContainsKey(pr))
-                    allProxiesDict.Add(pr, pr.Id);
-            });
-
-            if (allProxiesDict.ContainsKey(p))
-            {
-                Console.WriteLine("Found existing proxy!");
-                return allProxiesDict[p];
-            }
             var r = new RestRequest("proxy", Method.POST);
             if (p.Type == "socks") p.Type = "socks5";
             r.AddParameter("type", p.Type);
@@ -63,11 +63,24 @@ namespace YWB.AntidetectAccountParser.Services.Browsers
             if (!res["success"]?.Value<bool>() ?? false)
                 throw new Exception(res["error"].ToString());
             Console.WriteLine("Proxy added!");
-            return res["data"]["id"].ToString();
+            var proxyId = res["data"]["id"].ToString();
+            _proxyIds.Add(p, proxyId);
+            return proxyId;
         }
 
-        public async Task<string> CreateNewProfileAsync(string pName, string os, string proxyId)
+        public override async Task<string> CreateNewProfileAsync(string pName, string os, Proxy proxy, AccountGroup group)
         {
+            if (_proxyIds == null)
+                _proxyIds = (await GetExistingProxiesAsync()).ToDictionary(p => p, p => p.Id);
+
+            string proxyId;
+            if (!_proxyIds.ContainsKey(proxy))
+            {
+                Console.WriteLine("Adding proxy...");
+                proxyId = await CreateProxyAsync(proxy);
+            }
+            else proxyId = _proxyIds[proxy];
+
             var fp = await GetNewFingerprintAsync(os);
             var ua = await GetNewUseragentAsync(os);
             var memory = int.Parse(fp["deviceMemory"].ToString());
@@ -140,6 +153,7 @@ namespace YWB.AntidetectAccountParser.Services.Browsers
             p.ports.blacklist = "3389,5900,5800,7070,6568,5938";
             p.statusId = 0;
             p.tags = new JArray();
+            p.tags.Add(group.Name);
 
             request.AddParameter("application/json", p.ToString(), ParameterType.RequestBody);
             var res = await ExecuteRequestAsync<JObject>(request);
@@ -164,31 +178,6 @@ namespace YWB.AntidetectAccountParser.Services.Browsers
             var res = await ExecuteRequestAsync<JObject>(request);
             return res["data"].ToString();
         }
-
-        protected override async Task<List<(string pName, string pId)>> CreateProfilesAsync(IEnumerable<SocialAccount> accounts)
-        {
-            var profiles = new List<(string, string)>();
-            Console.WriteLine("Choose operating system:");
-            var os = SelectHelper.Select(_oses);
-
-            var proxyIds = new Dictionary<Proxy, string>();
-            var res = new List<(string, string)>();
-            foreach (SocialAccount account in accounts)
-            {
-                if (!proxyIds.ContainsKey(account.Proxy))
-                {
-                    Console.WriteLine("Adding proxy...");
-                    var proxyId = await CreateOrGetProxyAsync(account.Proxy);
-                    proxyIds.Add(account.Proxy, proxyId);
-                }
-                Console.WriteLine($"Creating profile {account.Name}...");
-                var pId = await CreateNewProfileAsync(account.Name, os, proxyIds[account.Proxy]);
-                Console.WriteLine($"Profile with ID={pId} created!");
-                res.Add((account.Name, pId));
-            }
-            return res;
-        }
-
 
         protected override async Task ImportCookiesAsync(string profileId, string cookies)
         {
@@ -261,5 +250,7 @@ namespace YWB.AntidetectAccountParser.Services.Browsers
                 return (login, password);
             }
         }
+
+
     }
 }

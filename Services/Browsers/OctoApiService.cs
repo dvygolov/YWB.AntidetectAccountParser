@@ -21,7 +21,14 @@ namespace YWB.AntidetectAccountParser.Services.Browsers
         private string _token;
         private string[] _oses = new[] { "win", "mac" };
 
-        private async Task<List<AccountGroup>> GetExistingTagsAsync()
+        public override List<string> GetOSes()=>_oses.ToList();
+
+        public override Task<AccountGroup> AddNewGroupAsync(string groupName)
+        {
+            return Task.FromResult(new AccountGroup() { Id = "new", Name = groupName });
+        }
+
+        public override async Task<List<AccountGroup>> GetExistingGroupsAsync()
         {
             var r = new RestRequest("tags", Method.GET);
             var json = await ExecuteRequestAsync<JObject>(r);
@@ -32,14 +39,7 @@ namespace YWB.AntidetectAccountParser.Services.Browsers
             }).ToList();
         }
 
-        private Task<AccountGroup> AddNewTag()
-        {
-            Console.Write("Enter tag name:");
-            var tagName = Console.ReadLine();
-            return Task.FromResult(new AccountGroup() { Id = "new", Name = tagName });
-        }
-
-        public async Task<string> CreateNewProfileAsync(string pName, string os, Proxy proxy, string tag = null)
+        public override async Task<string> CreateNewProfileAsync(string pName, string os, Proxy proxy, AccountGroup group)
         {
             var request = new RestRequest("profiles", Method.POST);
             dynamic p = new JObject();
@@ -53,36 +53,13 @@ namespace YWB.AntidetectAccountParser.Services.Browsers
             p.proxy.login = proxy.Login;
             p.proxy.password = proxy.Password;
             p.tags = new JArray();
-            if (tag != null) p.tags.Add(tag);
+            if (group != null) p.tags.Add(group.Name);
 
             request.AddParameter("application/json", p.ToString(), ParameterType.RequestBody);
             dynamic res = await ExecuteRequestAsync<dynamic>(request);
             if (res.success != true) throw new Exception(res.ToString());
             return res.data.uuid;
         }
-
-
-        protected override async Task<List<(string pName, string pId)>> CreateProfilesAsync(IEnumerable<SocialAccount> accounts)
-        {
-            var profiles = new List<(string, string)>();
-            Console.WriteLine("Choose operating system:");
-            var os = SelectHelper.Select(_oses);
-
-            var tags = await GetExistingTagsAsync();
-            Console.WriteLine("Choose a tag for all of these profiles, if needed:");
-            var tag = await SelectHelper.SelectWithCreateAsync(tags, t => t.Name, AddNewTag, true);
-
-            var res = new List<(string, string)>();
-            foreach (SocialAccount account in accounts)
-            {
-                Console.WriteLine($"Creating profile {account.Name}...");
-                var pId = await CreateNewProfileAsync(account.Name, os, account.Proxy, tag?.Name);
-                Console.WriteLine($"Profile with ID={pId} created!");
-                res.Add((account.Name, pId));
-            }
-            return res;
-        }
-
 
         protected override async Task ImportCookiesAsync(string profileId, string cookies)
         {
@@ -139,5 +116,6 @@ namespace YWB.AntidetectAccountParser.Services.Browsers
                 return token;
             }
         }
+
     }
 }

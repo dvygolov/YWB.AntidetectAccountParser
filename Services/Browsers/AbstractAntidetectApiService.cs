@@ -16,7 +16,7 @@ namespace YWB.AntidetectAccountParser.Services.Browsers
         protected abstract Task ImportCookiesAsync(string profileId, string cookies);
         protected abstract Task<bool> SaveItemToNoteAsync(string profileId, SocialAccount sa);
         public abstract Task<List<AccountGroup>> GetExistingGroupsAsync();
-        public abstract Task<AccountGroup> AddNewGroupAsync();
+        public abstract Task<AccountGroup> AddNewGroupAsync(string groupName);
         public abstract List<string> GetOSes();
 
         public async Task<Dictionary<string, SocialAccount>> ImportAccountsAsync(
