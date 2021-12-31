@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using YWB.AntidetectAccountParser.Helpers;
+using YWB.AntidetectAccountParser.Model;
 using YWB.AntidetectAccountParser.Model.Accounts;
 using YWB.AntidetectAccountParser.Services.Browsers;
 using YWB.AntidetectAccountParser.Services.Monitoring;
@@ -67,7 +68,10 @@ namespace YWB.AntidetectAccountParser
                 };
                     var selectedBrowser = SelectHelper.Select(browsers, b => b.Key).Value();
 
-                    var profiles = await selectedBrowser.ImportAccountsAsync(accounts.ToList());
+                    var cff = new ConsoleFlowFiller(selectedBrowser);
+                    FlowSettings flow = await cff.FillAsync();
+
+                    var profiles = await selectedBrowser.ImportAccountsAsync(accounts.ToList(),flow);
 
                     if (accounts?.All(a => a is FacebookAccount && !string.IsNullOrEmpty((a as FacebookAccount).Token)) ?? false)
                     {

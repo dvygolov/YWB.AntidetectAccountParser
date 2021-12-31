@@ -1,8 +1,8 @@
 ﻿using System.Collections.Generic;
-using YWB.AntidetectAccountParser.Model;
 using YWB.AntidetectAccountParser.Model.Accounts;
+using YWB.AntidetectAccountParser.Services;
 
-namespace YWB.AntidetectAccountParser.Services.Telegram
+namespace YWB.AntidetectAccountParser.Model
 {
     public class BotFlow : FlowSettings
     {

@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using YWB.AntidetectAccountParser.Helpers;
+using YWB.AntidetectAccountParser.Model;
 using YWB.AntidetectAccountParser.Model.Accounts;
 
 namespace YWB.AntidetectAccountParser.Services.Browsers
@@ -11,13 +12,15 @@ namespace YWB.AntidetectAccountParser.Services.Browsers
     public abstract class AbstractAntidetectApiService:IAccountsImporter
     {
         protected abstract string FileName { get; set; }
-        protected abstract Task<List<(string pName, string pId)>> CreateProfilesAsync(IEnumerable<SocialAccount> accounts);
-
+        public abstract Task<string> CreateNewProfileAsync(string pName, string os, Proxy proxy, AccountGroup group);
         protected abstract Task ImportCookiesAsync(string profileId, string cookies);
-
         protected abstract Task<bool> SaveItemToNoteAsync(string profileId, SocialAccount sa);
+        public abstract Task<List<AccountGroup>> GetExistingGroupsAsync();
+        public abstract Task<AccountGroup> AddNewGroupAsync();
+        public abstract List<string> GetOSes();
 
-        public async Task<Dictionary<string, SocialAccount>> ImportAccountsAsync(IEnumerable<SocialAccount> accounts)
+        public async Task<Dictionary<string, SocialAccount>> ImportAccountsAsync(
+            IEnumerable<SocialAccount> accounts, FlowSettings fs)
         {
             var res = new Dictionary<string, SocialAccount>();
             var count = accounts.Count();
@@ -29,20 +32,18 @@ namespace YWB.AntidetectAccountParser.Services.Browsers
             else
                 Console.WriteLine($"Found {count} accounts.");
 
+            AccountNamesHelper.Process(accounts,fs);
 
-            AccountNamesHelper.Process(accounts);
+            Dictionary<string, SocialAccount> profiles = new Dictionary<string, SocialAccount>();
 
-            var selectedProfiles = await CreateProfilesAsync(accounts);
-
-            int i = 0;
-            foreach(var account in accounts)
+            foreach (SocialAccount account in accounts)
             {
-                string pId = selectedProfiles[i].pId;
-                string pName = selectedProfiles[i].pName;
-
+                Console.WriteLine($"Creating profile {account.Name}...");
+                var pId = await CreateNewProfileAsync(account.Name, fs.Os, account.Proxy, fs.Group);
+                Console.WriteLine($"Profile with ID={pId} created!");
                 if (!string.IsNullOrEmpty(account.Cookies))
                 {
-                    Console.WriteLine($"Importing {account.Login} account's cookies to {pName} profile...");
+                    Console.WriteLine($"Importing {account.Login} account's cookies to {account.Name} profile...");
 
                     if (CookieHelper.AreCookiesInBase64(account.Cookies))
                     {
@@ -52,9 +53,8 @@ namespace YWB.AntidetectAccountParser.Services.Browsers
                 }
 
                 await SaveItemToNoteAsync(pId, account);
-                Console.WriteLine("Note saved!");
-                res.Add(selectedProfiles[i].pId, account);
-                i++;
+                Console.WriteLine($"Profile {account.Name} saved!");
+                profiles.Add(pId,account);
             }
             return res;
         }
