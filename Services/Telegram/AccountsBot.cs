@@ -12,6 +12,7 @@ using Telegram.Bot.Extensions.Polling;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
 using Telegram.Bot.Types.ReplyMarkups;
+using YWB.AntidetectAccountParser.Model;
 using YWB.AntidetectAccountParser.Services.Browsers;
 using YWB.AntidetectAccountParser.Services.Logging;
 using YWB.AntidetectAccountParser.Services.Monitoring;
@@ -117,9 +118,9 @@ namespace YWB.AntidetectAccountParser.Services.Telegram
                         }
                         break;
                     }
-                    if (string.IsNullOrEmpty(f.Group))
+                    if (f.Group==null)
                     {
-                        f.Group = m.Text;
+                            f.Group = new Model.Accounts.AccountGroup() { Name = "new" }; //TODO:Redo!
                         await b.SendTextMessageAsync(m.Chat.Id, "Enter profile names prefix (for examle, YWB_2212_NPPR70_):");
                         break;
                     }
@@ -144,7 +145,7 @@ namespace YWB.AntidetectAccountParser.Services.Telegram
                 var flow = _flows[m.From.Id];
                 if (flow.IsFilled())
                 {
-                    await flow.Importer.ImportAccountsAsync(flow.Accounts);
+                    await flow.Importer.ImportAccountsAsync(flow.Accounts,flow);
                     await b.SendTextMessageAsync(m.Chat.Id, "All done, HAPPY HACKING!");
                 }
             }

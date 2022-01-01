@@ -11,26 +11,22 @@ using YWB.AntidetectAccountParser.Model.Accounts;
 
 namespace YWB.AntidetectAccountParser.Services.Monitoring
 {
-    public abstract class AbstractMonitoringService:IAccountsImporter
+    public abstract class AbstractMonitoringService : IAccountsImporter
     {
         protected string _token;
         protected string _apiUrl;
 
         protected abstract Task SetTokenAndApiUrlAsync();
         protected abstract void AddAuthorization(RestRequest r);
-        protected abstract Task<List<AccountGroup>> GetExistingGroupsAsync();
-        protected abstract Task<AccountGroup> AddNewGroupAsync();
+        public abstract Task<List<AccountGroup>> GetExistingGroupsAsync();
+        public abstract Task<AccountGroup> AddNewGroupAsync(string groupName);
         protected abstract Task<List<Proxy>> GetExistingProxiesAsync();
         protected abstract Task<string> AddProxyAsync(Proxy p);
         protected abstract Task<bool> AddAccountAsync(FacebookAccount acc, AccountGroup g, string proxyId);
-        public async Task<Dictionary<string, SocialAccount>> ImportAccountsAsync(IEnumerable<SocialAccount> accounts)
+        public async Task<Dictionary<string, SocialAccount>> ImportAccountsAsync(IEnumerable<SocialAccount> accounts, FlowSettings fs)
         {
-            AccountNamesHelper.Process(accounts);
-            var groups = await GetExistingGroupsAsync();
-            Console.WriteLine("Do you want to add your accounts to group/tag?");
-            var group = await SelectHelper.SelectWithCreateAsync(groups, g => g.Name, AddNewGroupAsync, true);
+            AccountNamesHelper.Process(accounts, fs);
             Console.WriteLine("Getting existing proxies...");
-
             var existingProxies = await GetExistingProxiesAsync();
             var existingProxiesDict = new Dictionary<Proxy, string>();
             existingProxies.ForEach(pr =>
@@ -57,7 +53,7 @@ namespace YWB.AntidetectAccountParser.Services.Monitoring
                     Console.WriteLine($"Proxy {acc.Proxy} added!");
                 }
                 Console.WriteLine($"Adding account {acc.Name}...");
-                var success = await AddAccountAsync(acc as FacebookAccount, group, proxyId);
+                var success = await AddAccountAsync(acc as FacebookAccount, fs.Group, proxyId);
                 if (success)
                     Console.WriteLine($"Account {acc.Name} added!");
             }

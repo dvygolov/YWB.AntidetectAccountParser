@@ -15,16 +15,14 @@ namespace YWB.AntidetectAccountParser.Services.Monitoring
     {
         private const string FileName = "dolphin.txt";
 
-        protected override Task<List<AccountGroup>> GetExistingGroupsAsync()
+        public override Task<List<AccountGroup>> GetExistingGroupsAsync()
         {
             return Task.FromResult(new List<AccountGroup>());
         }
 
-        protected override Task<AccountGroup> AddNewGroupAsync()
+        public override Task<AccountGroup> AddNewGroupAsync(string groupName)
         {
-            Console.Write("Enter tag name:");
-            var tagName = Console.ReadLine();
-            return Task.FromResult(new AccountGroup() { Name = tagName });
+            return Task.FromResult(new AccountGroup() { Name = groupName });
         }
         protected override async Task<List<Proxy>> GetExistingProxiesAsync()
         {

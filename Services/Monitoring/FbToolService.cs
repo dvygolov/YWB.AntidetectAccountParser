@@ -15,7 +15,7 @@ namespace YWB.AntidetectAccountParser.Services.Monitoring
     {
         private const string FileName = "fbtool.txt";
 
-        protected override async Task<List<AccountGroup>> GetExistingGroupsAsync()
+        public override async Task<List<AccountGroup>> GetExistingGroupsAsync()
         {
             var r = new RestRequest("get-groups", Method.GET);
             var json = await ExecuteRequestAsync<JObject>(r);
@@ -25,11 +25,9 @@ namespace YWB.AntidetectAccountParser.Services.Monitoring
                 Name = t["name"].ToString()
             }).ToList();
         }
-        protected override Task<AccountGroup> AddNewGroupAsync()
+        public override Task<AccountGroup> AddNewGroupAsync(string groupName)
         {
-            Console.Write("Enter group name:");
-            var tagName = Console.ReadLine();
-            return Task.FromResult(new AccountGroup() { Id = "new", Name = tagName });
+            return Task.FromResult(new AccountGroup() { Id = "new", Name = groupName });
         }
 
         protected override async Task<string> AddProxyAsync(Proxy p)

@@ -2,17 +2,17 @@
 using System.Threading.Tasks;
 using YWB.AntidetectAccountParser.Helpers;
 using YWB.AntidetectAccountParser.Model;
-using YWB.AntidetectAccountParser.Services.Browsers;
+using YWB.AntidetectAccountParser.Services.Monitoring;
 
 namespace YWB.AntidetectAccountParser
 {
-    internal class ConsoleFlowFiller
+    internal class ConsoleMonitoringFlowFiller
     {
-        private AbstractAntidetectApiService _b;
+        private AbstractMonitoringService _m;
 
-        public ConsoleFlowFiller(AbstractAntidetectApiService selectedBrowser)
+        public ConsoleMonitoringFlowFiller(AbstractMonitoringService selectedMonitoringService)
         {
-            _b = selectedBrowser;
+            _m = selectedMonitoringService;
         }
 
         internal async Task<FlowSettings> FillAsync()
@@ -21,18 +21,15 @@ namespace YWB.AntidetectAccountParser
             var namePrefix = Console.ReadLine();
             Console.Write("Enter starting index (For example, 1):");
             var sIndex = int.Parse(Console.ReadLine());
-            Console.WriteLine("Choose operating system:");
-            var oses = _b.GetOSes();
-            var os = SelectHelper.Select(oses);
-            var groups = await _b.GetExistingGroupsAsync();
+            var groups = await _m.GetExistingGroupsAsync();
             Console.WriteLine("Choose a tag/group for all of your profiles, if needed:");
             var group = await SelectHelper.SelectWithCreateAsync(groups, g => g.Name, async () => 
             {
                 Console.Write("Enter new tag/group name:");
                 var tagName = Console.ReadLine();
-                return await _b.AddNewGroupAsync(tagName);
+                return await _m.AddNewGroupAsync(tagName);
             }, true);
-            return new FlowSettings { NamingIndex = sIndex, NamingPrefix = namePrefix, Os = os, Group = group };
+            return new FlowSettings { NamingIndex = sIndex, NamingPrefix = namePrefix, Group = group };
         }
     }
 }

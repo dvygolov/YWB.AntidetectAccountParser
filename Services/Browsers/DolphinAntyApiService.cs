@@ -25,12 +25,12 @@ namespace YWB.AntidetectAccountParser.Services.Browsers
 
         public override Task<List<AccountGroup>> GetExistingGroupsAsync()
         {
-            throw new NotImplementedException();
+            return Task.FromResult(new List<AccountGroup>());
         }
 
         public override Task<AccountGroup> AddNewGroupAsync(string groupName)
         {
-            throw new NotImplementedException();
+            return Task.FromResult(new AccountGroup { Name = groupName });
         }
 
         private async Task<List<Proxy>> GetExistingProxiesAsync()
@@ -68,18 +68,18 @@ namespace YWB.AntidetectAccountParser.Services.Browsers
             return proxyId;
         }
 
-        public override async Task<string> CreateNewProfileAsync(string pName, string os, Proxy proxy, AccountGroup group)
+        public override async Task<string> CreateNewProfileAsync(SocialAccount acc, string os, AccountGroup group)
         {
             if (_proxyIds == null)
                 _proxyIds = (await GetExistingProxiesAsync()).ToDictionary(p => p, p => p.Id);
 
             string proxyId;
-            if (!_proxyIds.ContainsKey(proxy))
+            if (!_proxyIds.ContainsKey(acc.Proxy))
             {
                 Console.WriteLine("Adding proxy...");
-                proxyId = await CreateProxyAsync(proxy);
+                proxyId = await CreateProxyAsync(acc.Proxy);
             }
-            else proxyId = _proxyIds[proxy];
+            else proxyId = _proxyIds[acc.Proxy];
 
             var fp = await GetNewFingerprintAsync(os);
             var ua = await GetNewUseragentAsync(os);
@@ -90,7 +90,7 @@ namespace YWB.AntidetectAccountParser.Services.Browsers
             var request = new RestRequest("browser_profiles", Method.POST);
             request.AddHeader("Content-Type", "application/json;charset=UTF-8");
             dynamic p = new JObject();
-            p.name = pName;
+            p.name = acc.Name;
             p.screen = new JObject();
             p.screen.mode = "manual";
             p.screen.resolution = $"{fp["screen"]["width"]}x{fp["screen"]["height"]}";

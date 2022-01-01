@@ -21,7 +21,7 @@ namespace YWB.AntidetectAccountParser.Services.Browsers
         private string _token;
         private string[] _oses = new[] { "win", "mac" };
 
-        public override List<string> GetOSes()=>_oses.ToList();
+        public override List<string> GetOSes() => _oses.ToList();
 
         public override Task<AccountGroup> AddNewGroupAsync(string groupName)
         {
@@ -39,19 +39,19 @@ namespace YWB.AntidetectAccountParser.Services.Browsers
             }).ToList();
         }
 
-        public override async Task<string> CreateNewProfileAsync(string pName, string os, Proxy proxy, AccountGroup group)
+        public override async Task<string> CreateNewProfileAsync(SocialAccount acc, string os, AccountGroup group)
         {
             var request = new RestRequest("profiles", Method.POST);
             dynamic p = new JObject();
-            p.title = pName;
+            p.title = acc.Name;
             p.fingerprint = new JObject();
             p.fingerprint.os = os;
             p.proxy = new JObject();
-            p.proxy.type = proxy.Type;
-            p.proxy.host = proxy.Address;
-            p.proxy.port = int.Parse(proxy.Port);
-            p.proxy.login = proxy.Login;
-            p.proxy.password = proxy.Password;
+            p.proxy.type = acc.Proxy.Type;
+            p.proxy.host = acc.Proxy.Address;
+            p.proxy.port = int.Parse(acc.Proxy.Port);
+            p.proxy.login = acc.Proxy.Login;
+            p.proxy.password = acc.Proxy.Password;
             p.tags = new JArray();
             if (group != null) p.tags.Add(group.Name);
 

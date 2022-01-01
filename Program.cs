@@ -68,10 +68,10 @@ namespace YWB.AntidetectAccountParser
                 };
                     var selectedBrowser = SelectHelper.Select(browsers, b => b.Key).Value();
 
-                    var cff = new ConsoleFlowFiller(selectedBrowser);
+                    var cff = new ConsoleBrowserFlowFiller(selectedBrowser);
                     FlowSettings flow = await cff.FillAsync();
 
-                    var profiles = await selectedBrowser.ImportAccountsAsync(accounts.ToList(),flow);
+                    var profiles = await selectedBrowser.ImportAccountsAsync(accounts.ToList(), flow);
 
                     if (accounts?.All(a => a is FacebookAccount && !string.IsNullOrEmpty((a as FacebookAccount).Token)) ?? false)
                     {
@@ -118,7 +118,9 @@ namespace YWB.AntidetectAccountParser
             };
             Console.WriteLine("Choose your service:");
             var monitoringService = SelectHelper.Select(monitoringServices, ms => ms.Key).Value();
-            await monitoringService.ImportAccountsAsync(accounts);
+            var cff = new ConsoleMonitoringFlowFiller(monitoringService);
+            FlowSettings flow = await cff.FillAsync();
+            await monitoringService.ImportAccountsAsync(accounts, flow);
             Console.WriteLine("All accounts added to FbTool/Dolphin.");
         }
     }

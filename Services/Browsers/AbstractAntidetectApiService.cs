@@ -12,7 +12,7 @@ namespace YWB.AntidetectAccountParser.Services.Browsers
     public abstract class AbstractAntidetectApiService:IAccountsImporter
     {
         protected abstract string FileName { get; set; }
-        public abstract Task<string> CreateNewProfileAsync(string pName, string os, Proxy proxy, AccountGroup group);
+        public abstract Task<string> CreateNewProfileAsync(SocialAccount acc, string os, AccountGroup group);
         protected abstract Task ImportCookiesAsync(string profileId, string cookies);
         protected abstract Task<bool> SaveItemToNoteAsync(string profileId, SocialAccount sa);
         public abstract Task<List<AccountGroup>> GetExistingGroupsAsync();
@@ -26,7 +26,7 @@ namespace YWB.AntidetectAccountParser.Services.Browsers
             var count = accounts.Count();
             if (count == 0)
             {
-                Console.WriteLine("Couldn't find any accounts to import! Unknown format or empty accounts.txt file!");
+                Console.WriteLine("Couldn't find any accounts to import! Unknown format or empty accounts file!");
                 return null;
             }
             else
@@ -39,7 +39,7 @@ namespace YWB.AntidetectAccountParser.Services.Browsers
             foreach (SocialAccount account in accounts)
             {
                 Console.WriteLine($"Creating profile {account.Name}...");
-                var pId = await CreateNewProfileAsync(account.Name, fs.Os, account.Proxy, fs.Group);
+                var pId = await CreateNewProfileAsync(account, fs.Os, fs.Group);
                 Console.WriteLine($"Profile with ID={pId} created!");
                 if (!string.IsNullOrEmpty(account.Cookies))
                 {

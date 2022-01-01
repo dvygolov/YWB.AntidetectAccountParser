@@ -8,7 +8,6 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using YWB.AntidetectAccountParser.Helpers;
-using YWB.AntidetectAccountParser.Model;
 using YWB.AntidetectAccountParser.Model.Accounts;
 using YWB.AntidetectAccountParser.Model.Indigo;
 
@@ -18,7 +17,6 @@ namespace YWB.AntidetectAccountParser.Services.Browsers
     {
         private string _token;
         private IndigoPlanSettings _ips;
-        private Dictionary<string, IndigoProfilesGroup> _allGroups;
         private ConcurrentDictionary<string, IndigoProfileSettings> _profileSettings = new ConcurrentDictionary<string, IndigoProfileSettings>();
         protected override string FileName { get; set; }
 
@@ -38,14 +36,21 @@ namespace YWB.AntidetectAccountParser.Services.Browsers
             }
         }
 
-        public Dictionary<string, IndigoProfilesGroup> AllGroups
+        public override List<string> GetOSes() => new List<string> { "win", "mac" };
+
+        public override async Task<List<AccountGroup>> GetExistingGroupsAsync()
         {
-            get
-            {
-                if (_allGroups == null)
-                    _allGroups = GetAllGroupsAsync().Result;
-                return _allGroups;
-            }
+            var r = new RestRequest($"clb/rest/v1/t/{Ips.Uid}/m/{Ips.Uid}/g/");
+            var groups = await ExecuteRequestAsync<IndigoProfilesGroup[]>(r);
+            return groups.Select(g => new AccountGroup { Id = g.Sid, Name = g.Name }).ToList();
+        }
+
+        public async override Task<AccountGroup> AddNewGroupAsync(string groupName)
+        {
+            var r = new RestRequest($"clb/u/{Ips.Uid}/g/", Method.POST);
+            r.AddJsonBody($@"{{""name"":""{groupName}"",""accessRights"":""[]"",""accessRightsModified"":true}}");
+            var group = await ExecuteLocalRequestAsync<IndigoProfilesGroup>(r);
+            return new AccountGroup { Id=group.Sid, Name = group.Name };
         }
 
         private async Task<IndigoProfileSettings> GetProfileSettingsAsync(string profileId)
@@ -68,42 +73,45 @@ namespace YWB.AntidetectAccountParser.Services.Browsers
             _profileSettings[ips.sid] = ips;
         }
 
-        public async Task<Dictionary<string, List<IndigoProfile>>> GetAllProfilesAsync()
-        {
-            var r = new RestRequest($"clb/rest/v1/t/{Ips.Uid}/m/{Ips.Uid}/p/");
-            var profiles = await ExecuteRequestAsync<IndigoProfile[]>(r);
-            return profiles.GroupBy(p => p.Group).ToDictionary(g => g.Key, g => g.Select(p => p).ToList());
-        }
-
-        public async Task<Dictionary<string, IndigoProfilesGroup>> GetAllGroupsAsync()
-        {
-            var r = new RestRequest($"clb/rest/v1/t/{Ips.Uid}/m/{Ips.Uid}/g/");
-            var groups = await ExecuteRequestAsync<IndigoProfilesGroup[]>(r);
-            return groups.Where(g => !string.IsNullOrEmpty(g.Name)).ToDictionary(g => g.Name, g => g);
-        }
-
         public async Task<IndigoPlanSettings> GetCurrentPlanSettingsAsync()
         {
             var r = new RestRequest("rest/v1/plans/current");
             return await ExecuteRequestAsync<IndigoPlanSettings>(r);
         }
 
-        protected override async Task<List<(string pName, string pId)>> CreateProfilesAsync(IEnumerable<SocialAccount> accounts)
+
+        public override async Task<string> CreateNewProfileAsync(SocialAccount acc, string os, AccountGroup group)
         {
-            var groups = AllGroups.OrderBy(g => g.Key);
-            Console.WriteLine("Choose group:");
-            var selected = SelectHelper.Select(groups, g => g.Key);
-            Console.WriteLine("Choose operating system:");
-            var os = SelectHelper.Select(new[] { "win", "mac" });
-            var res = new List<(string, string)>();
-            foreach (SocialAccount account in accounts)
-            {
-                Console.WriteLine($"Creating profile {account.Name}...");
-                var pId = await CreateNewProfileAsync(account.Name, os, selected.Value.Sid, account.Proxy);
-                Console.WriteLine($"Profile with ID={pId} created!");
-                res.Add((account.Name, pId));
-            }
-            return res;
+            var vInputs = StaticRandom.Instance.Next(0, 1);
+            var aInputs = StaticRandom.Instance.Next(0, 4);
+            var aOutputs = StaticRandom.Instance.Next(0, 4);
+
+            var r = new RestRequest("api/v2/profile", Method.POST);
+            var param = @$"{{
+                ""name"":""{acc.Name}"",
+                ""group"":""{group.Id}"",
+                ""os"":""{os}"",
+                ""browser"":""mimic"",
+                ""googleServices"":true,
+                ""mediaDevices"":{{""mode"":""FAKE"",""videoInputs"":""{vInputs}"",""audioInputs"":""{aInputs}"",""audioOutputs"":""{aOutputs}""}},
+                ""storage"":{{""local"":true,""extensions"":true,""bookmarks"":false,""history"":false,""passwords"":false}},
+                ""canvas"":{{""mode"":""REAL""}},
+                ""navigator"":{{""language"":""en-US,en;q=0.9,ru-RU;q=0.8""}},
+                ""audioContext"":{{""mode"":""NOISE""}},
+                ""webGL"":{{""mode"":""NOISE""}},
+                ""webGLMetadata"":{{""mode"":""MASK""}},
+                ""network"":{{""proxy"":{{
+                    ""type"":""{acc.Proxy.Type.ToUpper()}"",
+                    ""host"":""{acc.Proxy.Address}"",
+                    ""port"":""{acc.Proxy.Port}"",
+                    ""username"":""{acc.Proxy.Login}"",
+                    ""password"":""{acc.Proxy.Password}""}}}},
+                ""extensions"":{{""enable"":true,""names"":""""}}}}";
+            r.AddParameter("application/json", param, ParameterType.RequestBody);
+            var res = await ExecuteLocalRequestAsync<JObject>(r);
+            if (res["uuid"] == null)
+                throw new Exception($"Can't create browser profile! Error:{res}");
+            return res["uuid"].ToString();
         }
 
         protected override async Task ImportCookiesAsync(string profileId, string cookies)
@@ -137,20 +145,6 @@ namespace YWB.AntidetectAccountParser.Services.Browsers
             }
         }
 
-        public async Task<string> CreateNewProfileAsync(string pName, string os, string groupId, Proxy p)
-        {
-            var vInputs = StaticRandom.Instance.Next(0, 1);
-            var aInputs = StaticRandom.Instance.Next(0, 4);
-            var aOutputs = StaticRandom.Instance.Next(0, 4);
-
-            var r = new RestRequest("api/v2/profile", Method.POST);
-            var param = @$"{{""name"":""{pName}"",""group"":""{groupId}"",""os"":""{os}"",""browser"":""mimic"",""googleServices"":true,""mediaDevices"":{{""mode"":""FAKE"",""videoInputs"":""{vInputs}"",""audioInputs"":""{aInputs}"",""audioOutputs"":""{aOutputs}""}},""storage"":{{""local"":true,""extensions"":true,""bookmarks"":false,""history"":false,""passwords"":false}},""canvas"":{{""mode"":""REAL""}},""navigator"":{{""language"":""en-US,en;q=0.9,ru-RU;q=0.8""}},""audioContext"":{{""mode"":""NOISE""}},""webGL"":{{""mode"":""NOISE""}},""webGLMetadata"":{{""mode"":""MASK""}},""network"":{{""proxy"":{{""type"":""{p.Type.ToUpper()}"",""host"":""{p.Address}"",""port"":""{p.Port}"",""username"":""{p.Login}"",""password"":""{p.Password}""}}}},""extensions"":{{""enable"":true,""names"":""""}}}}";
-            r.AddParameter("application/json", param, ParameterType.RequestBody);
-            var res = await ExecuteLocalRequestAsync<JObject>(r);
-            if (res["uuid"] == null)
-                throw new Exception($"Can't create browser profile! Error:{res}");
-            return res["uuid"].ToString();
-        }
 
         protected override async Task<bool> SaveItemToNoteAsync(string profileId, SocialAccount fa)
         {
@@ -248,5 +242,6 @@ namespace YWB.AntidetectAccountParser.Services.Browsers
         }
 
         private void AddToLog(Exception e, string msg) => Console.WriteLine($"{msg} - {e}");
+
     }
 }

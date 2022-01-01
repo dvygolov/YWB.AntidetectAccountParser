@@ -9,6 +9,7 @@ using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 using YWB.AntidetectAccountParser.Helpers;
+using YWB.AntidetectAccountParser.Model;
 using YWB.AntidetectAccountParser.Model.Accounts;
 
 namespace YWB.AntidetectAccountParser.Services.Browsers
@@ -22,25 +23,18 @@ namespace YWB.AntidetectAccountParser.Services.Browsers
         private List<string> _cpu = new List<string> { "2", "4", "6", "8", "16" };
         private List<string> _memory = new List<string> { "2", "4", "6", "8" };
 
-        protected override async Task<List<(string pName, string pId)>> CreateProfilesAsync(IEnumerable<SocialAccount> accounts)
+        public override List<string> GetOSes() => _oses;
+        public override Task<List<AccountGroup>> GetExistingGroupsAsync()
         {
-            var profiles = new List<(string, string)>();
-            Console.WriteLine("Choose operating system:");
-            var os = SelectHelper.Select(_oses);
-
-            var res = new List<(string, string)>();
-            foreach (SocialAccount account in accounts)
-            {
-                Console.WriteLine($"Creating profile {account.Name}...");
-                var pId = await CreateNewProfileAsync(os, account);
-                Console.WriteLine($"Profile with ID={pId} created!");
-                res.Add((account.Name, pId));
-            }
-            return res;
-
+            return Task.FromResult(new List<AccountGroup>());
         }
 
-        private async Task<string> CreateNewProfileAsync(string os,SocialAccount sa)
+        public override Task<AccountGroup> AddNewGroupAsync(string groupName)
+        {
+            return Task.FromResult(new AccountGroup { Name = groupName });
+        }
+
+        public async override Task<string> CreateNewProfileAsync(SocialAccount acc, string os, AccountGroup group)
         {
             var r = new RestRequest("fbcc/user/rand-get-user-agent", Method.POST);
             r.AddParameter("system", os);
@@ -55,21 +49,21 @@ namespace YWB.AntidetectAccountParser.Services.Browsers
 
             r = new RestRequest("fbcc/user/single-import-user", Method.POST);
             r.AddParameter("batch_id", "0");
-            r.AddParameter("name", sa.Name);
-            r.AddParameter("domain_name", sa.Domain);
-            if (!string.IsNullOrEmpty(sa.Login) && !string.IsNullOrEmpty(sa.Password))
+            r.AddParameter("name", acc.Name);
+            r.AddParameter("domain_name", acc.Domain);
+            if (!string.IsNullOrEmpty(acc.Login) && !string.IsNullOrEmpty(acc.Password))
             {
-                r.AddParameter("username", sa.Login);
-                r.AddParameter("password", sa.Password);
+                r.AddParameter("username", acc.Login);
+                r.AddParameter("password", acc.Password);
             }
 
-            if (!string.IsNullOrEmpty(sa.Cookies))
-                r.AddParameter("cookie", sa.Cookies);
+            if (!string.IsNullOrEmpty(acc.Cookies))
+                r.AddParameter("cookie", acc.Cookies);
 
             r.AddParameter("repeat_config", 0); //allow username/password duplicates
-            if (sa.Proxy.Type == "socks") sa.Proxy.Type = "socks5";
-            r.AddParameter("proxytype", sa.Proxy.Type);
-            r.AddParameter("proxy", $"{sa.Proxy.Address}:{sa.Proxy.Port}:{sa.Proxy.Login}:{sa.Proxy.Password}");
+            if (acc.Proxy.Type == "socks") acc.Proxy.Type = "socks5";
+            r.AddParameter("proxytype", acc.Proxy.Type);
+            r.AddParameter("proxy", $"{acc.Proxy.Address}:{acc.Proxy.Port}:{acc.Proxy.Login}:{acc.Proxy.Password}");
 
             dynamic fp = new JObject();
             fp.automatic_timezone = "1";
@@ -88,7 +82,7 @@ namespace YWB.AntidetectAccountParser.Services.Browsers
             fp.audio = "1"; //add noise
             fp.media_devices = "1"; //fake
             fp.device_name_switch = "2"; //mask
-            fp.device_name = sa.Name; //mask
+            fp.device_name = acc.Name; //mask
             fp.ua = ua;
             fp.scan_port_type = 1; //protect
             r.AddParameter("fingerprint_config", fp.ToString());
@@ -201,5 +195,8 @@ namespace YWB.AntidetectAccountParser.Services.Browsers
                 return (login, password);
             }
         }
+
+
+
     }
 }
