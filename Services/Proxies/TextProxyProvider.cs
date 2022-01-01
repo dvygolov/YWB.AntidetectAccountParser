@@ -12,6 +12,6 @@ namespace YWB.AntidetectAccountParser.Services.Proxies
         {
             _input = input;
         }
-        public override List<string> GetLines() => _input.Split(Environment.NewLine, StringSplitOptions.RemoveEmptyEntries).ToList();
+        public override List<string> GetLines() => _input.Split('\n', StringSplitOptions.RemoveEmptyEntries).ToList();
     }
 }
