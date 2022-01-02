@@ -43,6 +43,7 @@ For Octo you can create **octo.txt** and add your API token there.
 You can create **fbtool.txt** and add your API token there, 
 ## Dolphin
 You can create **dolphin.txt** and add your domain (WITHOUT http://) and API token separated by :. How to get API token? [Read here](https://documenter.getpostman.com/view/15402503/TzJrBJdk) or just run this script in your browser's console on your Dolphin's website:
+
 *const cookie=document.cookie.split(";").map(function(o){return o.trim().split("=").map(decodeURIComponent)}).reduce(function(o,e){try{o[e[0]]=JSON.parse(e[1])}catch(c){o[e[0]]=e[1]}return o},{});console.log(cookie.user_id+"-"+cookie.hash);*
 
 
