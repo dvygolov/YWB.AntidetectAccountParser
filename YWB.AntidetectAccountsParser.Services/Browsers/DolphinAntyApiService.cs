@@ -1,7 +1,6 @@
 ﻿using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using RestSharp;
-using System.Reflection;
 using YWB.AntidetectAccountsParser.Model;
 using YWB.AntidetectAccountsParser.Model.Accounts;
 using YWB.Helpers;
@@ -10,12 +9,12 @@ namespace YWB.AntidetectAccountsParser.Services.Browsers
 {
     public class DolphinAntyApiService : AbstractAntidetectApiService
     {
-        protected override string FileName { get; set; } = "dolphinanty.txt";
         private string _token;
-        private string[] _oses = new[] { "windows", "linux", "macos" };
         private Dictionary<Proxy, string> _proxyIds;
 
-        public override List<string> GetOSes() => _oses.ToList();
+        public DolphinAntyApiService(string credentials) : base(credentials) { }
+
+        public override List<string> GetOSes() => new List<string>() { "windows", "linux", "macos" };
 
         public override Task<List<AccountGroup>> GetExistingGroupsAsync()
         {
@@ -228,23 +227,8 @@ namespace YWB.AntidetectAccountsParser.Services.Browsers
 
         private (string login, string password) GetLoginAndPassword()
         {
-            var dir = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
-            var fullPath = Path.Combine(dir, FileName);
-            if (File.Exists(fullPath))
-            {
-                var split = File.ReadAllText(fullPath).Split(':');
-                return (split[0], split[1]);
-            }
-            else
-            {
-                Console.Write("Enter your Dolphin Anty login:");
-                var login = Console.ReadLine();
-                Console.Write("Enter your Dolphin Anty password:");
-                var password = Console.ReadLine();
-                return (login, password);
-            }
+            var split = _credentials.Split(':');
+            return (split[0], split[1]);
         }
-
-
     }
 }

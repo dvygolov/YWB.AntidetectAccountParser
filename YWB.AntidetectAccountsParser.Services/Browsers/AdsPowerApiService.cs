@@ -1,7 +1,6 @@
 ﻿using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using RestSharp;
-using System.Reflection;
 using YWB.AntidetectAccountsParser.Model.Accounts;
 using YWB.Helpers;
 
@@ -11,10 +10,11 @@ namespace YWB.AntidetectAccountsParser.Services.Browsers
     {
         private string _token;
         private string _cpl;
-        protected override string FileName { get; set; } = "adspower.txt";
         private List<string> _oses = new List<string> { "Windows", "Mac OS X", "Linux" };
         private List<string> _cpu = new List<string> { "2", "4", "6", "8", "16" };
         private List<string> _memory = new List<string> { "2", "4", "6", "8" };
+
+        public AdsPowerApiService(string credentials) : base(credentials) { }
 
         public override List<string> GetOSes() => _oses;
         public override Task<List<AccountGroup>> GetExistingGroupsAsync()
@@ -99,7 +99,7 @@ namespace YWB.AntidetectAccountsParser.Services.Browsers
             var r = new RestRequest("fbcc/user/update-user-info", Method.POST);
             r.AddParameter("fbcc_user_id", profileId);
             r.AddParameter("login_user_comment", fa.ToString(false, false));
-            var json=await ExecuteRequestAsync<JObject>(r);
+            var json = await ExecuteRequestAsync<JObject>(r);
             return json["msg"]?.ToString() == "Success";
         }
 
@@ -172,24 +172,8 @@ namespace YWB.AntidetectAccountsParser.Services.Browsers
 
         private (string login, string password) GetLoginAndPassword()
         {
-            var dir = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
-            var fullPath = Path.Combine(dir, FileName);
-            if (File.Exists(fullPath))
-            {
-                var split = File.ReadAllText(fullPath).Split(':');
-                return (split[0], split[1]);
-            }
-            else
-            {
-                Console.Write("Enter your Adspower login:");
-                var login = Console.ReadLine();
-                Console.Write("Enter your Adspower password:");
-                var password = Console.ReadLine();
-                return (login, password);
-            }
+            var split = _credentials.Split(':');
+            return (split[0], split[1]);
         }
-
-
-
     }
 }

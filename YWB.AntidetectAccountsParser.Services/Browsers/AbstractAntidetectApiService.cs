@@ -7,7 +7,13 @@ namespace YWB.AntidetectAccountsParser.Services.Browsers
 {
     public abstract class AbstractAntidetectApiService:IAccountsImporter
     {
-        protected abstract string FileName { get; set; }
+        protected readonly string _credentials;
+
+        public AbstractAntidetectApiService(string credentials)
+        {
+            _credentials = credentials;
+        }
+
         public abstract Task<string> CreateNewProfileAsync(SocialAccount acc, string os, AccountGroup group);
         protected abstract Task ImportCookiesAsync(string profileId, string cookies);
         protected abstract Task<bool> SaveItemToNoteAsync(string profileId, SocialAccount sa);

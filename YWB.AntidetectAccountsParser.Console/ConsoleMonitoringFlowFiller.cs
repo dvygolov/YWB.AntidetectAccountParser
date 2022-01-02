@@ -4,7 +4,7 @@ using YWB.AntidetectAccountsParser.Model;
 using YWB.AntidetectAccountsParser.Services.Monitoring;
 using YWB.Helpers;
 
-namespace YWB.AntidetectAccountParser
+namespace YWB.AntidetectAccountsParser.Terminal
 {
     internal class ConsoleMonitoringFlowFiller
     {

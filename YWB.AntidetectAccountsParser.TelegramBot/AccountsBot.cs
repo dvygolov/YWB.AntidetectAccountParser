@@ -1,4 +1,6 @@
-﻿using System.Collections.Concurrent;
+﻿using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
+using System.Collections.Concurrent;
 using System.Reflection;
 using System.Text;
 using Telegram.Bot;
@@ -18,19 +20,23 @@ namespace YWB.AntidetectAccountsParser.TelegramBot
     internal class AccountsBot
     {
         ConcurrentDictionary<long, BotFlow> _flows = new ConcurrentDictionary<long, BotFlow>();
-        private const string FileName = "bot.txt";
         private TelegramBotClient _bot;
+        CancellationTokenSource _cts;
         private const string Antidetect = "Antidetect Browser";
         private const string Monitoring = "Dolphin/FbTool";
+        private readonly IConfigurationRoot _configuration;
+        private readonly ILogger _logger;
 
-        public AccountsBot()
+        public AccountsBot(IConfigurationRoot configuration, ILogger logger)
         {
-            var dir = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
-            var fullPath = Path.Combine(dir, FileName);
-            if (!System.IO.File.Exists(fullPath)) return;
-            _bot = new TelegramBotClient(System.IO.File.ReadAllText(fullPath));
-            using var cts = new CancellationTokenSource();
+            _configuration = configuration;
+            _logger = logger;
+        }
 
+        public void Start()
+        {
+            _bot = new TelegramBotClient(_configuration.GetValue<string>("TelegramBotApiKey"));
+            _cts = new CancellationTokenSource();
             var receiverOptions = new ReceiverOptions
             {
                 AllowedUpdates = { } // receive all update types
@@ -39,7 +45,13 @@ namespace YWB.AntidetectAccountsParser.TelegramBot
                 HandleUpdateAsync,
                 HandleErrorAsync,
                 receiverOptions,
-                cancellationToken: cts.Token);
+                cancellationToken: _cts.Token);
+        }
+
+        public void Stop()
+        {
+            _cts.Cancel();
+            _bot = null;
         }
 
         async Task HandleUpdateAsync(ITelegramBotClient b, Update update, CancellationToken cancellationToken)

@@ -1,18 +1,16 @@
 ﻿using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using RestSharp;
-using System.Reflection;
 using YWB.AntidetectAccountsParser.Model.Accounts;
 
 namespace YWB.AntidetectAccountsParser.Services.Browsers
 {
     public class OctoApiService : AbstractAntidetectApiService
     {
-        protected override string FileName { get; set; } = "octo.txt";
         private const string ApiUrl = "https://app.octobrowser.net/api/v2/automation/";
-        private string _token;
         private string[] _oses = new[] { "win", "mac" };
 
+        public OctoApiService(string credentials) : base(credentials) {} 
         public override List<string> GetOSes() => _oses.ToList();
 
         public override Task<AccountGroup> AddNewGroupAsync(string groupName)
@@ -76,9 +74,8 @@ namespace YWB.AntidetectAccountsParser.Services.Browsers
         private async Task<T> ExecuteRequestAsync<T>(RestRequest r)
         {
             var rc = new RestClient(ApiUrl);
-            if (string.IsNullOrEmpty(_token)) _token = GetOctoApiToken();
             r.AddHeader("Content-Type", "application/json");
-            r.AddHeader("X-Octo-Api-Token", _token);
+            r.AddHeader("X-Octo-Api-Token", _credentials);
             var resp = await rc.ExecuteAsync(r, new CancellationToken());
             T res = default(T);
             try
@@ -92,22 +89,5 @@ namespace YWB.AntidetectAccountsParser.Services.Browsers
             }
             return res;
         }
-
-        private string GetOctoApiToken()
-        {
-            var dir = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
-            var fullPath = Path.Combine(dir, FileName);
-            if (File.Exists(fullPath))
-            {
-                return File.ReadAllText(fullPath);
-            }
-            else
-            {
-                Console.Write("Enter your Octo browsers' API Token:");
-                var token = Console.ReadLine();
-                return token;
-            }
-        }
-
     }
 }

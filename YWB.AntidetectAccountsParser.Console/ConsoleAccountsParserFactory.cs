@@ -1,13 +1,16 @@
-﻿using System.Reflection;
+﻿using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Reflection;
 using YWB.AntidetectAccountsParser.Model.Accounts;
 using YWB.AntidetectAccountsParser.Services.Logging;
+using YWB.AntidetectAccountsParser.Services.Parsers;
 using YWB.Helpers;
 
-namespace YWB.AntidetectAccountsParser.Services.Parsers
+namespace YWB.AntidetectAccountsParser.Terminal
 {
-    public class AccountsParserFactory
+    public class ConsoleAccountsParserFactory
     {
-        public enum AccountTypes { Google, Facebook };
         public AccountTypes AccountType { get; private set; }
         public IAccountsParser<SocialAccount> CreateParser()
         {

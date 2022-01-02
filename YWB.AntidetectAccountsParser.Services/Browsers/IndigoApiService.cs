@@ -13,7 +13,8 @@ namespace YWB.AntidetectAccountsParser.Services.Browsers
         private string _token;
         private IndigoPlanSettings _ips;
         private ConcurrentDictionary<string, IndigoProfileSettings> _profileSettings = new ConcurrentDictionary<string, IndigoProfileSettings>();
-        protected override string FileName { get; set; }
+
+        public IndigoApiService(string credentials) : base(credentials) {}
 
         public IndigoPlanSettings Ips
         {

@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Microsoft.Extensions.DependencyInjection;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -11,7 +12,7 @@ using YWB.AntidetectAccountsParser.Services.Parsers;
 using YWB.AntidetectAccountsParser.Services.Proxies;
 using YWB.Helpers;
 
-namespace YWB.AntidetectAccountParser
+namespace YWB.AntidetectAccountsParser.Terminal
 {
     class Program
     {
@@ -21,8 +22,8 @@ namespace YWB.AntidetectAccountParser
             Console.OutputEncoding = System.Text.Encoding.UTF8;
             await CopyrightHelper.ShowAsync(false);
 
-            var apf = new AccountsParserFactory();
-            var parser = apf.CreateParser();
+            var sp = TerminalServiceProvider.Configure();
+            var parser = sp.GetService<IAccountsParser<SocialAccount>>();
             var accounts = parser.Parse();
             if (accounts.Count() == 0)
             {
@@ -30,21 +31,18 @@ namespace YWB.AntidetectAccountParser
                 return;
             }
 
-            if (accounts.All(a => a.Proxy == null))
-            {
-                var proxyProvider = new FileProxyProvider();
-                proxyProvider.SetProxies(accounts);
-            }
+            var proxyProvider = sp.GetService<AbstractProxyProvider>();
+            proxyProvider.SetProxies(accounts);
 
             int answer = 0;
-            if (apf.AccountType == AccountsParserFactory.AccountTypes.Facebook)
+            if (apf.AccountType == AccountTypes.Facebook)
             {
                 Console.WriteLine("What do you want to do?");
                 Console.WriteLine("1. Create Profiles in an Antidetect Browser");
                 Console.WriteLine("2. Import accounts to FbTool/Dolphin");
                 answer = YesNoSelector.GetMenuAnswer(2);
             }
-            else if (apf.AccountType == AccountsParserFactory.AccountTypes.Google)
+            else if (apf.AccountType == AccountTypes.Google)
                 answer = 1;
 
             if (answer == 1)
@@ -93,11 +91,11 @@ namespace YWB.AntidetectAccountParser
                         await ImportToMonitoringService(fbAccounts.Where(a => !string.IsNullOrEmpty(a.Token)).ToList());
                 }
                 else
-                    Console.WriteLine("No accounts with access tokens found!((");
+                    System.Console.WriteLine("No accounts with access tokens found!((");
             }
 
-            Console.WriteLine("All done! Press any key to exit... and don't forget to donate ;-)");
-            Console.ReadKey();
+            System.Console.WriteLine("All done! Press any key to exit... and don't forget to donate ;-)");
+            System.Console.ReadKey();
         }
 
         private static async Task ImportToMonitoringService(List<FacebookAccount> accounts)
@@ -106,12 +104,12 @@ namespace YWB.AntidetectAccountParser
                             {"FbTool",()=>new FbToolService() },
                             {"Dolphin",()=>new DolphinService() }
             };
-            Console.WriteLine("Choose your service:");
+            System.Console.WriteLine("Choose your service:");
             var monitoringService = SelectHelper.Select(monitoringServices, ms => ms.Key).Value();
             var cff = new ConsoleMonitoringFlowFiller(monitoringService);
             FlowSettings flow = await cff.FillAsync();
             await monitoringService.ImportAccountsAsync(accounts, flow);
-            Console.WriteLine("All accounts added to FbTool/Dolphin.");
+            System.Console.WriteLine("All accounts added to FbTool/Dolphin.");
         }
     }
 }

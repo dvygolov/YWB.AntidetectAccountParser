@@ -1,10 +1,9 @@
-﻿using System;
-using System.Threading.Tasks;
+﻿using System.Threading.Tasks;
 using YWB.AntidetectAccountsParser.Model;
 using YWB.AntidetectAccountsParser.Services.Browsers;
 using YWB.Helpers;
 
-namespace YWB.AntidetectAccountParser
+namespace YWB.AntidetectAccountsParser.Terminal
 {
     internal class ConsoleBrowserFlowFiller
     {

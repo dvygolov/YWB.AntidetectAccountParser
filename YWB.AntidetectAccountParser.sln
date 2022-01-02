@@ -3,7 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.0.32014.148
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "YWB.AntidetectAccountsParser.Console", "YWB.AntidetectAccountsParser.Console\YWB.AntidetectAccountsParser.Console.csproj", "{8AD77F18-6D39-4DAC-B015-A64718951E12}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "YWB.AntidetectAccountsParser.Terminal", "YWB.AntidetectAccountsParser.Console\YWB.AntidetectAccountsParser.Terminal.csproj", "{8AD77F18-6D39-4DAC-B015-A64718951E12}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "YWB.AntidetectAccountsParser.Services", "YWB.AntidetectAccountsParser.Services\YWB.AntidetectAccountsParser.Services.csproj", "{CD2934FF-DC6B-4CFA-BB16-DE899F9AB0AA}"
 EndProject

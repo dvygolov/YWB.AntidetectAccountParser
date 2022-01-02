@@ -3,7 +3,22 @@
   <PropertyGroup>
     <OutputType>Exe</OutputType>
     <TargetFramework>net6.0</TargetFramework>
+    <RepositoryUrl>https://github.com/dvygolov/YWB.AntidetectAccountParser</RepositoryUrl>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <PackageProjectUrl>https://yellowweb.top/massovyj-import-akkauntov-facebook-v-profili-indigo-na-izi/</PackageProjectUrl>
+    <Copyright>by Yellow Web</Copyright>
   </PropertyGroup>
+
+  <ItemGroup>
+    <None Include="..\README.md">
+      <Pack>True</Pack>
+      <PackagePath>\</PackagePath>
+    </None>
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="6.0.0" />
+  </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\YWB.AntidetectAccountsParser.Model\YWB.AntidetectAccountsParser.Model.csproj" />
