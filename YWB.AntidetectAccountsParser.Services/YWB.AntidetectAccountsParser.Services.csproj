@@ -1,0 +1,19 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net6.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>disable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="RestSharp" Version="106.15.0" />
+    <PackageReference Include="SharpCompress" Version="0.30.1" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\YWB.AntidetectAccountsParser.Model\YWB.AntidetectAccountsParser.Model.csproj" />
+    <ProjectReference Include="..\YWB.Helpers\YWB.Helpers.csproj" />
+  </ItemGroup>
+
+</Project>

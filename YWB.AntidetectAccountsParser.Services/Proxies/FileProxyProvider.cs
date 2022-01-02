@@ -1,0 +1,22 @@
+﻿using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using System.Reflection;
+
+namespace YWB.AntidetectAccountsParser.Services.Proxies
+{
+    public class FileProxyProvider : AbstractProxyProvider
+    {
+        private const string FileName = "proxy.txt";
+
+        public override List<string> GetLines()
+        {
+            var dir = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
+            var fullPath = Path.Combine(dir, FileName);
+            if (!File.Exists(fullPath))
+                throw new FileNotFoundException("There's no proxy.txt file!!!", fullPath);
+            var split = File.ReadAllLines(fullPath).Where(l => !string.IsNullOrEmpty(l)).ToList();
+            return split;
+        }
+    }
+}
