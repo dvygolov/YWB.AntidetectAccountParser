@@ -1,11 +1,12 @@
 ﻿using System.Text;
+using YWB.AntidetectAccountsParser.Interfaces;
 using YWB.AntidetectAccountsParser.Model;
 using YWB.AntidetectAccountsParser.Model.Accounts;
 using YWB.Helpers;
 
 namespace YWB.AntidetectAccountsParser.Services.Browsers
 {
-    public abstract class AbstractAntidetectApiService:IAccountsImporter
+    public abstract class AbstractAntidetectApiService : IAccountsImporter
     {
         protected readonly string _credentials;
 
@@ -34,7 +35,7 @@ namespace YWB.AntidetectAccountsParser.Services.Browsers
             else
                 Console.WriteLine($"Found {count} accounts.");
 
-            AccountNamesHelper.Process(accounts,fs);
+            AccountNamesHelper.Process(accounts, fs);
 
             Dictionary<string, SocialAccount> profiles = new Dictionary<string, SocialAccount>();
 
@@ -56,7 +57,7 @@ namespace YWB.AntidetectAccountsParser.Services.Browsers
 
                 await SaveItemToNoteAsync(pId, account);
                 Console.WriteLine($"Profile {account.Name} saved!");
-                profiles.Add(pId,account);
+                profiles.Add(pId, account);
             }
             return res;
         }

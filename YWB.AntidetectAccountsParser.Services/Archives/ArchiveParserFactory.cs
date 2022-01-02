@@ -1,4 +1,5 @@
 ﻿using System.Reflection;
+using YWB.AntidetectAccountsParser.Interfaces;
 using YWB.AntidetectAccountsParser.Model.Accounts;
 
 namespace YWB.AntidetectAccountsParser.Services.Archives

@@ -1,9 +1,14 @@
-﻿using Microsoft.Extensions.DependencyInjection;
+﻿using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Threading.Tasks;
 using YWB.AntidetectAccountParser.Services.Playwright;
+using YWB.AntidetectAccountsParser.Interfaces;
 using YWB.AntidetectAccountsParser.Model;
 using YWB.AntidetectAccountsParser.Model.Accounts;
 using YWB.AntidetectAccountsParser.Services.Browsers;
@@ -30,9 +35,6 @@ namespace YWB.AntidetectAccountsParser.Terminal
                 Console.WriteLine("Couldn't find any accounts to import(((");
                 return;
             }
-
-            var proxyProvider = sp.GetService<AbstractProxyProvider>();
-            proxyProvider.SetProxies(accounts);
 
             int answer = 0;
             if (apf.AccountType == AccountTypes.Facebook)
@@ -62,14 +64,13 @@ namespace YWB.AntidetectAccountsParser.Terminal
 
                 var profiles = await selectedBrowser.ImportAccountsAsync(accounts.ToList(), flow);
 
-                if (accounts?.All(a => a is FacebookAccount && !string.IsNullOrEmpty((a as FacebookAccount).Token)) ?? false)
+                if (accounts?.All(a => a is FacebookAccount && 
+                    !string.IsNullOrEmpty((a as FacebookAccount).Token)) ?? false)
                 {
                     var add = YesNoSelector.ReadAnswerEqualsYes(
                         "All accounts have access tokens! Do you wand to add them to Dolphin/FbTool?");
                     if (add)
-                    {
                         await ImportToMonitoringService(accounts.Cast<FacebookAccount>().ToList());
-                    }
                 }
                 else
                 {
@@ -91,25 +92,26 @@ namespace YWB.AntidetectAccountsParser.Terminal
                         await ImportToMonitoringService(fbAccounts.Where(a => !string.IsNullOrEmpty(a.Token)).ToList());
                 }
                 else
-                    System.Console.WriteLine("No accounts with access tokens found!((");
+                    Console.WriteLine("No accounts with access tokens found!((");
             }
 
-            System.Console.WriteLine("All done! Press any key to exit... and don't forget to donate ;-)");
-            System.Console.ReadKey();
+            Console.WriteLine("All done! Press any key to exit... and don't forget to donate ;-)");
+            Console.ReadKey();
         }
 
         private static async Task ImportToMonitoringService(List<FacebookAccount> accounts)
         {
-            var monitoringServices = new Dictionary<string, Func<AbstractMonitoringService>> {
-                            {"FbTool",()=>new FbToolService() },
-                            {"Dolphin",()=>new DolphinService() }
+            var monitoringServices = new Dictionary<string, Func<AbstractMonitoringService>> 
+            {
+                {"FbTool",()=>new FbToolService() },
+                {"Dolphin",()=>new DolphinService() }
             };
-            System.Console.WriteLine("Choose your service:");
+            Console.WriteLine("Choose your service:");
             var monitoringService = SelectHelper.Select(monitoringServices, ms => ms.Key).Value();
             var cff = new ConsoleMonitoringFlowFiller(monitoringService);
             FlowSettings flow = await cff.FillAsync();
             await monitoringService.ImportAccountsAsync(accounts, flow);
-            System.Console.WriteLine("All accounts added to FbTool/Dolphin.");
+            Console.WriteLine("All accounts added to FbTool/Dolphin.");
         }
     }
 }

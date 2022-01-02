@@ -1,6 +1,7 @@
 ﻿using System.IO.Compression;
+using YWB.AntidetectAccountsParser.Interfaces;
 using YWB.AntidetectAccountsParser.Model.Accounts;
-using YWB.AntidetectAccountsParser.Services.Actions;
+using YWB.AntidetectAccountsParser.Model.Actions;
 
 namespace YWB.AntidetectAccountsParser.Services.Archives
 {

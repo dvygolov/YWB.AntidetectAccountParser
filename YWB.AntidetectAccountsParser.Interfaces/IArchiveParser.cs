@@ -1,7 +1,7 @@
 ﻿using YWB.AntidetectAccountsParser.Model.Accounts;
-using YWB.AntidetectAccountsParser.Services.Actions;
+using YWB.AntidetectAccountsParser.Model.Actions;
 
-namespace YWB.AntidetectAccountsParser.Services.Archives
+namespace YWB.AntidetectAccountsParser.Interfaces
 {
     public interface IArchiveParser<T> where T : SocialAccount
     {

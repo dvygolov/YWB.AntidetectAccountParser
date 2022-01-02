@@ -26,5 +26,4 @@ namespace YWB.AntidetectAccountsParser.TelegramBot
             _bot.Stop();
         }
     }
-    }
 }

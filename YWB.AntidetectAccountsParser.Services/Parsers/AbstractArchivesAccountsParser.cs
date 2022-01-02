@@ -1,20 +1,29 @@
-﻿using YWB.AntidetectAccountsParser.Model.Accounts;
-using YWB.AntidetectAccountsParser.Services.Actions;
+﻿using Microsoft.Extensions.Logging;
+using YWB.AntidetectAccountsParser.Interfaces;
+using YWB.AntidetectAccountsParser.Model.Accounts;
+using YWB.AntidetectAccountsParser.Model.Actions;
 using YWB.AntidetectAccountsParser.Services.Archives;
-using YWB.AntidetectAccountsParser.Services.Proxies;
 
 namespace YWB.AntidetectAccountsParser.Services.Parsers
 {
     public enum AccountValidity { Valid, PasswordOnly, Invalid }
     public abstract class AbstractArchivesAccountsParser<T> : IAccountsParser<T> where T : SocialAccount
     {
+        protected readonly ILogger _logger;
+        protected readonly IProxyProvider<T> _pp;
+
+        public AbstractArchivesAccountsParser(ILogger logger,IProxyProvider<T> pp)
+        {
+            _logger = logger;
+            _pp = pp;
+        }
+
         public IEnumerable<T> Parse()
         {
             var apf = new ArchiveParserFactory<T>();
             var ap = apf.GetArchiveParser();
             List<T> accounts = new List<T>();
-            var proxyProvider = new FileProxyProvider();
-            var proxies=proxyProvider.Get();
+            var proxies=_pp.Get();
 
             for (int i = 0; i < ap.Containers.Count; i++)
             {
@@ -40,6 +49,8 @@ namespace YWB.AntidetectAccountsParser.Services.Parsers
                         break;
                 }
             }
+            if (accounts.All(a=>a.Proxy==null))
+                _pp.SetProxies(accounts);   
             return MultiplyCookies(accounts);
         }
 

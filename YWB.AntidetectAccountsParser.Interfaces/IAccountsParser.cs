@@ -1,6 +1,6 @@
 ﻿using YWB.AntidetectAccountsParser.Model.Accounts;
 
-namespace YWB.AntidetectAccountsParser.Services.Parsers
+namespace YWB.AntidetectAccountsParser.Interfaces
 {
     public interface IAccountsParser<out A> where A : SocialAccount
     {

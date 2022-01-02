@@ -1,15 +1,18 @@
-﻿using YWB.AntidetectAccountsParser.Model.Accounts;
-using YWB.AntidetectAccountsParser.Services.Logging;
+﻿using Microsoft.Extensions.Logging;
+using YWB.AntidetectAccountsParser.Interfaces;
+using YWB.AntidetectAccountsParser.Model.Accounts;
 
 namespace YWB.AntidetectAccountsParser.Services.Parsers
 {
     public abstract class AbstractTextAccountsParser<T> : IAccountsParser<T> where T : SocialAccount
     {
-        protected readonly IAccountsLogger _logger;
+        private readonly IProxyProvider<T> _pp;
+        protected readonly ILogger _logger;
         private List<string> _input;
 
-        public AbstractTextAccountsParser(IAccountsLogger logger,List<string> input)
+        public AbstractTextAccountsParser(IProxyProvider<T> pp, ILogger logger,List<string> input)
         {
+            _pp = pp;
             _logger = logger;
             _input = input;
         }
@@ -39,7 +42,9 @@ namespace YWB.AntidetectAccountsParser.Services.Parsers
         public IEnumerable<T> Parse()
         {
             var input = Preprocess();
-            return Process(input);
+            var accounts=Process(input);
+            _pp.SetProxies(accounts);
+            return accounts;
         }
 
         protected abstract IEnumerable<T> Process(string input);

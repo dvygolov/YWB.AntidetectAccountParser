@@ -1,4 +1,7 @@
-﻿using YWB.AntidetectAccountsParser.Model.Accounts;
+﻿using Microsoft.Extensions.Logging;
+using YWB.AntidetectAccountsParser.Interfaces;
+using YWB.AntidetectAccountsParser.Model.Accounts;
+using YWB.AntidetectAccountsParser.Model.Actions;
 using YWB.AntidetectAccountsParser.Services.Actions;
 using YWB.Helpers;
 
@@ -6,6 +9,8 @@ namespace YWB.AntidetectAccountsParser.Services.Parsers
 {
     public class FacebookArchivesAccountsParser : AbstractArchivesAccountsParser<FacebookAccount>
     {
+        public FacebookArchivesAccountsParser(ILogger logger, IProxyProvider<FacebookAccount> pp) : base(logger, pp) { }
+
         public override ActionsFacade<FacebookAccount> GetActions(string filePath)
         {
             var fa = new FacebookAccount(Path.GetFileNameWithoutExtension(filePath));
@@ -63,7 +68,8 @@ namespace YWB.AntidetectAccountsParser.Services.Parsers
                         Token = fa.Token,
                         TwoFactor = fa.TwoFactor,
                         UserAgent = fa.UserAgent,
-                        Name = $"{fa.Name}_{i + 1}"
+                        Name = $"{fa.Name}_{i + 1}",
+                        Proxy=fa.Proxy
                     };
                     finalRes.Add(newFa);
                 }

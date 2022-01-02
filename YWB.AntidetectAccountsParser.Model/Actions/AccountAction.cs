@@ -1,6 +1,6 @@
 ﻿using YWB.AntidetectAccountsParser.Model.Accounts;
 
-namespace YWB.AntidetectAccountsParser.Services.Actions
+namespace YWB.AntidetectAccountsParser.Model.Actions
 {
     public class AccountAction<T> where T:SocialAccount
     {

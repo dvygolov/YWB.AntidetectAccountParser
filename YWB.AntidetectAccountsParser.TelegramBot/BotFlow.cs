@@ -1,6 +1,6 @@
-﻿using YWB.AntidetectAccountsParser.Model;
+﻿using YWB.AntidetectAccountsParser.Interfaces;
+using YWB.AntidetectAccountsParser.Model;
 using YWB.AntidetectAccountsParser.Model.Accounts;
-using YWB.AntidetectAccountsParser.Services;
 
 namespace YWB.AntidetectAccountsParser.TelegramBot
 {

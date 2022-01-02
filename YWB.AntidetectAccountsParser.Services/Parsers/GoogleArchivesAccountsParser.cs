@@ -1,10 +1,15 @@
-﻿using YWB.AntidetectAccountsParser.Model.Accounts;
+﻿using Microsoft.Extensions.Logging;
+using YWB.AntidetectAccountsParser.Interfaces;
+using YWB.AntidetectAccountsParser.Model.Accounts;
+using YWB.AntidetectAccountsParser.Model.Actions;
 using YWB.AntidetectAccountsParser.Services.Actions;
 
 namespace YWB.AntidetectAccountsParser.Services.Parsers
 {
     public class GoogleArchivesAccountsParser : AbstractArchivesAccountsParser<SocialAccount>
     {
+        public GoogleArchivesAccountsParser(ILogger logger, IProxyProvider<SocialAccount> pp) : base(logger, pp) { }
+
         public override ActionsFacade<SocialAccount> GetActions(string filePath)
         {
             var sa = new SocialAccount(Path.GetFileNameWithoutExtension(filePath));
@@ -49,7 +54,8 @@ namespace YWB.AntidetectAccountsParser.Services.Parsers
                         Cookies = cookies,
                         Logins = fa.Logins,
                         Passwords = fa.Passwords,
-                        Name = $"{fa.Name}_{i + 1}"
+                        Name = $"{fa.Name}_{i + 1}",
+                        Proxy= fa.Proxy
                     };
                     finalRes.Add(newFa);
                 }

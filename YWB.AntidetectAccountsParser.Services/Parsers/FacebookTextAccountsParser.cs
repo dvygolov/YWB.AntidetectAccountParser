@@ -1,19 +1,20 @@
-﻿using System.Text.RegularExpressions;
+﻿using Microsoft.Extensions.Logging;
+using System.Text.RegularExpressions;
+using YWB.AntidetectAccountsParser.Interfaces;
 using YWB.AntidetectAccountsParser.Model.Accounts;
-using YWB.AntidetectAccountsParser.Services.Logging;
 using YWB.Helpers;
 
 namespace YWB.AntidetectAccountsParser.Services.Parsers
 {
     public class FacebookTextAccountsParser : AbstractTextAccountsParser<FacebookAccount>
     {
-        public FacebookTextAccountsParser(IAccountsLogger logger, List<string> input) : base(logger,input) { }
+        public FacebookTextAccountsParser(IProxyProvider<FacebookAccount> pp, ILogger logger, List<string> input) : base(pp, logger, input) { }
 
         protected override IEnumerable<FacebookAccount> Process(string input)
         {
             var re = new Regex(@"^(?<Login>[^\:;\|\s]+)\s*[:;\|\s]\s*(?<Password>[^\:;\|\s]+)\s*[:;\|\s]", RegexOptions.Multiline);
             var matches = re.Matches(input);
-            _logger.Log($"Found {matches.Count} logins/passwords!");
+            _logger.LogInformation($"Found {matches.Count} logins/passwords!");
 
             List<FacebookAccount> lst = matches.Select(m => new FacebookAccount()
             {
@@ -25,15 +26,15 @@ namespace YWB.AntidetectAccountsParser.Services.Parsers
             matches = re.Matches(input);
             if (matches.Count == 0)
             {
-                _logger.Log("Didn't find access tokens!");
+                _logger.LogInformation("Didn't find access tokens!");
             }
             else if (matches.Count != lst.Count)
             {
-                _logger.Log("Found access tokens count does not match accounts count!");
+                _logger.LogInformation("Found access tokens count does not match accounts count!");
             }
             else
             {
-                _logger.Log("Found access tokens!");
+                _logger.LogInformation("Found access tokens!");
                 for (int i = 0; i < matches.Count; i++)
                 {
                     lst[i].Token = matches[i].Groups["Token"].Value;
@@ -44,15 +45,15 @@ namespace YWB.AntidetectAccountsParser.Services.Parsers
             matches = re.Matches(input);
             if (matches.Count == 0)
             {
-                _logger.Log("Didn't find BM tokens!");
+                _logger.LogInformation("Didn't find BM tokens!");
             }
             else if (matches.Count != lst.Count)
             {
-                _logger.Log("Found BM tokens count does not match accounts count!");
+                _logger.LogInformation("Found BM tokens count does not match accounts count!");
             }
             else
             {
-                _logger.Log("Found BM access tokens!");
+                _logger.LogInformation("Found BM access tokens!");
                 for (int i = 0; i < matches.Count; i++)
                 {
                     lst[i].BmToken = matches[i].Groups["Token"].Value;
@@ -63,11 +64,11 @@ namespace YWB.AntidetectAccountsParser.Services.Parsers
             matches = re.Matches(input);
             if (matches.Count == 0)
             {
-                _logger.Log("Didn't find emails and passwords.");
+                _logger.LogInformation("Didn't find emails and passwords.");
             }
             else if (matches.Count > lst.Count)
             {
-                _logger.Log("Found duplicate emails, trying to remove...");
+                _logger.LogInformation("Found duplicate emails, trying to remove...");
                 var mList = matches.ToList();
                 int i = 0;
                 while (i < mList.Count - 1)
@@ -81,7 +82,7 @@ namespace YWB.AntidetectAccountsParser.Services.Parsers
                 }
                 if (mList.Count == lst.Count)
                 {
-                    _logger.Log("Found emails with passwords!");
+                    _logger.LogInformation("Found emails with passwords!");
                     for (int j = 0; j < mList.Count; j++)
                     {
                         lst[j].EmailLogin = mList[j].Groups["Email"].Value;
@@ -91,11 +92,11 @@ namespace YWB.AntidetectAccountsParser.Services.Parsers
             }
             else if (matches.Count != lst.Count)
             {
-                _logger.Log("Found emails count does not match accounts count!");
+                _logger.LogInformation("Found emails count does not match accounts count!");
             }
             else
             {
-                _logger.Log("Found emails with passwords!");
+                _logger.LogInformation("Found emails with passwords!");
                 for (int i = 0; i < matches.Count; i++)
                 {
                     lst[i].EmailLogin = matches[i].Groups["Email"].Value;
@@ -113,15 +114,15 @@ namespace YWB.AntidetectAccountsParser.Services.Parsers
             }
             if (matches.Count == 0)
             {
-                _logger.Log("Didn't find cookies!");
+                _logger.LogInformation("Didn't find cookies!");
             }
             else if (matches.Count != lst.Count)
             {
-                _logger.Log("Found cookies count does not match accounts count!");
+                _logger.LogInformation("Found cookies count does not match accounts count!");
             }
             else
             {
-                _logger.Log("Found cookies!");
+                _logger.LogInformation("Found cookies!");
                 for (int i = 0; i < matches.Count; i++)
                 {
                     lst[i].Cookies = CookieHelper.GetDomainCookies(matches[i].Groups["Cookies"].Value, lst[i].Domain);
@@ -140,15 +141,15 @@ namespace YWB.AntidetectAccountsParser.Services.Parsers
             }
             if (matches.Count == 0)
             {
-                _logger.Log("Didn't find birthdays!");
+                _logger.LogInformation("Didn't find birthdays!");
             }
             else if (matches.Count != lst.Count)
             {
-                _logger.Log("Found birthdays count does not match accounts count!");
+                _logger.LogInformation("Found birthdays count does not match accounts count!");
             }
             else
             {
-                _logger.Log("Found birthdays!");
+                _logger.LogInformation("Found birthdays!");
                 for (int i = 0; i < matches.Count; i++)
                 {
                     lst[i].Birthday = matches[i].Groups["Birthday"].Value;
@@ -157,7 +158,7 @@ namespace YWB.AntidetectAccountsParser.Services.Parsers
 
             if (invalid.Count > 0)
             {
-                _logger.Log($"{invalid.Count} invalid accounts were found! Removing them...");
+                _logger.LogInformation($"{invalid.Count} invalid accounts were found! Removing them...");
                 for (int i = invalid.Count - 1; i >= 0; i--)
                 {
                     lst.RemoveAt(invalid[i]);

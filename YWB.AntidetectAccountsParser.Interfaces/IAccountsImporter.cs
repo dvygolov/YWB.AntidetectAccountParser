@@ -1,7 +1,7 @@
 ﻿using YWB.AntidetectAccountsParser.Model;
 using YWB.AntidetectAccountsParser.Model.Accounts;
 
-namespace YWB.AntidetectAccountsParser.Services
+namespace YWB.AntidetectAccountsParser.Interfaces
 {
     public interface IAccountsImporter
     {

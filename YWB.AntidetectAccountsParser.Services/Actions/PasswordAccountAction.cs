@@ -1,5 +1,6 @@
 ﻿using System.Text;
 using YWB.AntidetectAccountsParser.Model.Accounts;
+using YWB.AntidetectAccountsParser.Model.Actions;
 using YWB.Helpers;
 
 namespace YWB.AntidetectAccountsParser.Services.Actions
