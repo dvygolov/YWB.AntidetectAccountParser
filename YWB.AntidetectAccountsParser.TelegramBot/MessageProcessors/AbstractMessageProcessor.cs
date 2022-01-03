@@ -1,7 +1,6 @@
 ﻿using System.Collections.Concurrent;
 using Telegram.Bot;
 using Telegram.Bot.Types;
-using Telegram.Bot.Types.ReplyMarkups;
 
 namespace YWB.AntidetectAccountsParser.TelegramBot.MessageProcessors
 {
@@ -16,14 +15,9 @@ namespace YWB.AntidetectAccountsParser.TelegramBot.MessageProcessors
 
         public abstract bool Filter(BotFlow flow, Update update);
         public abstract Task PayloadAsync(BotFlow flow, Update update, ITelegramBotClient b, CancellationToken ct);
-        public async Task<bool> ProcessAsync(ConcurrentDictionary<long, BotFlow> flows, Update update, ITelegramBotClient b, CancellationToken ct)
+        public async Task<bool> ProcessAsync(Dictionary<long, BotFlow> flows, Update update, ITelegramBotClient b, CancellationToken ct)
         {
             var m = update.Message;
-            if (!flows.ContainsKey(m.From.Id))
-            {
-                await b.SendTextMessageAsync(m.Chat.Id, "Flow not found! Send your accounts file first!");
-                return true;
-            }
             var flow = flows[m.From.Id];
             if (Filter(flow, update))
             {
@@ -34,24 +28,17 @@ namespace YWB.AntidetectAccountsParser.TelegramBot.MessageProcessors
         }
     }
 
-    public class GroupMessageProcessor : AbstractMessageProcessor
+    public class FilledFlowMessageProcessor : AbstractMessageProcessor
     {
-        public GroupMessageProcessor(IServiceProvider sp) : base(sp) { }
+        public FilledFlowMessageProcessor(IServiceProvider sp) : base(sp) { }
 
-        public override bool Filter(BotFlow flow, Update update) => flow.Group == null;
+        public override bool Filter(BotFlow flow, Update update) => flow?.IsFilled() ?? false;
 
         public override async Task PayloadAsync(BotFlow flow, Update update, ITelegramBotClient b, CancellationToken ct)
         {
             var m = update.Message;
-            flow.Group = new Model.Accounts.AccountGroup() { Name = "new" }; //TODO:Redo!
-            ReplyKeyboardMarkup replyKeyboardMarkup = new(new[] { 
-                new KeyboardButton[] { /*Antidetect, Monitoring */} }) { ResizeKeyboard = true };
-            //TODO:redo
-            Message sentMessage = await b.SendTextMessageAsync(
-                chatId: m.Chat.Id,
-                text: "Choose your OS:",
-                replyMarkup: replyKeyboardMarkup,
-                cancellationToken: ct);
+            await flow.Importer.ImportAccountsAsync(flow.Accounts, flow);
+            await b.SendTextMessageAsync(m.Chat.Id, "All done, HAPPY HACKING!");
         }
     }
 }

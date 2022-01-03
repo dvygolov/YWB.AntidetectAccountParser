@@ -4,6 +4,7 @@ using Microsoft.Extensions.Logging;
 using System.Reflection;
 using YWB.AntidetectAccountsParser.Model;
 using YWB.AntidetectAccountsParser.Services.Proxies;
+using YWB.Helpers;
 
 namespace YWB.AntidetectAccountsParser.TelegramBot
 {
@@ -12,6 +13,7 @@ namespace YWB.AntidetectAccountsParser.TelegramBot
         private AccountsBot _bot;
         public void OnStart()
         {
+            CopyrightHelper.ShowAsync(true).Wait();
             var builder = new ConfigurationBuilder()
                             .SetBasePath(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location))
                             .AddJsonFile("appsettings.json", false, true);

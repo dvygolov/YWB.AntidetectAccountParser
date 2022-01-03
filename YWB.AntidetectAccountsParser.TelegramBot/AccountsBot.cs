@@ -1,28 +1,24 @@
 ﻿using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using System.Collections.Concurrent;
 using Telegram.Bot;
 using Telegram.Bot.Exceptions;
 using Telegram.Bot.Extensions.Polling;
 using Telegram.Bot.Types;
-using Telegram.Bot.Types.Enums;
-using Telegram.Bot.Types.ReplyMarkups;
-using YWB.AntidetectAccountsParser.Services.Browsers;
-using YWB.AntidetectAccountsParser.Services.Monitoring;
 using YWB.AntidetectAccountsParser.TelegramBot.MessageProcessors;
 
 namespace YWB.AntidetectAccountsParser.TelegramBot
 {
     internal class AccountsBot
     {
-        ConcurrentDictionary<long, BotFlow> _flows = new ConcurrentDictionary<long, BotFlow>();
         private TelegramBotClient _bot;
         CancellationTokenSource _cts;
         private readonly IServiceProvider _sp;
         private readonly IConfigurationRoot _configuration;
         private readonly ILogger _logger;
         private List<AbstractMessageProcessor> _processors;
+        Dictionary<long, BotFlow> _flows = new Dictionary<long, BotFlow>();
+
 
         public AccountsBot(IServiceProvider sp)
         {
@@ -37,10 +33,12 @@ namespace YWB.AntidetectAccountsParser.TelegramBot
             {
                 new UnknownFileMessageProcessor(_sp),
                 new TxtFileMessageProcessor(_sp),
+                new UnknownFlowProcessor(_sp),
                 new ProxyMessageProcessor(_sp),
                 new OsMessageProcessor(_sp),
                 new NamingPrefixMessageProcessor(_sp),
-                new NamingIndexMessageProcessor(_sp)
+                new NamingIndexMessageProcessor(_sp),
+                new FilledFlowMessageProcessor(_sp)
             };
             _bot = new TelegramBotClient(_configuration.GetValue<string>("TelegramBotApiKey"));
             _cts = new CancellationTokenSource();
@@ -64,19 +62,13 @@ namespace YWB.AntidetectAccountsParser.TelegramBot
 
         async Task HandleUpdateAsync(ITelegramBotClient b, Update update, CancellationToken cancellationToken)
         {
+            var m = update.Message;
+            if (!_flows.ContainsKey(m.From.Id))
+                _flows.Add(m.From.Id, new BotFlow());
+
             foreach (var p in _processors)
             {
                 if (await p.ProcessAsync(_flows, update, b, cancellationToken)) break;
-            }
-            var m = update.Message;
-            if (_flows.ContainsKey(m.From.Id))
-            {
-                var flow = _flows[m.From.Id];
-                if (flow.IsFilled())
-                {
-                    await flow.Importer.ImportAccountsAsync(flow.Accounts, flow);
-                    await b.SendTextMessageAsync(m.Chat.Id, "All done, HAPPY HACKING!");
-                }
             }
         }
 

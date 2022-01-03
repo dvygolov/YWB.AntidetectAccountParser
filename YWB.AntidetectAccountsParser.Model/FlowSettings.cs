@@ -10,5 +10,7 @@ namespace YWB.AntidetectAccountsParser.Model
         public int? NamingIndex { get; set; }
         public virtual bool IsFilled() =>
             !string.IsNullOrEmpty(Os) && !string.IsNullOrEmpty(NamingPrefix) && NamingIndex != null;
+        public virtual bool IsEmpty() =>
+            string.IsNullOrEmpty(Os) && string.IsNullOrEmpty(NamingPrefix) && NamingIndex == null;
     }
 }

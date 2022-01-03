@@ -3,6 +3,7 @@ using Telegram.Bot;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
 using YWB.AntidetectAccountsParser.Services.Logging;
+using YWB.AntidetectAccountsParser.Services.Parsers;
 
 namespace YWB.AntidetectAccountsParser.TelegramBot.MessageProcessors
 {
@@ -22,14 +23,8 @@ namespace YWB.AntidetectAccountsParser.TelegramBot.MessageProcessors
             var ms = new MemoryStream();
             await b.GetInfoAndDownloadFileAsync(m.Document.FileId, ms);
             var content = Encoding.UTF8.GetString(ms.ToArray());
-            //TODO:redo
-            var logger = new BufferAccountsLogger();
-            //var p = new FacebookTextAccountsParser(logger, content.Split(Environment.NewLine, StringSplitOptions.RemoveEmptyEntries).ToList());
-            //var accounts = p.Parse();
-            //var newFlow = new BotFlow { Accounts = accounts, UserId = m.From.Id };
-            await b.SendTextMessageAsync(m.Chat.Id, logger.Flush());
+            flow.AccountStrings = content.Split(Environment.NewLine, StringSplitOptions.RemoveEmptyEntries).ToList();
             await b.SendTextMessageAsync(m.Chat.Id, "Enter your proxy or proxies line by line\nFormat http(socks):192.168.0.1:6666:xxxx:yyyy");
-            //return newFlow;
         }
     }
 }

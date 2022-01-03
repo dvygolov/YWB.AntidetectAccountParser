@@ -1,8 +1,10 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using Telegram.Bot;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.ReplyMarkups;
 using YWB.AntidetectAccountsParser.Model;
+using YWB.AntidetectAccountsParser.Services.Parsers;
 using YWB.AntidetectAccountsParser.Services.Proxies;
 
 namespace YWB.AntidetectAccountsParser.TelegramBot.MessageProcessors
@@ -18,7 +20,8 @@ namespace YWB.AntidetectAccountsParser.TelegramBot.MessageProcessors
             var m = update.Message;
             var pp = new TextProxyProvider(m.Text);
             flow.Proxies = pp.Get();
-            pp.SetProxies(flow.Accounts);
+            var ap = new FacebookTextAccountsParser(pp, _sp.GetService<ILogger>(), flow.AccountStrings);
+            flow.Accounts = ap.Parse();
             var services = _sp.GetService<List<ServiceCredentials>>();
             InlineKeyboardMarkup inlineKeyboard = new(new[]
             {
