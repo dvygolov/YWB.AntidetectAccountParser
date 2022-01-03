@@ -37,14 +37,14 @@ namespace YWB.AntidetectAccountsParser.Terminal
             }
 
             int answer = 0;
-            if (apf.AccountType == AccountTypes.Facebook)
+            if (accounts.First() is FacebookAccount)
             {
                 Console.WriteLine("What do you want to do?");
                 Console.WriteLine("1. Create Profiles in an Antidetect Browser");
                 Console.WriteLine("2. Import accounts to FbTool/Dolphin");
                 answer = YesNoSelector.GetMenuAnswer(2);
             }
-            else if (apf.AccountType == AccountTypes.Google)
+            else if (accounts.First() is SocialAccount)
                 answer = 1;
 
             if (answer == 1)
@@ -52,10 +52,11 @@ namespace YWB.AntidetectAccountsParser.Terminal
                 Console.WriteLine("Choose your antidetect browser:");
                 var browsers = new Dictionary<string, Func<AbstractAntidetectApiService>>
                 {
-                    {"AdsPower",()=>new AdsPowerApiService() },
+                    //TODO:redo
+                    /*{"AdsPower",()=>new AdsPowerApiService() },
                     {"Dolphin Anty",()=>new DolphinAntyApiService() },
                     {"Indigo",()=> new IndigoApiService() },
-                    {"Octo",()=>new OctoApiService() }
+                    {"Octo",()=>new OctoApiService() }*/
                 };
                 var selectedBrowser = SelectHelper.Select(browsers, b => b.Key).Value();
 

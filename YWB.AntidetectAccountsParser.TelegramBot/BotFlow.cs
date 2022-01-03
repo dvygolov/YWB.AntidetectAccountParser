@@ -6,6 +6,8 @@ namespace YWB.AntidetectAccountsParser.TelegramBot
 {
     public class BotFlow : FlowSettings
     {
+
+        public long UserId;
         public IEnumerable<SocialAccount> Accounts { get; set; }
         public List<Proxy> Proxies { get; set; }
         public IAccountsImporter Importer { get; set; }

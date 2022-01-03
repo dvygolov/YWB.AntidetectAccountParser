@@ -1,7 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Reflection;
+﻿using Microsoft.Extensions.DependencyInjection;
+using System;
 using YWB.AntidetectAccountsParser.Interfaces;
 using YWB.AntidetectAccountsParser.Model.Accounts;
 using YWB.AntidetectAccountsParser.Services.Parsers;
@@ -20,18 +18,20 @@ namespace YWB.AntidetectAccountsParser.Terminal
             switch (AccountType)
             {
                 case AccountTypes.Google:
-                    parser = new GoogleArchivesAccountsParser();
+                    //TODO:remake
+                    //parser=_sp.GetService<GoogleArchivesAccountsParser>();
                     break;
                 case AccountTypes.Facebook:
                     Console.WriteLine("What do you want to parse?");
-                    var parsers = new Dictionary<string, Func<IAccountsParser<FacebookAccount>>> {
+                    //TODO:remake
+                    /*var parsers = new Dictionary<string, Func<IAccountsParser<FacebookAccount>>> {
                         {"Accounts from text file", ()=>
                             new FacebookTextAccountsParser(new ConsoleAccountsLogger(), File.ReadAllLines(
                                  Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "accounts.txt")).ToList()) 
                         },
                         {"Accounts from ZIP/RAR files or Folders",()=>new FacebookArchivesAccountsParser() }
                     };
-                    parser = SelectHelper.Select(parsers, a => a.Key).Value();
+                    parser = SelectHelper.Select(parsers, a => a.Key).Value();*/
                     break;
             }
             return parser;

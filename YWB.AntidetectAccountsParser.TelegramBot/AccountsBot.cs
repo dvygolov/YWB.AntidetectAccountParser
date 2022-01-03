@@ -1,8 +1,7 @@
 ﻿using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using System.Collections.Concurrent;
-using System.Reflection;
-using System.Text;
 using Telegram.Bot;
 using Telegram.Bot.Exceptions;
 using Telegram.Bot.Extensions.Polling;
@@ -10,10 +9,8 @@ using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
 using Telegram.Bot.Types.ReplyMarkups;
 using YWB.AntidetectAccountsParser.Services.Browsers;
-using YWB.AntidetectAccountsParser.Services.Logging;
 using YWB.AntidetectAccountsParser.Services.Monitoring;
-using YWB.AntidetectAccountsParser.Services.Parsers;
-using YWB.AntidetectAccountsParser.Services.Proxies;
+using YWB.AntidetectAccountsParser.TelegramBot.MessageProcessors;
 
 namespace YWB.AntidetectAccountsParser.TelegramBot
 {
@@ -22,19 +19,29 @@ namespace YWB.AntidetectAccountsParser.TelegramBot
         ConcurrentDictionary<long, BotFlow> _flows = new ConcurrentDictionary<long, BotFlow>();
         private TelegramBotClient _bot;
         CancellationTokenSource _cts;
-        private const string Antidetect = "Antidetect Browser";
-        private const string Monitoring = "Dolphin/FbTool";
+        private readonly IServiceProvider _sp;
         private readonly IConfigurationRoot _configuration;
         private readonly ILogger _logger;
+        private List<AbstractMessageProcessor> _processors;
 
-        public AccountsBot(IConfigurationRoot configuration, ILogger logger)
+        public AccountsBot(IServiceProvider sp)
         {
-            _configuration = configuration;
-            _logger = logger;
+            _sp = sp;
+            _configuration = sp.GetService<IConfigurationRoot>();
+            _logger = sp.GetService<ILogger>();
         }
 
         public void Start()
         {
+            _processors = new()
+            {
+                new UnknownFileMessageProcessor(_sp),
+                new TxtFileMessageProcessor(_sp),
+                new ProxyMessageProcessor(_sp),
+                new OsMessageProcessor(_sp),
+                new NamingPrefixMessageProcessor(_sp),
+                new NamingIndexMessageProcessor(_sp)
+            };
             _bot = new TelegramBotClient(_configuration.GetValue<string>("TelegramBotApiKey"));
             _cts = new CancellationTokenSource();
             var receiverOptions = new ReceiverOptions
@@ -50,141 +57,27 @@ namespace YWB.AntidetectAccountsParser.TelegramBot
 
         public void Stop()
         {
+            _processors.Clear();
             _cts.Cancel();
             _bot = null;
         }
 
         async Task HandleUpdateAsync(ITelegramBotClient b, Update update, CancellationToken cancellationToken)
         {
-            switch (update.Type)
+            foreach (var p in _processors)
             {
-                case UpdateType.CallbackQuery:
-                    switch(update.CallbackQuery.Data)
-                    {
-
-                    }
-                    break;
-                case UpdateType.Message:
-                    var m = update.Message;
-                    switch (m.Type)
-                    {
-                        case MessageType.Document:
-                            if (!m.Document.FileName.EndsWith(".txt"))
-                            {
-                                await b.SendTextMessageAsync(m.Chat.Id, "Unknown file type!");
-                                break;
-                            }
-
-                            await b.SendTextMessageAsync(m.Chat.Id, "Received file with accounts! Parsing...");
-                            var ms = new MemoryStream();
-                            await _bot.GetInfoAndDownloadFileAsync(m.Document.FileId, ms);
-                            var content = Encoding.UTF8.GetString(ms.ToArray());
-                            var logger = new BufferAccountsLogger();
-                            var p = new FacebookTextAccountsParser(logger, content.Split(Environment.NewLine, StringSplitOptions.RemoveEmptyEntries).ToList());
-                            var accounts = p.Parse();
-                            _flows.AddOrUpdate(m.From.Id, new BotFlow { Accounts = accounts }, (id, bf) => bf);
-                            await b.SendTextMessageAsync(m.Chat.Id, logger.Flush());
-                            await b.SendTextMessageAsync(m.Chat.Id, "Enter your proxy or proxies line by line\nFormat http(socks):192.168.0.1:6666:xxxx:yyyy");
-                            break;
-                        case MessageType.Text:
-                            {
-                                if (!_flows.ContainsKey(m.From.Id))
-                                {
-                                    await b.SendTextMessageAsync(m.Chat.Id, "Flow not found! Send your accounts file first!");
-                                    break;
-                                }
-                                var f = _flows[m.From.Id];
-                                if (f.Proxies == null)
-                                {
-                                    var pp = new TextProxyProvider(m.Text);
-                                    f.Proxies = pp.Get();
-                                    pp.SetProxies(f.Accounts);
-                                    InlineKeyboardMarkup inlineKeyboard = new(new[]
-                                    {
-                                        new []
-                                        {
-                                            InlineKeyboardButton.WithCallbackData(text: Antidetect, callbackData: Antidetect),
-                                            InlineKeyboardButton.WithCallbackData(text: Monitoring, callbackData: Monitoring),
-                                        }
-                                    });
-                                    Message sentMessage = await b.SendTextMessageAsync(
-                                        chatId: m.Chat.Id,
-                                        text: "Choose, where to import your accounts:",
-                                        replyMarkup: inlineKeyboard,
-                                        cancellationToken: cancellationToken);
-                                    break;
-                                }
-                                if (f.Importer == null)
-                                {
-                                    switch (m.Text)
-                                    {
-                                        case Antidetect:
-                                            f.Importer = new IndigoApiService();
-                                            break;
-                                        case Monitoring:
-                                            f.Importer = new FbToolService();
-                                            break;
-                                        default:
-                                            ReplyKeyboardMarkup replyKeyboardMarkup = new(new[] { new KeyboardButton[] { Antidetect, Monitoring } }) { ResizeKeyboard = true };
-                                            Message sentMessage = await b.SendTextMessageAsync(
-                                                chatId: m.Chat.Id,
-                                                text: "Unknown answer, choose again:",
-                                                replyMarkup: replyKeyboardMarkup,
-                                                cancellationToken: cancellationToken);
-                                            break;
-                                    }
-                                    if (f.Importer != null)
-                                    {
-                                        await b.SendTextMessageAsync(m.Chat.Id, "Enter your group name (for example, YWB):");
-                                    }
-                                    break;
-                                }
-                                if (f.Group == null)
-                                {
-                                    f.Group = new Model.Accounts.AccountGroup() { Name = "new" }; //TODO:Redo!
-                                    ReplyKeyboardMarkup replyKeyboardMarkup = new(new[] { new KeyboardButton[] { Antidetect, Monitoring } }) { ResizeKeyboard = true };
-                                    Message sentMessage = await b.SendTextMessageAsync(
-                                        chatId: m.Chat.Id,
-                                        text: "Choose your OS:",
-                                        replyMarkup: replyKeyboardMarkup,
-                                        cancellationToken: cancellationToken);
-                                    break;
-                                }
-                                if (string.IsNullOrEmpty(f.Os))
-                                {
-                                    f.Os = m.Text;
-                                    await b.SendTextMessageAsync(m.Chat.Id, "Enter profile names prefix (for examle, YWB_2212_NPPR70_):");
-                                    break;
-                                }
-                                if (string.IsNullOrEmpty(f.NamingPrefix))
-                                {
-                                    f.NamingPrefix = m.Text;
-                                    await b.SendTextMessageAsync(m.Chat.Id, "Enter profile names starting index(for example,1):");
-                                    break;
-                                }
-                                if (f.NamingIndex == null)
-                                {
-                                    f.NamingIndex = int.Parse(m.Text);
-                                    await b.SendTextMessageAsync(m.Chat.Id, "All data filled, starting import, PLEASE WAIT!");
-                                    break;
-                                }
-                                break;
-                            }
-                    }
-                    if (_flows.ContainsKey(m.From.Id))
-                    {
-                        var flow = _flows[m.From.Id];
-                        if (flow.IsFilled())
-                        {
-                            await flow.Importer.ImportAccountsAsync(flow.Accounts, flow);
-                            await b.SendTextMessageAsync(m.Chat.Id, "All done, HAPPY HACKING!");
-                        }
-                    }
-                    break;
-                default:
-                    break;
+                if (await p.ProcessAsync(_flows, update, b, cancellationToken)) break;
             }
-
+            var m = update.Message;
+            if (_flows.ContainsKey(m.From.Id))
+            {
+                var flow = _flows[m.From.Id];
+                if (flow.IsFilled())
+                {
+                    await flow.Importer.ImportAccountsAsync(flow.Accounts, flow);
+                    await b.SendTextMessageAsync(m.Chat.Id, "All done, HAPPY HACKING!");
+                }
+            }
         }
 
         Task HandleErrorAsync(ITelegramBotClient botClient, Exception exception, CancellationToken cancellationToken)

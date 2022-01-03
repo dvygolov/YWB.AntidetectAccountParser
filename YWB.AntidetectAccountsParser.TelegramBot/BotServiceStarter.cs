@@ -1,5 +1,9 @@
 ﻿using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using System.Reflection;
+using YWB.AntidetectAccountsParser.Model;
+using YWB.AntidetectAccountsParser.Services.Proxies;
 
 namespace YWB.AntidetectAccountsParser.TelegramBot
 {
@@ -9,15 +13,22 @@ namespace YWB.AntidetectAccountsParser.TelegramBot
         public void OnStart()
         {
             var builder = new ConfigurationBuilder()
-                            .SetBasePath(Directory.GetCurrentDirectory())
+                            .SetBasePath(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location))
                             .AddJsonFile("appsettings.json", false, true);
             IConfigurationRoot configuration = builder.Build();
-            ILoggerFactory loggerFactory = LoggerFactory.Create(builder =>
-                builder
-                    .AddConsole()
+            List<ServiceCredentials> services = new List<ServiceCredentials>();
+            configuration.GetSection("Services").Bind(services);
+
+            var sc = new ServiceCollection();
+            sc.AddSingleton(configuration);
+            sc.AddSingleton(services);
+            sc.AddSingleton<AbstractProxyProvider, TextProxyProvider>();
+            sc.AddLogging(builder => builder.AddConsole()
                     .AddFile("Logs\\AAP.Telegram.log", LogLevel.Trace));
-            ILogger logger = loggerFactory.CreateLogger<AccountsBot>();
-            _bot = new AccountsBot(configuration, logger);
+            sc.AddSingleton<AccountsBot>();
+            var sp = sc.BuildServiceProvider();
+
+            _bot = sp.GetService<AccountsBot>();
             _bot.Start();
         }
 
