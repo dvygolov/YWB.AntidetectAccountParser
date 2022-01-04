@@ -40,18 +40,18 @@ namespace YWB.AntidetectAccountParser.Services.Browsers
 
         }
 
-        private async Task<string> CreateNewProfileAsync(string os,SocialAccount sa)
+        private async Task<string> CreateNewProfileAsync(string os, SocialAccount sa)
         {
             var r = new RestRequest("fbcc/user/rand-get-user-agent", Method.POST);
             r.AddParameter("system", os);
-            var json = await ExecuteRequestAsync<JObject>(r);
-            string ua = json["data"]["ua"].ToString();
+            dynamic json = await ExecuteRequestAsync<JObject>(r);
+            string ua = json.data.ua;
 
             r = new RestRequest("fbcc/user/random-webgl-config", Method.POST);
             r.AddParameter("ua", ua);
             json = await ExecuteRequestAsync<JObject>(r);
-            string renderer = json["data"]["unmasked_renderer"].ToString();
-            string vendor = json["data"]["unmasked_vendor"].ToString();
+            string renderer = json.data.unmasked_renderer;
+            string vendor = json.data.unmasked_vendor;
 
             r = new RestRequest("fbcc/user/single-import-user", Method.POST);
             r.AddParameter("batch_id", "0");
@@ -94,12 +94,14 @@ namespace YWB.AntidetectAccountParser.Services.Browsers
             r.AddParameter("fingerprint_config", fp.ToString());
             json = await ExecuteRequestAsync<JObject>(r);
 
-            if (json["code"].ToString() == "8619")
+            if (json.code == "8619")
                 throw new Exception("This account already exists in AdsPower!");
 
-            if (json["code"].ToString() == "4006")
+            if (json.code== "4006")
                 throw new Exception("You are logged in AdsPower browser, logout first and run this program again!");
-            return json["data"]["id"].ToString();
+            if (json.code == "8616")
+                throw new Exception("You exceeded the number of available profiles!");
+            return json.data.id;
         }
 
         protected override Task ImportCookiesAsync(string profileId, string cookies)
@@ -112,7 +114,7 @@ namespace YWB.AntidetectAccountParser.Services.Browsers
             var r = new RestRequest("fbcc/user/update-user-info", Method.POST);
             r.AddParameter("fbcc_user_id", profileId);
             r.AddParameter("login_user_comment", fa.ToString(false, false));
-            var json=await ExecuteRequestAsync<JObject>(r);
+            var json = await ExecuteRequestAsync<JObject>(r);
             return json["msg"]?.ToString() == "Success";
         }
 
