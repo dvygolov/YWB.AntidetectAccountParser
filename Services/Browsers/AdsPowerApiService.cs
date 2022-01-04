@@ -96,12 +96,14 @@ namespace YWB.AntidetectAccountParser.Services.Browsers
 
             if (json.code == "8619")
                 throw new Exception("This account already exists in AdsPower!");
-
-            if (json.code== "4006")
+            if (json.code == "4006")
                 throw new Exception("You are logged in AdsPower browser, logout first and run this program again!");
-            if (json.code == "8616")
-                throw new Exception("You exceeded the number of available profiles!");
-            return json.data.id;
+            //if (json.code == "8616")
+            //    throw new Exception("You exceeded the number of available profiles!");
+            string profileId = json?.data?.id;
+            if (profileId == null)
+                throw new Exception(json.ToString());
+            return profileId;
         }
 
         protected override Task ImportCookiesAsync(string profileId, string cookies)
@@ -161,7 +163,7 @@ namespace YWB.AntidetectAccountParser.Services.Browsers
             (var login, var password) = GetLoginAndPassword();
             var r = new RestRequest("api/getUniqueId", Method.GET);
             var res = await ExecuteLocalRequestAsync<JObject>(r);
-            var uniqueId = res["data"]?["unique_id"]?.ToString();
+            var uniqueId = res?["data"]?["unique_id"]?.ToString();
             if (uniqueId == null)
                 throw new Exception($"Couldn't get UniqueId for AdsPower. Check, that your browser is running!Error:{res}");
 
