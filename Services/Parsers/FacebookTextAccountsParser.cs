@@ -70,7 +70,7 @@ namespace YWB.AntidetectAccountParser.Services.Parsers
                 Console.WriteLine("Found duplicate emails, trying to remove...");
                 var mList = matches.ToList();
                 int i = 0;
-                while (i < mList.Count - 1)
+                while (i < mList.Count)
                 {
                     if (mList[i].Groups["Email"].Value == mList[i + 1].Groups["Email"].Value)
                     {
@@ -131,6 +131,25 @@ namespace YWB.AntidetectAccountParser.Services.Parsers
                 }
             }
 
+            re = new Regex(@"[:;\|\s](?<TwoFactor>[\dA-Z]{32})($|[\:;\|\s])", RegexOptions.Multiline);
+            matches = re.Matches(input);
+            if (matches.Count == 0)
+            {
+                Console.WriteLine("Didn't find 2FA!");
+            }
+            else if (matches.Count != lst.Count)
+            {
+                Console.WriteLine("Found 2FA count does not match accounts count!");
+            }
+            else
+            {
+                Console.WriteLine("Found 2FA!");
+                for (int i = 0; i < matches.Count; i++)
+                {
+                    lst[i].TwoFactor = matches[i].Groups["TwoFactor"].Value;
+                }
+            }
+
             re = new Regex(@"(?<Birthday>\d{1,2}\s[а-я]+\s\d{4})", RegexOptions.Multiline);
             matches = re.Matches(input);
             if (matches.Count == 0)
@@ -141,6 +160,32 @@ namespace YWB.AntidetectAccountParser.Services.Parsers
             if (matches.Count == 0)
             {
                 Console.WriteLine("Didn't find birthdays!");
+            }
+            else if (matches.Count > lst.Count)
+            {
+                Console.WriteLine("Found more birthdays than expected, trying to remove unnecessary...");
+                var mList = matches.ToList();
+                int i = 0;
+                var now = DateTime.Now;
+                while (i < mList.Count)
+                {
+                    var bDay = mList[i].Groups["Birthday"].Value;
+                    var parsed = DateTime.TryParse(bDay, out DateTime dt);
+                    if (parsed && dt.Year == now.Year)
+                    {
+                        mList.RemoveAt(i);
+                        continue;
+                    }
+                    i++;
+                }
+                if (mList.Count == lst.Count)
+                {
+                    Console.WriteLine("Cleanup successfull, adding birthdays!");
+                    for (int j = 0; j < mList.Count; j++)
+                    {
+                        lst[j].Birthday = mList[j].Groups["Birthday"].Value;
+                    }
+                }
             }
             else if (matches.Count != lst.Count)
             {

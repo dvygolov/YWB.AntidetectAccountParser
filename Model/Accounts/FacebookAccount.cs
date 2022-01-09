@@ -10,7 +10,6 @@
         {
             Domain = "facebook.com";
         }
-        public string UserAgent { get; set; }
         public string Birthday { get; set; }
         public string EmailLogin { get; set; }
         public string EmailPassword { get; set; }
