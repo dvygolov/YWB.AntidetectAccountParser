@@ -81,7 +81,7 @@ namespace YWB.AntidetectAccountsParser.TelegramBot
                 _ => exception.ToString()
             };
 
-            Console.WriteLine(ErrorMessage);
+            _logger.LogError(ErrorMessage);
             return Task.CompletedTask;
         }
     }
