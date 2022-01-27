@@ -48,6 +48,7 @@ namespace YWB.AntidetectAccountParser.Services.Parsers
             {
                 if (acc.Name.Length > 100) acc.Name = acc.Name.Substring(0, 100);
             }
+            return multipliedAccounts;
         }
 
         public abstract ActionsFacade<T> GetActions(string filePath);
