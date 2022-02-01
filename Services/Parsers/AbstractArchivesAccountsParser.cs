@@ -16,7 +16,7 @@ namespace YWB.AntidetectAccountParser.Services.Parsers
             var ap = apf.GetArchiveParser();
             List<T> accounts = new List<T>();
             var proxyProvider = new FileProxyProvider();
-            var proxies=proxyProvider.Get();
+            var proxies = proxyProvider.Get();
 
             for (int i = 0; i < ap.Containers.Count; i++)
             {
@@ -27,11 +27,11 @@ namespace YWB.AntidetectAccountParser.Services.Parsers
                 switch (validity)
                 {
                     case AccountValidity.Valid:
-                        if (proxies.Count==ap.Containers.Count) acc.Proxy=proxies[i];
+                        if (proxies.Count == ap.Containers.Count) acc.Proxy = proxies[i];
                         accounts.Add(acc);
                         break;
                     case AccountValidity.PasswordOnly:
-                        if (proxies.Count==ap.Containers.Count) acc.Proxy=proxies[i];
+                        if (proxies.Count == ap.Containers.Count) acc.Proxy = proxies[i];
                         acc.Name = $"PasswordOnly_{acc.Name}";
                         accounts.Add(acc);
                         break;
@@ -42,7 +42,13 @@ namespace YWB.AntidetectAccountParser.Services.Parsers
                         break;
                 }
             }
-            return MultiplyCookies(accounts);
+            var multipliedAccounts = MultiplyCookies(accounts);
+            //we must trim long names, cause some antidetect browsers can't create profiles with such name length
+            foreach (var acc in multipliedAccounts)
+            {
+                if (acc.Name.Length > 100) acc.Name = acc.Name.Substring(0, 100);
+            }
+            return multipliedAccounts;
         }
 
         public abstract ActionsFacade<T> GetActions(string filePath);
