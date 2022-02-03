@@ -70,7 +70,7 @@ namespace YWB.AntidetectAccountParser.Services.Parsers
                 Console.WriteLine("Found duplicate emails, trying to remove...");
                 var mList = matches.ToList();
                 int i = 0;
-                while (i < mList.Count)
+                while (i + 1 < mList.Count)
                 {
                     if (mList[i].Groups["Email"].Value == mList[i + 1].Groups["Email"].Value)
                     {
