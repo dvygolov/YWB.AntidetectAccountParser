@@ -18,6 +18,12 @@ namespace YWB.AntidetectAccountsParser.TelegramBot.MessageProcessors
         public override async Task PayloadAsync(BotFlow flow, Update update, ITelegramBotClient b, CancellationToken ct)
         {
             var m = update.Message;
+
+            Message sentMessage = await b.SendTextMessageAsync(
+                chatId: m.Chat.Id,
+                text: "Checking accounts, please wait!",
+                cancellationToken: ct);
+
             var pp = new TextProxyProvider(m.Text);
             flow.Proxies = pp.Get();
             var ap = new FacebookTextAccountsParser(pp, _sp.GetService<ILogger>(), flow.AccountStrings);
@@ -27,7 +33,7 @@ namespace YWB.AntidetectAccountsParser.TelegramBot.MessageProcessors
             {
                 services.Select(s=>InlineKeyboardButton.WithCallbackData(s.Name))
             });
-            Message sentMessage = await b.SendTextMessageAsync(
+            sentMessage = await b.SendTextMessageAsync(
                 chatId: m.Chat.Id,
                 text: "Choose, where to import your accounts:",
                 replyMarkup: inlineKeyboard,

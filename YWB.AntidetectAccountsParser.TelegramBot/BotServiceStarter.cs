@@ -20,13 +20,13 @@ namespace YWB.AntidetectAccountsParser.TelegramBot
             IConfigurationRoot configuration = builder.Build();
             List<ServiceCredentials> services = new List<ServiceCredentials>();
             configuration.GetSection("Services").Bind(services);
+            services=services.Where(s=>!string.IsNullOrEmpty(s.Credentials)||s.Name=="Indigo").ToList();
 
             var sc = new ServiceCollection();
             sc.AddSingleton(configuration);
             sc.AddSingleton(services);
             sc.AddSingleton<AbstractProxyProvider, TextProxyProvider>();
-            sc.AddLogging(builder => builder.AddConsole()
-                    .AddFile("Logs\\AAP.Telegram.log", LogLevel.Trace));
+            sc.AddLogging(builder => builder.AddConsole().AddFile("Logs\\AAP.Telegram.log", LogLevel.Trace));
             sc.AddSingleton<AccountsBot>();
             var sp = sc.BuildServiceProvider();
 

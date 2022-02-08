@@ -15,5 +15,14 @@ namespace YWB.AntidetectAccountsParser.TelegramBot
             AccountStrings != null && Accounts != null && Proxies != null && Importer != null && base.IsFilled();
         public override bool IsEmpty() =>
             AccountStrings == null && Accounts == null && Proxies == null && Importer == null && base.IsEmpty();
+
+        public override void Clear()
+        {
+            AccountStrings = null;
+            Accounts = null;
+            Proxies = null;
+            Importer = null;
+            base.Clear();
+        }
     }
 }

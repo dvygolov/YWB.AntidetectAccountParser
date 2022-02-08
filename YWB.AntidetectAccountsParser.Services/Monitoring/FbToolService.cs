@@ -1,6 +1,5 @@
 ﻿using Newtonsoft.Json.Linq;
 using RestSharp;
-using System.Reflection;
 using YWB.AntidetectAccountsParser.Model;
 using YWB.AntidetectAccountsParser.Model.Accounts;
 
@@ -8,7 +7,7 @@ namespace YWB.AntidetectAccountsParser.Services.Monitoring
 {
     public class FbToolService : AbstractMonitoringService
     {
-        private const string FileName = "fbtool.txt";
+        public FbToolService(string credentials) : base(credentials) { }
 
         public override async Task<List<AccountGroup>> GetExistingGroupsAsync()
         {
@@ -98,19 +97,9 @@ namespace YWB.AntidetectAccountsParser.Services.Monitoring
         }
 
 
-        protected override async Task SetTokenAndApiUrlAsync()
+        protected override void SetTokenAndApiUrl()
         {
-            var dir = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
-            var fullPath = Path.Combine(dir, FileName);
-            if (File.Exists(fullPath))
-            {
-                _token = await File.ReadAllTextAsync(fullPath);
-            }
-            else
-            {
-                Console.Write("Enter your FbTool API Token:");
-                _token = Console.ReadLine();
-            }
+            _token = _credentials;
             _apiUrl = "https://fbtool.pro/api";
         }
 

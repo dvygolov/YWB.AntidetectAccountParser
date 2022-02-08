@@ -31,10 +31,12 @@ namespace YWB.AntidetectAccountsParser.TelegramBot
         {
             _processors = new()
             {
+                new CancelMessageProcessor(_sp),
                 new UnknownFileMessageProcessor(_sp),
                 new TxtFileMessageProcessor(_sp),
                 new UnknownFlowProcessor(_sp),
                 new ProxyMessageProcessor(_sp),
+                new ImporterMessageProcessor(_sp),
                 new OsMessageProcessor(_sp),
                 new NamingPrefixMessageProcessor(_sp),
                 new NamingIndexMessageProcessor(_sp),
@@ -62,13 +64,24 @@ namespace YWB.AntidetectAccountsParser.TelegramBot
 
         async Task HandleUpdateAsync(ITelegramBotClient b, Update update, CancellationToken cancellationToken)
         {
-            var m = update.Message;
-            if (!_flows.ContainsKey(m.From.Id))
-                _flows.Add(m.From.Id, new BotFlow());
+            var fromId = update.Message?.From.Id ?? update.CallbackQuery?.From.Id;
+            if (!_flows.ContainsKey(fromId.Value))
+                _flows.Add(fromId.Value, new BotFlow());
 
             foreach (var p in _processors)
             {
-                if (await p.ProcessAsync(_flows, update, b, cancellationToken)) break;
+                try
+                {
+                    if (await p.ProcessAsync(_flows, update, b, cancellationToken)) break;
+                }
+                catch (Exception e)
+                {
+                    await b.SendTextMessageAsync(
+                        chatId: fromId,
+                        text: $"An ERROR occured: {e}" );
+                    _flows.Remove(fromId.Value);
+                    return;
+                }
             }
         }
 

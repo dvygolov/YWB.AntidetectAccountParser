@@ -1,6 +1,5 @@
 ﻿using Newtonsoft.Json.Linq;
 using RestSharp;
-using System.Reflection;
 using YWB.AntidetectAccountsParser.Model;
 using YWB.AntidetectAccountsParser.Model.Accounts;
 
@@ -8,7 +7,7 @@ namespace YWB.AntidetectAccountsParser.Services.Monitoring
 {
     public class DolphinService : AbstractMonitoringService
     {
-        private const string FileName = "dolphin.txt";
+        public DolphinService(string credentials) : base(credentials) { }
 
         public override Task<List<AccountGroup>> GetExistingGroupsAsync()
         {
@@ -81,22 +80,10 @@ namespace YWB.AntidetectAccountsParser.Services.Monitoring
             r.AddHeader("Authorization", _token);
         }
 
-        protected override async Task SetTokenAndApiUrlAsync()
+        protected override void SetTokenAndApiUrl()
         {
-            var dir = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
-            var fullPath = Path.Combine(dir, FileName);
-            if (File.Exists(fullPath))
-            {
-                var split = (await File.ReadAllTextAsync(fullPath)).Split(':');
-                (_apiUrl, _token) = (split[0], split[1]);
-            }
-            else
-            {
-                Console.Write("Enter your Dolphin domain (WITHOUT HTTP!):");
-                _apiUrl = Console.ReadLine();
-                Console.Write("Enter your Dolphin API token:");
-                _token = Console.ReadLine();
-            }
+            var split = _credentials.Split(':');
+            (_apiUrl, _token) = (split[0], split[1]);
             _apiUrl = $"http://{_apiUrl}/new/";
         }
 

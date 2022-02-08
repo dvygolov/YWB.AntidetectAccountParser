@@ -104,8 +104,8 @@ namespace YWB.AntidetectAccountsParser.Terminal
         {
             var monitoringServices = new Dictionary<string, Func<AbstractMonitoringService>> 
             {
-                {"FbTool",()=>new FbToolService() },
-                {"Dolphin",()=>new DolphinService() }
+                //{"FbTool",()=>new FbToolService() },
+                //{"Dolphin",()=>new DolphinService() }
             };
             Console.WriteLine("Choose your service:");
             var monitoringService = SelectHelper.Select(monitoringServices, ms => ms.Key).Value();

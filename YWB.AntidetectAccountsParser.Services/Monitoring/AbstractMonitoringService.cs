@@ -9,10 +9,15 @@ namespace YWB.AntidetectAccountsParser.Services.Monitoring
 {
     public abstract class AbstractMonitoringService : IAccountsImporter
     {
-        protected string _token;
         protected string _apiUrl;
+        protected string _token;
+        protected readonly string _credentials;
 
-        protected abstract Task SetTokenAndApiUrlAsync();
+        public AbstractMonitoringService(string credentials)
+        {
+            _credentials = credentials;
+        }
+        protected abstract void SetTokenAndApiUrl();
         protected abstract void AddAuthorization(RestRequest r);
         public abstract Task<List<AccountGroup>> GetExistingGroupsAsync();
         public abstract Task<AccountGroup> AddNewGroupAsync(string groupName);
@@ -58,8 +63,8 @@ namespace YWB.AntidetectAccountsParser.Services.Monitoring
 
         protected async Task<T> ExecuteRequestAsync<T>(RestRequest r)
         {
-            if (string.IsNullOrEmpty(_token) || string.IsNullOrEmpty(_apiUrl))
-                await SetTokenAndApiUrlAsync();
+            if (string.IsNullOrEmpty(_credentials) || string.IsNullOrEmpty(_apiUrl))
+                SetTokenAndApiUrl();
             var rc = new RestClient(_apiUrl);
             AddAuthorization(r);
             var resp = await rc.ExecuteAsync(r, new CancellationToken());

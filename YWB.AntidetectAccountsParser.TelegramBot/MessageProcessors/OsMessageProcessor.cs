@@ -7,7 +7,7 @@ namespace YWB.AntidetectAccountsParser.TelegramBot.MessageProcessors
     {
         public OsMessageProcessor(IServiceProvider sp) : base(sp) { }
 
-        public override bool Filter(BotFlow flow, Update update) => string.IsNullOrEmpty(flow.Os);
+        public override bool Filter(BotFlow flow, Update update) => flow.Importer!=null && string.IsNullOrEmpty(flow.Os);
 
         public override async Task PayloadAsync(BotFlow flow, Update update, ITelegramBotClient b, CancellationToken ct)
         {
