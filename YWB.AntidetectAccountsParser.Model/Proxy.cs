@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-
-namespace YWB.AntidetectAccountsParser.Model
+﻿namespace YWB.AntidetectAccountsParser.Model
 {
     public class Proxy
     {

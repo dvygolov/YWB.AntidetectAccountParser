@@ -61,5 +61,10 @@ namespace YWB.AntidetectAccountsParser.Services.Browsers
             }
             return res;
         }
+
+        public List<string> GetOsList()
+        {
+            return GetOSes();
+        }
     }
 }

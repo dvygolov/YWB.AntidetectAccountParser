@@ -1,5 +1,6 @@
 ﻿using Telegram.Bot;
 using Telegram.Bot.Types;
+using Telegram.Bot.Types.Enums;
 
 namespace YWB.AntidetectAccountsParser.TelegramBot.MessageProcessors
 {
@@ -7,7 +8,10 @@ namespace YWB.AntidetectAccountsParser.TelegramBot.MessageProcessors
     {
         public NamingPrefixMessageProcessor(IServiceProvider sp) : base(sp) { }
 
-        public override bool Filter(BotFlow flow, Update update) => string.IsNullOrEmpty(flow.NamingPrefix);
+        public override bool Filter(BotFlow flow, Update update) => 
+            update.Type==UpdateType.Message&& 
+            flow.Group!=null&&
+            flow.NamingPrefix== null;
 
         public override async Task PayloadAsync(BotFlow flow, Update update, ITelegramBotClient b, CancellationToken ct)
         {

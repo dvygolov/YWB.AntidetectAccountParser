@@ -81,5 +81,9 @@ namespace YWB.AntidetectAccountsParser.Services.Monitoring
             return res;
         }
 
+        public List<string> GetOsList()
+        {
+            return null;
+        }
     }
 }

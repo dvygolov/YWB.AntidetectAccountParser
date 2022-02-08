@@ -38,9 +38,9 @@ namespace YWB.AntidetectAccountsParser.TelegramBot
                 new ProxyMessageProcessor(_sp),
                 new ImporterMessageProcessor(_sp),
                 new OsMessageProcessor(_sp),
+                new GroupMessageProcessor(_sp),
                 new NamingPrefixMessageProcessor(_sp),
-                new NamingIndexMessageProcessor(_sp),
-                new FilledFlowMessageProcessor(_sp)
+                new NamingIndexMessageProcessor(_sp)
             };
             _bot = new TelegramBotClient(_configuration.GetValue<string>("TelegramBotApiKey"));
             _cts = new CancellationTokenSource();
@@ -94,7 +94,7 @@ namespace YWB.AntidetectAccountsParser.TelegramBot
                 _ => exception.ToString()
             };
 
-            _logger.LogError(ErrorMessage);
+            _logger?.LogError(ErrorMessage);
             return Task.CompletedTask;
         }
     }

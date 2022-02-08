@@ -19,13 +19,25 @@ namespace YWB.AntidetectAccountsParser.TelegramBot.MessageProcessors
         {
             var m = update.Message;
 
+
+            var pp = new TextProxyProvider(m.Text);
+            try
+            {
+                flow.Proxies = pp.Get();
+            }
+            catch
+            {
+                await b.SendTextMessageAsync(
+                    chatId: m.Chat.Id,
+                    text: "Invalid proxy format! Try again.",
+                    cancellationToken: ct);
+                return;
+            }
+
             Message sentMessage = await b.SendTextMessageAsync(
                 chatId: m.Chat.Id,
                 text: "Checking accounts, please wait!",
                 cancellationToken: ct);
-
-            var pp = new TextProxyProvider(m.Text);
-            flow.Proxies = pp.Get();
             var ap = new FacebookTextAccountsParser(pp, _sp.GetService<ILogger>(), flow.AccountStrings);
             flow.Accounts = ap.Parse();
             var services = _sp.GetService<List<ServiceCredentials>>();
