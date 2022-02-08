@@ -17,6 +17,7 @@ namespace YWB.AntidetectAccountsParser.Model.Accounts
 
         public string Name { get; set; }
         public string Domain { get; set; } = "google.com";
+        public string UserAgent { get; set; }
         public string Login
         {
             get

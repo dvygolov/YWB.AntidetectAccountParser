@@ -6,6 +6,11 @@ namespace YWB.AntidetectAccountsParser.Services
     {
         public static bool Check(string id)
         {
+            if (string.IsNullOrEmpty(id))
+            {
+                System.Console.WriteLine("c_user cookie is empty!");
+                return true;
+            }
             var url = $"https://mbasic.facebook.com/profile.php?id={id}";
             var hc = new HttpClient();
             hc.DefaultRequestHeaders.Add("User-Agent", "Mozilla/5.0 (iPhone; CPU iPhone OS 14_2 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) GSA/190.0.415307624 Mobile/15E148 Safari/604.1");
@@ -30,7 +35,7 @@ namespace YWB.AntidetectAccountsParser.Services
                     return false;
                 default:
                     System.Console.WriteLine($"Error getting account's {id} status from Facebook!");
-                    return false;
+                    return true;
             }
         }
     }
