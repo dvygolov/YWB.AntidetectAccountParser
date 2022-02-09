@@ -1,5 +1,4 @@
-﻿using System.Collections.Concurrent;
-using Telegram.Bot;
+﻿using Telegram.Bot;
 using Telegram.Bot.Types;
 
 namespace YWB.AntidetectAccountsParser.TelegramBot.MessageProcessors

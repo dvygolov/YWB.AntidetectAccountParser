@@ -40,8 +40,7 @@ namespace YWB.AntidetectAccountsParser.TelegramBot
                 new OsMessageProcessor(_sp),
                 new GroupMessageProcessor(_sp),
                 new NamingPrefixMessageProcessor(_sp),
-                new NamingIndexMessageProcessor(_sp),
-                new FilledFlowMessageProcessor(_sp)
+                new NamingIndexMessageProcessor(_sp)
             };
             _bot = new TelegramBotClient(_configuration.GetValue<string>("TelegramBotApiKey"));
             _cts = new CancellationTokenSource();

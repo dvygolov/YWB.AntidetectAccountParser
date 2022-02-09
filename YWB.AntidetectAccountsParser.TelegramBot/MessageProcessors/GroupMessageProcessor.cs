@@ -1,6 +1,7 @@
 ﻿using Telegram.Bot;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
+using Telegram.Bot.Types.ReplyMarkups;
 
 namespace YWB.AntidetectAccountsParser.TelegramBot.MessageProcessors
 {
@@ -24,6 +25,18 @@ namespace YWB.AntidetectAccountsParser.TelegramBot.MessageProcessors
                 return;
             }
             flow.Group = selected;
+
+            if (flow.IsFilled())
+            {
+                await b.SendTextMessageAsync(fromId, "All data filled, starting import, PLEASE WAIT!");
+                await flow.Importer.ImportAccountsAsync(flow.Accounts, flow);
+                await b.SendTextMessageAsync(
+                    chatId: fromId,
+                    text: "All done, HAPPY HACKING!",
+                    replyMarkup: new ReplyKeyboardRemove());
+                flow.Clear();
+                return;
+            }
             await b.SendTextMessageAsync(fromId, "Enter profile names prefix (for example, YWB_2212_NPPR70_) :");
         }
     }

@@ -46,10 +46,13 @@ namespace YWB.AntidetectAccountsParser.TelegramBot.MessageProcessors
                         cancellationToken: ct);
                 }
                 else
+                {
+                    flow.Clear();
                     await b.SendTextMessageAsync(
                         chatId: m.Chat.Id,
                         text: "All done, HAPPY HACKING!",
                         replyMarkup: new ReplyKeyboardRemove());
+                }
             }
             else
                 await b.SendTextMessageAsync(m.Chat.Id, "Flow not filled!");

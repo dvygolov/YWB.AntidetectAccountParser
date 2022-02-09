@@ -25,7 +25,7 @@ namespace YWB.AntidetectAccountsParser.Terminal
         {
             Console.InputEncoding = System.Text.Encoding.UTF8;
             Console.OutputEncoding = System.Text.Encoding.UTF8;
-            await CopyrightHelper.Show(false);
+            CopyrightHelper.Show(false);
 
             var sp = TerminalServiceProvider.Configure();
             var parser = sp.GetService<IAccountsParser<SocialAccount>>();

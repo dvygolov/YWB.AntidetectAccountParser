@@ -15,6 +15,7 @@ namespace YWB.AntidetectAccountsParser.Model
         public virtual void Clear()
         {
             Os = null;
+            Group = null;
             NamingPrefix = null;
             NamingIndex = null;
         }
