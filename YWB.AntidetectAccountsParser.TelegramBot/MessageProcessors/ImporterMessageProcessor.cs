@@ -27,7 +27,7 @@ namespace YWB.AntidetectAccountsParser.TelegramBot.MessageProcessors
                 await b.SendTextMessageAsync(
                     chatId: fromId,
                     text: "All done, HAPPY HACKING!",
-                    replyMarkup:new ReplyKeyboardRemove());
+                    replyMarkup: new ReplyKeyboardRemove());
                 return;
             }
             var current = credentials.First(c => c.Name == update.CallbackQuery.Data).Credentials;
@@ -41,6 +41,17 @@ namespace YWB.AntidetectAccountsParser.TelegramBot.MessageProcessors
                 "Dolphin" => new DolphinService(current),
                 _ => throw new Exception("Invalid importing service name!")
             };
+
+            if (flow.IsFilled())
+            {
+                await b.SendTextMessageAsync(fromId, "All data filled, starting import, PLEASE WAIT!");
+                await flow.Importer.ImportAccountsAsync(flow.Accounts, flow);
+                await b.SendTextMessageAsync(
+                    chatId: fromId,
+                    text: "All done, HAPPY HACKING!",
+                    replyMarkup: new ReplyKeyboardRemove());
+                return;
+            }
 
             var oses = flow.Importer.GetOsList();
             if (oses != null)
