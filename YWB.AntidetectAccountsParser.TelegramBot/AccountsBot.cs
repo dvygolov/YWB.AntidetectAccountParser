@@ -69,7 +69,8 @@ namespace YWB.AntidetectAccountsParser.TelegramBot
             var users = _sp.GetService<List<string>>();
             if (!users.Contains(from))
             {
-                await b.SendTextMessageAsync(chatId: fromId, text: "FUCK OFF!" );
+                await b.SendTextMessageAsync(chatId: fromId, text: "FUCK OFF!");
+                await b.BanChatMemberAsync(chatId: fromId, userId: fromId.Value);
                 return;
             }
 
@@ -86,7 +87,7 @@ namespace YWB.AntidetectAccountsParser.TelegramBot
                 {
                     await b.SendTextMessageAsync(
                         chatId: fromId,
-                        text: $"An ERROR occured: {e}" );
+                        text: $"An ERROR occured: {e}");
                     _flows.Remove(fromId.Value);
                     return;
                 }
