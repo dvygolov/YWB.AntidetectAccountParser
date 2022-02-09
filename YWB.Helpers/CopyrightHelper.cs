@@ -2,7 +2,7 @@
 {
     public class CopyrightHelper
     {
-        public static async Task ShowAsync(bool isBot)
+        public static void Show(bool isBot)
         {
             if (isBot)
             Console.WriteLine(@"            Antidetect Accounts Parser Telegram Bot v6.0 ");

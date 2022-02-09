@@ -40,7 +40,8 @@ namespace YWB.AntidetectAccountsParser.TelegramBot
                 new OsMessageProcessor(_sp),
                 new GroupMessageProcessor(_sp),
                 new NamingPrefixMessageProcessor(_sp),
-                new NamingIndexMessageProcessor(_sp)
+                new NamingIndexMessageProcessor(_sp),
+                new FilledFlowMessageProcessor(_sp)
             };
             _bot = new TelegramBotClient(_configuration.GetValue<string>("TelegramBotApiKey"));
             _cts = new CancellationTokenSource();
@@ -64,7 +65,15 @@ namespace YWB.AntidetectAccountsParser.TelegramBot
 
         async Task HandleUpdateAsync(ITelegramBotClient b, Update update, CancellationToken cancellationToken)
         {
+            var from = update.Message?.From.Username ?? update.CallbackQuery?.From.Username;
             var fromId = update.Message?.From.Id ?? update.CallbackQuery?.From.Id;
+            var users = _sp.GetService<List<string>>();
+            if (!users.Contains(from))
+            {
+                await b.SendTextMessageAsync(chatId: fromId, text: "FUCK OFF!" );
+                return;
+            }
+
             if (!_flows.ContainsKey(fromId.Value))
                 _flows.Add(fromId.Value, new BotFlow());
 

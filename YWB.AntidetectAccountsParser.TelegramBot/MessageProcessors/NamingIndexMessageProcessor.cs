@@ -27,7 +27,7 @@ namespace YWB.AntidetectAccountsParser.TelegramBot.MessageProcessors
             {
                 await flow.Importer.ImportAccountsAsync(flow.Accounts, flow);
                 var credentials = _sp.GetService<List<ServiceCredentials>>()
-                    .Where(c => c.Name == "FbTool" || c.Name == "Dolphin");
+                    .Where(c => c.Name.StartsWith("FbTool") || c.Name == "Dolphin");
                 if (flow.Importer is AbstractAntidetectApiService &&
                     credentials.Any() &&
                     flow.Accounts.All(a => !string.IsNullOrEmpty((a as FacebookAccount).Token)))

@@ -21,7 +21,6 @@ namespace YWB.AntidetectAccountsParser.TelegramBot.MessageProcessors
         {
             var credentials = _sp.GetService<List<ServiceCredentials>>();
             var fromId = update.CallbackQuery.From.Id;
-            var current = credentials.First(c => c.Name == update.CallbackQuery.Data).Credentials;
             if (update.CallbackQuery.Data.Contains("Exit"))
             {
                 flow.Clear();
@@ -31,13 +30,14 @@ namespace YWB.AntidetectAccountsParser.TelegramBot.MessageProcessors
                     replyMarkup:new ReplyKeyboardRemove());
                 return;
             }
+            var current = credentials.First(c => c.Name == update.CallbackQuery.Data).Credentials;
             flow.Importer = update.CallbackQuery.Data switch
             {
                 "Indigo" => new IndigoApiService(current),
                 "AdsPower" => new AdsPowerApiService(current),
                 "DolphinAnty" => new DolphinAntyApiService(current),
                 "Octo" => new OctoApiService(current),
-                "FbTool" => new FbToolService(current),
+                string fbTool when fbTool.StartsWith("FbTool") => new FbToolService(current),
                 "Dolphin" => new DolphinService(current),
                 _ => throw new Exception("Invalid importing service name!")
             };

@@ -13,7 +13,7 @@ namespace YWB.AntidetectAccountsParser.TelegramBot
         private AccountsBot _bot;
         public void OnStart()
         {
-            CopyrightHelper.ShowAsync(true).Wait();
+            CopyrightHelper.Show(true);
             var builder = new ConfigurationBuilder()
                             .SetBasePath(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location))
                             .AddJsonFile("appsettings.json", false, true);
@@ -22,11 +22,15 @@ namespace YWB.AntidetectAccountsParser.TelegramBot
             configuration.GetSection("Services").Bind(services);
             services=services.Where(s=>!string.IsNullOrEmpty(s.Credentials)||s.Name=="Indigo").ToList();
 
+            List<string> users = new List<string>();
+            configuration.GetSection("AllowedUsers").Bind(users);
+
             var sc = new ServiceCollection();
+            sc.AddSingleton(users);
             sc.AddSingleton(configuration);
             sc.AddSingleton(services);
             sc.AddSingleton<AbstractProxyProvider, TextProxyProvider>();
-            sc.AddLogging(builder => builder.AddConsole().AddFile("Logs\\AAP.Telegram.log", LogLevel.Trace));
+            sc.AddLogging(builder => builder.AddConsole().AddFile(@"logging\AAP.Telegram.log", LogLevel.Trace));
             sc.AddSingleton<AccountsBot>();
             var sp = sc.BuildServiceProvider();
 
