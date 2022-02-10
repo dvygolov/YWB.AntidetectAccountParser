@@ -66,6 +66,7 @@ namespace YWB.AntidetectAccountsParser.TelegramBot
         {
             var from = update.Message?.From.Username ?? update.CallbackQuery?.From.Username;
             var fromId = update.Message?.From.Id ?? update.CallbackQuery?.From.Id;
+            if (fromId == null) return;
             var users = _sp.GetService<List<string>>();
             if (!users.Contains(from))
             {
