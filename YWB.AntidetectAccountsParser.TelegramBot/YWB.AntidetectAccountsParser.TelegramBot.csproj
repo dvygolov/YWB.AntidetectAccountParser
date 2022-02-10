@@ -5,6 +5,10 @@
     <TargetFramework>net6.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>disable</Nullable>
+    <Version>6.1.0</Version>
+    <Company>Yellow Web</Company>
+    <Copyright>by Yellow Web</Copyright>
+    <PackageProjectUrl>https://yellowweb.top</PackageProjectUrl>
   </PropertyGroup>
 
   <ItemGroup>
