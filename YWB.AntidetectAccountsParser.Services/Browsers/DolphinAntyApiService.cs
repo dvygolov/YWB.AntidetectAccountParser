@@ -26,20 +26,6 @@ namespace YWB.AntidetectAccountsParser.Services.Browsers
             return Task.FromResult(new AccountGroup { Name = groupName });
         }
 
-        private async Task<List<Proxy>> GetExistingProxiesAsync()
-        {
-            var r = new RestRequest("proxy", Method.GET);
-            var res = await ExecuteRequestAsync<JObject>(r);
-            return res["data"].Select(p => new Proxy()
-            {
-                Id = p["id"].ToString(),
-                Address = p["host"].ToString(),
-                Port = p["port"].ToString(),
-                Login = p["login"].ToString(),
-                Password = p["password"].ToString()
-            }).ToList();
-        }
-
         private async Task<string> CreateProxyAsync(Proxy p)
         {
             var r = new RestRequest("proxy", Method.POST);
@@ -63,17 +49,6 @@ namespace YWB.AntidetectAccountsParser.Services.Browsers
 
         public override async Task<string> CreateNewProfileAsync(SocialAccount acc, string os, AccountGroup group)
         {
-            if (_proxyIds == null)
-                _proxyIds = (await GetExistingProxiesAsync()).ToDictionary(p => p, p => p.Id);
-
-            string proxyId;
-            if (!_proxyIds.ContainsKey(acc.Proxy))
-            {
-                Console.WriteLine("Adding proxy...");
-                proxyId = await CreateProxyAsync(acc.Proxy);
-            }
-            else proxyId = _proxyIds[acc.Proxy];
-
             var fp = await GetNewFingerprintAsync(os);
             var ua = await GetNewUseragentAsync(os);
             var memory = int.Parse(fp["deviceMemory"].ToString());
@@ -90,8 +65,15 @@ namespace YWB.AntidetectAccountsParser.Services.Browsers
             p.platform = os;
             p.platformName = fp["platform"];
             p.osVersion = fp["os"]["version"];
-            p.proxy = new JObject();
-            p.proxy.id = proxyId;
+            dynamic proxy = new JObject();
+            proxy.Type = (acc.Proxy.Type == "socks" ? "socks5" : acc.Proxy.Type);
+            proxy.host = acc.Proxy.Address;
+            proxy.port = acc.Proxy.Port;
+            proxy.login = acc.Proxy.Login;
+            proxy.password = acc.Proxy.Password;
+            if (!string.IsNullOrEmpty(acc.Proxy.UpdateLink))
+                proxy.changeIpUrl = p.UpdateLink;
+            p.proxy = proxy;
             p.useragent = new JObject();
             p.useragent.mode = "manual";
             p.useragent.value = ua;
