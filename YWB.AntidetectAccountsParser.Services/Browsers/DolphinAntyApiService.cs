@@ -26,27 +26,6 @@ namespace YWB.AntidetectAccountsParser.Services.Browsers
             return Task.FromResult(new AccountGroup { Name = groupName });
         }
 
-        private async Task<string> CreateProxyAsync(Proxy p)
-        {
-            var r = new RestRequest("proxy", Method.POST);
-            if (p.Type == "socks") p.Type = "socks5";
-            r.AddParameter("type", p.Type);
-            r.AddParameter("host", p.Address);
-            r.AddParameter("port", p.Port);
-            r.AddParameter("login", p.Login);
-            r.AddParameter("password", p.Password);
-            if (!string.IsNullOrEmpty(p.UpdateLink))
-                r.AddParameter("changeIpUrl", p.UpdateLink);
-            r.AddParameter("name", DateTime.Now.ToString("G"));
-            var res = await ExecuteRequestAsync<JObject>(r);
-            if (!res["success"]?.Value<bool>() ?? false)
-                throw new Exception(res["error"].ToString());
-            Console.WriteLine("Proxy added!");
-            var proxyId = res["data"]["id"].ToString();
-            _proxyIds.Add(p, proxyId);
-            return proxyId;
-        }
-
         public override async Task<string> CreateNewProfileAsync(SocialAccount acc, string os, AccountGroup group)
         {
             var fp = await GetNewFingerprintAsync(os);
@@ -66,13 +45,13 @@ namespace YWB.AntidetectAccountsParser.Services.Browsers
             p.platformName = fp["platform"];
             p.osVersion = fp["os"]["version"];
             dynamic proxy = new JObject();
-            proxy.Type = (acc.Proxy.Type == "socks" ? "socks5" : acc.Proxy.Type);
+            proxy.type = (acc.Proxy.Type == "socks" ? "socks5" : acc.Proxy.Type);
             proxy.host = acc.Proxy.Address;
             proxy.port = acc.Proxy.Port;
             proxy.login = acc.Proxy.Login;
             proxy.password = acc.Proxy.Password;
             if (!string.IsNullOrEmpty(acc.Proxy.UpdateLink))
-                proxy.changeIpUrl = p.UpdateLink;
+                proxy.changeIpUrl = acc.Proxy.UpdateLink;
             p.proxy = proxy;
             p.useragent = new JObject();
             p.useragent.mode = "manual";
