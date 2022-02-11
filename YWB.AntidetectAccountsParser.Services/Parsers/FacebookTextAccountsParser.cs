@@ -8,14 +8,16 @@ namespace YWB.AntidetectAccountsParser.Services.Parsers
 {
     public class FacebookTextAccountsParser : AbstractTextAccountsParser<FacebookAccount>
     {
+        private readonly FbHeadersChecker _fhc;
         private readonly ILogger<FacebookTextAccountsParser> _logger;
 
-        public FacebookTextAccountsParser(IProxyProvider<FacebookAccount> pp, IAccountsDataProvider adp, ILogger<FacebookTextAccountsParser> logger) : base(pp, adp)
+        public FacebookTextAccountsParser(IProxyProvider<FacebookAccount> pp, IAccountsDataProvider adp, FbHeadersChecker fhc, ILogger<FacebookTextAccountsParser> logger) : base(pp, adp)
         {
+            _fhc = fhc;
             _logger = logger;
         }
 
-        protected override IEnumerable<FacebookAccount> Process(string input)
+        private List<FacebookAccount> ProcessLoginsAndPasswords(string input)
         {
             var re = new Regex(@"^(?<Login>[^\:;\|\s]+)\s*[:;\|\s]\s*(?<Password>[^\:;\|\s]+)\s*[:;\|\s]", RegexOptions.Multiline);
             var matches = re.Matches(input);
@@ -26,9 +28,13 @@ namespace YWB.AntidetectAccountsParser.Services.Parsers
                 Login = m.Groups["Login"].Value,
                 Password = m.Groups["Password"].Value
             }).ToList();
+            return lst;
+        }
 
-            re = new Regex(@"(?<Token>EAABsb[^\s:;\|]+)", RegexOptions.Multiline);
-            matches = re.Matches(input);
+        private List<FacebookAccount> ProcessTokens(string input,List<FacebookAccount> lst)
+        {
+            var re = new Regex(@"(?<Token>EAABsb[^\s:;\|]+)", RegexOptions.Multiline);
+            var matches = re.Matches(input);
             if (matches.Count == 0)
             {
                 _logger.LogInformation("Didn't find access tokens!");
@@ -45,9 +51,13 @@ namespace YWB.AntidetectAccountsParser.Services.Parsers
                     lst[i].Token = matches[i].Groups["Token"].Value;
                 }
             }
+            return lst;
+        }
 
-            re = new Regex(@"(?<Token>EAAG[^\s:;\|]+)", RegexOptions.Multiline);
-            matches = re.Matches(input);
+        private List<FacebookAccount> ProcessBMTokens(string input, List<FacebookAccount> lst)
+        {
+            var re = new Regex(@"(?<Token>EAAG[^\s:;\|]+)", RegexOptions.Multiline);
+            var matches = re.Matches(input);
             if (matches.Count == 0)
             {
                 _logger.LogInformation("Didn't find BM tokens!");
@@ -64,9 +74,13 @@ namespace YWB.AntidetectAccountsParser.Services.Parsers
                     lst[i].BmToken = matches[i].Groups["Token"].Value;
                 }
             }
+            return lst;
+        }
 
-            re = new Regex(@"[:;\|\s](?<Email>[a-zA-Z0-9\._]+@[^\:;\|\s]+)[:;\|\s](?<EmailPassword>[^\:;\|\s]+)[:;\|\s]", RegexOptions.Multiline);
-            matches = re.Matches(input);
+        private List<FacebookAccount> ProcessEmails(string input, List<FacebookAccount> lst)
+        {
+            var re = new Regex(@"[:;\|\s](?<Email>[a-zA-Z0-9\._]+@[^\:;\|\s]+)[:;\|\s](?<EmailPassword>[^\:;\|\s]+)[:;\|\s]", RegexOptions.Multiline);
+            var matches = re.Matches(input);
             if (matches.Count == 0)
             {
                 _logger.LogInformation("Didn't find emails and passwords.");
@@ -108,9 +122,13 @@ namespace YWB.AntidetectAccountsParser.Services.Parsers
                     lst[i].EmailPassword = matches[i].Groups["EmailPassword"].Value;
                 }
             }
+            return lst;
+        }
 
-            re = new Regex(@"[\:;\|\s](?<Cookies>\[\s*\{.*?\}\s*\]\s*)($|[\:;\|\s])", RegexOptions.Multiline);
-            matches = re.Matches(input);
+        private (List<FacebookAccount> accounts,string input) ProcessCookies(string input, List<FacebookAccount> lst)
+        {
+            var re = new Regex(@"[\:;\|\s](?<Cookies>\[\s*\{.*?\}\s*\]\s*)($|[\:;\|\s])", RegexOptions.Multiline);
+            var matches = re.Matches(input);
             var invalid = new List<int>();
             if (matches.Count == 0)
             {
@@ -132,13 +150,29 @@ namespace YWB.AntidetectAccountsParser.Services.Parsers
                 {
                     lst[i].Cookies = CookieHelper.GetDomainCookies(matches[i].Groups["Cookies"].Value, lst[i].Domain);
                     var cUser = CookieHelper.GetCUserCookie(lst[i].AllCookies);
-                    var ch = FbHeadersChecker.Check(cUser);
+                    var ch = _fhc.Check(cUser);
                     if (!ch) invalid.Add(i);
                 }
             }
 
-            re = new Regex(@"[:;\|\s](?<TwoFactor>[\dA-Z]{32})($|[\:;\|\s])", RegexOptions.Multiline);
-            matches = re.Matches(input);
+            if (invalid.Count > 0)
+            {
+                var split = input.Split(input, '\n', StringSplitOptions.RemoveEmptyEntries).ToList();
+                _logger.LogInformation($"{invalid.Count} invalid accounts were found! Removing them...");
+                for (int i = invalid.Count - 1; i >= 0; i--)
+                {
+                    split.RemoveAt(invalid[i]);
+                    lst.RemoveAt(invalid[i]);
+                }
+                input = string.Join('\n', split);
+            }
+            return (lst, input);
+        }
+
+        private List<FacebookAccount> Process2FA(string input, List<FacebookAccount> lst)
+        {
+            var re = new Regex(@"[:;\|\s](?<TwoFactor>[\dA-Z]{32})($|[\:;\|\s])", RegexOptions.Multiline);
+            var matches = re.Matches(input);
             if (matches.Count == 0)
             {
                 _logger.LogInformation("Didn't find 2FA!");
@@ -155,9 +189,13 @@ namespace YWB.AntidetectAccountsParser.Services.Parsers
                     lst[i].TwoFactor = matches[i].Groups["TwoFactor"].Value;
                 }
             }
+            return lst;
+        }
 
-            re = new Regex(@"(?<Birthday>\d{1,2}\s[а-я]+\s\d{4})", RegexOptions.Multiline);
-            matches = re.Matches(input);
+        private List<FacebookAccount> ProcessBirthdays(string input, List<FacebookAccount> lst)
+        {
+            var re = new Regex(@"(?<Birthday>\d{1,2}\s[а-я]+\s\d{4})", RegexOptions.Multiline);
+            var matches = re.Matches(input);
             if (matches.Count == 0)
             {
                 re = new Regex(@"(?<Birthday>\d{1,2}[\./\-]\d{1,2}[\./\-][12]\d{3})", RegexOptions.Multiline);
@@ -205,17 +243,19 @@ namespace YWB.AntidetectAccountsParser.Services.Parsers
                     lst[i].Birthday = matches[i].Groups["Birthday"].Value;
                 }
             }
-
-            if (invalid.Count > 0)
-            {
-                _logger.LogInformation($"{invalid.Count} invalid accounts were found! Removing them...");
-                for (int i = invalid.Count - 1; i >= 0; i--)
-                {
-                    lst.RemoveAt(invalid[i]);
-                }
-            }
-
             return lst;
+        }
+
+        protected override IEnumerable<FacebookAccount> Process(string input)
+        {
+            var accounts=ProcessLoginsAndPasswords(input);
+            (accounts,input) = ProcessCookies(input, accounts);
+            accounts = ProcessTokens(input, accounts);
+            accounts = ProcessBMTokens(input, accounts);
+            accounts = ProcessEmails(input, accounts);
+            accounts = Process2FA(input, accounts);
+            accounts = ProcessBirthdays(input, accounts);
+            return accounts;
         }
     }
 }

@@ -9,7 +9,7 @@ namespace YWB.AntidetectAccountsParser.Services.Proxies
         protected string _source;
         public List<Proxy> Get()
         {
-            var lines = GetLines(_source);
+            var lines = GetLines();
             var proxies = lines.Select(l =>
              {
                  var split = l.Split(':');

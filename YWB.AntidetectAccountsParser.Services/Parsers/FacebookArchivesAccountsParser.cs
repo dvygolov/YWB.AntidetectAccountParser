@@ -9,10 +9,12 @@ namespace YWB.AntidetectAccountsParser.Services.Parsers
 {
     public class FacebookArchivesAccountsParser : AbstractArchivesAccountsParser<FacebookAccount>
     {
+        private readonly FbHeadersChecker _fhc;
         private readonly ILogger<FacebookArchivesAccountsParser> _logger;
 
-        public FacebookArchivesAccountsParser(IProxyProvider<FacebookAccount> pp,ILogger<FacebookArchivesAccountsParser> logger) : base(pp)
+        public FacebookArchivesAccountsParser(IProxyProvider<FacebookAccount> pp, FbHeadersChecker fhc, ILogger<FacebookArchivesAccountsParser> logger) : base(pp)
         {
+            _fhc = fhc;
             _logger = logger;
         }
 
@@ -36,8 +38,8 @@ namespace YWB.AntidetectAccountsParser.Services.Parsers
         {
             if (fa.AllCookies.Any(c => CookieHelper.HasCUserCookie(c)))
             {
-                var uid=CookieHelper.GetCUserCookie(fa.AllCookies);
-                var ch=FbHeadersChecker.Check(uid);
+                var uid = CookieHelper.GetCUserCookie(fa.AllCookies);
+                var ch = _fhc.Check(uid);
                 if (!ch) return AccountValidity.Invalid;
                 return AccountValidity.Valid;
             }
@@ -74,7 +76,7 @@ namespace YWB.AntidetectAccountsParser.Services.Parsers
                         TwoFactor = fa.TwoFactor,
                         UserAgent = fa.UserAgent,
                         Name = $"{fa.Name}_{i + 1}",
-                        Proxy=fa.Proxy
+                        Proxy = fa.Proxy
                     };
                     finalRes.Add(newFa);
                 }

@@ -9,6 +9,7 @@ namespace YWB.AntidetectAccountsParser.TelegramBot.MessageProcessors
     {
         public override bool Filter(BotFlow flow, Update update) => 
             update.Type==UpdateType.CallbackQuery&& 
+            flow.Importer!=null&&
             !string.IsNullOrEmpty(flow.Os)&&
             flow.Group == null;
 

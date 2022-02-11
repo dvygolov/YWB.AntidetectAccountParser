@@ -1,14 +1,21 @@
-﻿using System.Net.Http;
+﻿using Microsoft.Extensions.Logging;
 
 namespace YWB.AntidetectAccountsParser.Services
 {
-    internal class FbHeadersChecker
+    public class FbHeadersChecker
     {
-        public static bool Check(string id)
+        private readonly ILogger<FbHeadersChecker> _logger;
+
+        public FbHeadersChecker(ILogger<FbHeadersChecker> logger)
+        {
+            _logger = logger;
+        }
+
+        public bool Check(string id)
         {
             if (string.IsNullOrEmpty(id))
             {
-                System.Console.WriteLine("c_user cookie is empty!");
+                _logger.LogInformation("c_user cookie is empty!");
                 return true;
             }
             var url = $"https://mbasic.facebook.com/profile.php?id={id}";
@@ -20,21 +27,21 @@ namespace YWB.AntidetectAccountsParser.Services
                 case System.Net.HttpStatusCode.Redirect:
                     if (resp.Headers.Contains("X-XSS-Protection"))
                     {
-                        System.Console.WriteLine($"Account {id} is blocked in Facebook!");
+                        _logger.LogInformation($"Account {id} is blocked in Facebook!");
                         return false;
                     }
-                    System.Console.WriteLine($"Account {id} is OK!");
+                    _logger.LogInformation($"Account {id} is OK!");
                     return true;
                 case System.Net.HttpStatusCode.OK:
                     if (resp.Headers.Contains("X-XSS-Protection"))
                     {
-                        System.Console.WriteLine($"Account {id} is OK!");
+                        _logger.LogInformation($"Account {id} is OK!");
                         return true;
                     }
-                    System.Console.WriteLine($"Account {id} doesn't exist in Facebook!");
+                    _logger.LogInformation($"Account {id} doesn't exist in Facebook!");
                     return false;
                 default:
-                    System.Console.WriteLine($"Error getting account's {id} status from Facebook!");
+                    _logger.LogInformation($"Error getting account's {id} status from Facebook!");
                     return true;
             }
         }

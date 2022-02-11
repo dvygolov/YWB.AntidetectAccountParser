@@ -3,6 +3,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using System.Reflection;
 using YWB.AntidetectAccountsParser.Model;
+using YWB.AntidetectAccountsParser.Services;
 using YWB.AntidetectAccountsParser.Services.Proxies;
 using YWB.AntidetectAccountsParser.TelegramBot.MessageProcessors;
 using YWB.Helpers;
@@ -30,7 +31,8 @@ namespace YWB.AntidetectAccountsParser.TelegramBot
             sc.AddSingleton(users);
             sc.AddSingleton(configuration);
             sc.AddSingleton(services);
-            sc.AddSingleton<AbstractProxyProvider, TextProxyProvider>();
+            sc.AddTransient<AbstractProxyProvider, TextProxyProvider>();
+            sc.AddTransient<FbHeadersChecker>();
             sc.AddLogging(builder => builder.AddConsole().AddFile(@"logging\AAP.Telegram.log", LogLevel.Trace));
 
             Assembly.GetEntryAssembly().GetTypesAssignableFrom<AbstractMessageProcessor>().ForEach((t) =>
@@ -38,11 +40,10 @@ namespace YWB.AntidetectAccountsParser.TelegramBot
                 sc.AddScoped(typeof(AbstractMessageProcessor), t);
             });
 
-            sc.AddSingleton<AccountsBot>(x =>
-                new AccountsBot(configuration.GetValue<string>("TelegramBotApiKey"), users, 
-                                x.GetServices<AbstractMessageProcessor>(), x.GetService<ILogger<AccountsBot>>()));
-            var sp = sc.BuildServiceProvider();
+            sc.AddSingleton(x => new AccountsBot(configuration.GetValue<string>("TelegramBotApiKey"), users, 
+                    x.GetServices<AbstractMessageProcessor>(), x.GetService<ILogger<AccountsBot>>()));
 
+            var sp = sc.BuildServiceProvider();
             _bot = sp.GetService<AccountsBot>();
             _bot.Start();
         }
