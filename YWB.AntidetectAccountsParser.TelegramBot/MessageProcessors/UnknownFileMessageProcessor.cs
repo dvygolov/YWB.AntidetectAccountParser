@@ -6,8 +6,6 @@ namespace YWB.AntidetectAccountsParser.TelegramBot.MessageProcessors
 {
     public class UnknownFileMessageProcessor : AbstractMessageProcessor
     {
-        public UnknownFileMessageProcessor(IServiceProvider sp) : base(sp) { }
-
         public override bool Filter(BotFlow flow, Update update) =>
             update.Type == UpdateType.Message &&
             update.Message.Type == MessageType.Document &&

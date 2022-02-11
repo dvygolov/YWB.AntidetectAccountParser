@@ -1,58 +1,40 @@
-﻿using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
+﻿using Microsoft.Extensions.Logging;
 using Telegram.Bot;
 using Telegram.Bot.Exceptions;
 using Telegram.Bot.Extensions.Polling;
 using Telegram.Bot.Types;
+using Telegram.Bot.Types.Enums;
 using YWB.AntidetectAccountsParser.TelegramBot.MessageProcessors;
 
 namespace YWB.AntidetectAccountsParser.TelegramBot
 {
     internal class AccountsBot
     {
+        private readonly string _apiKey;
+        private readonly List<string> _allowedUsers;
+        private readonly ILogger<AccountsBot> _logger;
+        private readonly List<AbstractMessageProcessor> _processors;
         private TelegramBotClient _bot;
-        CancellationTokenSource _cts;
-        private readonly IServiceProvider _sp;
-        private readonly IConfigurationRoot _configuration;
-        private readonly ILogger _logger;
-        private List<AbstractMessageProcessor> _processors;
-        Dictionary<long, BotFlow> _flows = new Dictionary<long, BotFlow>();
+        private CancellationTokenSource _cts;
+        private Dictionary<long, BotFlow> _flows = new Dictionary<long, BotFlow>();
 
-
-        public AccountsBot(IServiceProvider sp)
+        public AccountsBot(string apiKey, List<string> allowedUsers, IEnumerable<AbstractMessageProcessor> processors, ILogger<AccountsBot> logger)
         {
-            _sp = sp;
-            _configuration = sp.GetService<IConfigurationRoot>();
-            _logger = sp.GetService<ILogger>();
+            _apiKey = apiKey;
+            _allowedUsers = allowedUsers;
+            _processors = processors.ToList();
+            _logger = logger;
         }
 
         public void Start()
         {
-            _processors = new()
-            {
-                new CancelMessageProcessor(_sp),
-                new UnknownFileMessageProcessor(_sp),
-                new TxtFileMessageProcessor(_sp),
-                new UnknownFlowProcessor(_sp),
-                new ProxyMessageProcessor(_sp),
-                new ImporterMessageProcessor(_sp),
-                new OsMessageProcessor(_sp),
-                new GroupMessageProcessor(_sp),
-                new NamingPrefixMessageProcessor(_sp),
-                new NamingIndexMessageProcessor(_sp)
-            };
-            _bot = new TelegramBotClient(_configuration.GetValue<string>("TelegramBotApiKey"));
+            _bot = new TelegramBotClient(_apiKey);
             _cts = new CancellationTokenSource();
             var receiverOptions = new ReceiverOptions
             {
-                AllowedUpdates = { } // receive all update types
+                AllowedUpdates = new[] { UpdateType.Message, UpdateType.CallbackQuery }
             };
-            _bot.StartReceiving(
-                HandleUpdateAsync,
-                HandleErrorAsync,
-                receiverOptions,
-                cancellationToken: _cts.Token);
+            _bot.StartReceiving(HandleUpdateAsync, HandleErrorAsync, receiverOptions, cancellationToken: _cts.Token);
         }
 
         public void Stop()
@@ -67,8 +49,7 @@ namespace YWB.AntidetectAccountsParser.TelegramBot
             var from = update.Message?.From.Username ?? update.CallbackQuery?.From.Username;
             var fromId = update.Message?.From.Id ?? update.CallbackQuery?.From.Id;
             if (fromId == null) return;
-            var users = _sp.GetService<List<string>>();
-            if (!users.Contains(from))
+            if (!_allowedUsers.Contains(from))
             {
                 await b.SendTextMessageAsync(chatId: fromId, text: "FUCK OFF!");
                 await b.BanChatMemberAsync(chatId: fromId, userId: fromId.Value);
@@ -86,9 +67,8 @@ namespace YWB.AntidetectAccountsParser.TelegramBot
                 }
                 catch (Exception e)
                 {
-                    await b.SendTextMessageAsync(
-                        chatId: fromId,
-                        text: $"An ERROR occured: {e}");
+                    _logger.LogError(e, "An error occured:", update);
+                    await b.SendTextMessageAsync(chatId: fromId, text: $"An ERROR occured: {e}");
                     _flows.Remove(fromId.Value);
                     return;
                 }
@@ -104,7 +84,7 @@ namespace YWB.AntidetectAccountsParser.TelegramBot
                 _ => exception.ToString()
             };
 
-            _logger?.LogError(ErrorMessage);
+            _logger.LogError(ErrorMessage);
             return Task.CompletedTask;
         }
     }

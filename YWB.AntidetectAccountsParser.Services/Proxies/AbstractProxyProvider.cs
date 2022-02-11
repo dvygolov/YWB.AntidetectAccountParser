@@ -6,9 +6,10 @@ namespace YWB.AntidetectAccountsParser.Services.Proxies
 {
     public abstract class AbstractProxyProvider : IProxyProvider<SocialAccount>
     {
+        protected string _source;
         public List<Proxy> Get()
         {
-            var lines = GetLines();
+            var lines = GetLines(_source);
             var proxies = lines.Select(l =>
              {
                  var split = l.Split(':');
@@ -39,5 +40,10 @@ namespace YWB.AntidetectAccountsParser.Services.Proxies
         }
 
         public abstract List<string> GetLines();
+
+        public virtual void SetSource(string source)
+        {
+            _source = source;
+        }
     }
 }

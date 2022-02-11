@@ -24,8 +24,7 @@ namespace YWB.AntidetectAccountsParser.Terminal
                 return apf.CreateParser();
             });
             sc.AddSingleton<AbstractProxyProvider, FileProxyProvider>();
-            sc.AddLogging(builder=> builder.AddConsole()
-                    .AddFile("Logs\\AAP.Terminal.log", LogLevel.Trace));
+            sc.AddLogging(builder=> builder.AddConsole().AddFile(@"logging\AAP.Terminal.log", LogLevel.Trace));
             return sc.BuildServiceProvider();
         }
     }

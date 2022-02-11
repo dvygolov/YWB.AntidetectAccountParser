@@ -4,6 +4,7 @@ using Microsoft.Extensions.Logging;
 using System.Reflection;
 using YWB.AntidetectAccountsParser.Model;
 using YWB.AntidetectAccountsParser.Services.Proxies;
+using YWB.AntidetectAccountsParser.TelegramBot.MessageProcessors;
 using YWB.Helpers;
 
 namespace YWB.AntidetectAccountsParser.TelegramBot
@@ -20,7 +21,7 @@ namespace YWB.AntidetectAccountsParser.TelegramBot
             IConfigurationRoot configuration = builder.Build();
             List<ServiceCredentials> services = new List<ServiceCredentials>();
             configuration.GetSection("Services").Bind(services);
-            services=services.Where(s=>!string.IsNullOrEmpty(s.Credentials)||s.Name=="Indigo").ToList();
+            services = services.Where(s => !string.IsNullOrEmpty(s.Credentials) || s.Name == "Indigo").ToList();
 
             List<string> users = new List<string>();
             configuration.GetSection("AllowedUsers").Bind(users);
@@ -31,7 +32,15 @@ namespace YWB.AntidetectAccountsParser.TelegramBot
             sc.AddSingleton(services);
             sc.AddSingleton<AbstractProxyProvider, TextProxyProvider>();
             sc.AddLogging(builder => builder.AddConsole().AddFile(@"logging\AAP.Telegram.log", LogLevel.Trace));
-            sc.AddSingleton<AccountsBot>();
+
+            Assembly.GetEntryAssembly().GetTypesAssignableFrom<AbstractMessageProcessor>().ForEach((t) =>
+            {
+                sc.AddScoped(typeof(AbstractMessageProcessor), t);
+            });
+
+            sc.AddSingleton<AccountsBot>(x =>
+                new AccountsBot(configuration.GetValue<string>("TelegramBotApiKey"), users, 
+                                x.GetServices<AbstractMessageProcessor>(), x.GetService<ILogger<AccountsBot>>()));
             var sp = sc.BuildServiceProvider();
 
             _bot = sp.GetService<AccountsBot>();

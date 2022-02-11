@@ -3,13 +3,12 @@ using Telegram.Bot;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
 using Telegram.Bot.Types.ReplyMarkups;
+using YWB.AntidetectAccountsParser.Services.AccountsData;
 
 namespace YWB.AntidetectAccountsParser.TelegramBot.MessageProcessors
 {
     public class TxtFileMessageProcessor : AbstractMessageProcessor
     {
-        public TxtFileMessageProcessor(IServiceProvider sp) : base(sp) { }
-
         public override bool Filter(BotFlow flow, Update update) =>
             update.Type == UpdateType.Message &&
             update.Message.Type == MessageType.Document &&
@@ -19,10 +18,10 @@ namespace YWB.AntidetectAccountsParser.TelegramBot.MessageProcessors
         {
             var m = update.Message;
             await b.SendTextMessageAsync(m.Chat.Id, "Received file with accounts! Parsing...");
-            var ms = new MemoryStream();
+            using var ms = new MemoryStream();
             await b.GetInfoAndDownloadFileAsync(m.Document.FileId, ms);
             var content = Encoding.UTF8.GetString(ms.ToArray());
-            flow.AccountStrings = content.Split(Environment.NewLine, StringSplitOptions.RemoveEmptyEntries).ToList();
+            flow.AccountsDataProvider = new TextAccountsDataProvider(content);
             ReplyKeyboardMarkup replyKeyboardMarkup = new(new[] { new KeyboardButton[] { "Cancel"} }) { ResizeKeyboard = true };
             await b.SendTextMessageAsync(
                 chatId: m.Chat.Id,

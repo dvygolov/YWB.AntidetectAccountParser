@@ -7,8 +7,6 @@ namespace YWB.AntidetectAccountsParser.TelegramBot.MessageProcessors
 {
     public class OsMessageProcessor : AbstractMessageProcessor
     {
-        public OsMessageProcessor(IServiceProvider sp) : base(sp) { }
-
         public override bool Filter(BotFlow flow, Update update) =>
             update.Type == UpdateType.CallbackQuery &&
             flow.Importer != null &&

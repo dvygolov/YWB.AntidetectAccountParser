@@ -6,8 +6,6 @@ namespace YWB.AntidetectAccountsParser.TelegramBot.MessageProcessors
 {
     public class NamingPrefixMessageProcessor : AbstractMessageProcessor
     {
-        public NamingPrefixMessageProcessor(IServiceProvider sp) : base(sp) { }
-
         public override bool Filter(BotFlow flow, Update update) => 
             update.Type==UpdateType.Message&& 
             flow.Group!=null&&

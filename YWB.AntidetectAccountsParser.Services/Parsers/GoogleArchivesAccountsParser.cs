@@ -8,12 +8,17 @@ namespace YWB.AntidetectAccountsParser.Services.Parsers
 {
     public class GoogleArchivesAccountsParser : AbstractArchivesAccountsParser<SocialAccount>
     {
-        public GoogleArchivesAccountsParser(ILogger logger, IProxyProvider<SocialAccount> pp) : base(logger, pp) { }
+        private readonly ILogger<GoogleArchivesAccountsParser> _logger;
+
+        public GoogleArchivesAccountsParser(IProxyProvider<SocialAccount> pp,ILogger<GoogleArchivesAccountsParser> logger) : base(pp)
+        {
+            _logger = logger;
+        }
 
         public override ActionsFacade<SocialAccount> GetActions(string filePath)
         {
             var sa = new SocialAccount(Path.GetFileNameWithoutExtension(filePath));
-            Console.WriteLine($"Parsing file: {filePath}");
+            _logger.LogInformation($"Parsing file: {filePath}");
             return new ActionsFacade<SocialAccount>()
             {
                 Account = sa,

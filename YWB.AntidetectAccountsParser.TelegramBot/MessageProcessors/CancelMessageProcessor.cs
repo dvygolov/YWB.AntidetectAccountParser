@@ -7,8 +7,6 @@ namespace YWB.AntidetectAccountsParser.TelegramBot.MessageProcessors
 {
     public class CancelMessageProcessor : AbstractMessageProcessor
     {
-        public CancelMessageProcessor(IServiceProvider sp) : base(sp) { }
-
         public override bool Filter(BotFlow flow, Update update) =>
             update.Type == UpdateType.Message &&
             update.Message.Text == "Cancel";

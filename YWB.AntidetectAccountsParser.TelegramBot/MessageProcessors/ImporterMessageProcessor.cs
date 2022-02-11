@@ -11,7 +11,12 @@ namespace YWB.AntidetectAccountsParser.TelegramBot.MessageProcessors
 {
     public class ImporterMessageProcessor : AbstractMessageProcessor
     {
-        public ImporterMessageProcessor(IServiceProvider sp) : base(sp) { }
+        private readonly List<ServiceCredentials> _credentials;
+
+        public ImporterMessageProcessor(List<ServiceCredentials> credentials)
+        {
+            _credentials = credentials;
+        }
 
         public override bool Filter(BotFlow flow, Update update) =>
             update.Type == UpdateType.CallbackQuery &&
@@ -19,7 +24,6 @@ namespace YWB.AntidetectAccountsParser.TelegramBot.MessageProcessors
 
         public override async Task PayloadAsync(BotFlow flow, Update update, ITelegramBotClient b, CancellationToken ct)
         {
-            var credentials = _sp.GetService<List<ServiceCredentials>>();
             var fromId = update.CallbackQuery.From.Id;
             if (update.CallbackQuery.Data.Contains("Exit"))
             {
@@ -30,7 +34,7 @@ namespace YWB.AntidetectAccountsParser.TelegramBot.MessageProcessors
                     replyMarkup: new ReplyKeyboardRemove());
                 return;
             }
-            var current = credentials.First(c => c.Name == update.CallbackQuery.Data).Credentials;
+            var current = _credentials.First(c => c.Name == update.CallbackQuery.Data).Credentials;
             flow.Importer = update.CallbackQuery.Data switch
             {
                 "Indigo" => new IndigoApiService(current),

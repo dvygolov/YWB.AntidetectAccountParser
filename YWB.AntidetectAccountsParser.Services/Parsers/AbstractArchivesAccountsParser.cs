@@ -1,5 +1,4 @@
-﻿using Microsoft.Extensions.Logging;
-using YWB.AntidetectAccountsParser.Interfaces;
+﻿using YWB.AntidetectAccountsParser.Interfaces;
 using YWB.AntidetectAccountsParser.Model.Accounts;
 using YWB.AntidetectAccountsParser.Model.Actions;
 using YWB.AntidetectAccountsParser.Services.Archives;
@@ -9,12 +8,10 @@ namespace YWB.AntidetectAccountsParser.Services.Parsers
     public enum AccountValidity { Valid, PasswordOnly, Invalid }
     public abstract class AbstractArchivesAccountsParser<T> : IAccountsParser<T> where T : SocialAccount
     {
-        protected readonly ILogger _logger;
         protected readonly IProxyProvider<T> _pp;
 
-        public AbstractArchivesAccountsParser(ILogger logger,IProxyProvider<T> pp)
+        public AbstractArchivesAccountsParser(IProxyProvider<T> pp)
         {
-            _logger = logger;
             _pp = pp;
         }
 

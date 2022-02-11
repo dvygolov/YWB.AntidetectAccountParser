@@ -9,12 +9,17 @@ namespace YWB.AntidetectAccountsParser.Services.Parsers
 {
     public class FacebookArchivesAccountsParser : AbstractArchivesAccountsParser<FacebookAccount>
     {
-        public FacebookArchivesAccountsParser(ILogger logger, IProxyProvider<FacebookAccount> pp) : base(logger, pp) { }
+        private readonly ILogger<FacebookArchivesAccountsParser> _logger;
+
+        public FacebookArchivesAccountsParser(IProxyProvider<FacebookAccount> pp,ILogger<FacebookArchivesAccountsParser> logger) : base(pp)
+        {
+            _logger = logger;
+        }
 
         public override ActionsFacade<FacebookAccount> GetActions(string filePath)
         {
             var fa = new FacebookAccount(Path.GetFileNameWithoutExtension(filePath));
-            Console.WriteLine($"Parsing file: {filePath}");
+            _logger.LogInformation($"Parsing file: {filePath}");
             return new ActionsFacade<FacebookAccount>()
             {
                 Account = fa,

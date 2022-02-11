@@ -15,5 +15,12 @@ namespace YWB.AntidetectAccountsParser.Services.Proxies
             var split = File.ReadAllLines(fullPath).Where(l => !string.IsNullOrEmpty(l)).ToList();
             return split;
         }
+
+        public override void SetSource(string source)
+        {
+            if (string.IsNullOrEmpty(source))
+                source = FileName;
+            base.SetSource(source);
+        }
     }
 }

@@ -11,7 +11,12 @@ namespace YWB.AntidetectAccountsParser.TelegramBot.MessageProcessors
 {
     public class NamingIndexMessageProcessor : AbstractMessageProcessor
     {
-        public NamingIndexMessageProcessor(IServiceProvider sp) : base(sp) { }
+        private readonly List<ServiceCredentials> _credentials;
+
+        public NamingIndexMessageProcessor(List<ServiceCredentials> credentials)
+        {
+            _credentials = credentials;
+        }
 
         public override bool Filter(BotFlow flow, Update update) =>
             flow.Group != null &&
@@ -26,8 +31,7 @@ namespace YWB.AntidetectAccountsParser.TelegramBot.MessageProcessors
             if (flow.IsFilled())
             {
                 await flow.Importer.ImportAccountsAsync(flow.Accounts, flow);
-                var credentials = _sp.GetService<List<ServiceCredentials>>()
-                    .Where(c => c.Name.StartsWith("FbTool") || c.Name == "Dolphin");
+                var credentials = _credentials.Where(c => c.Name.StartsWith("FbTool") || c.Name == "Dolphin");
                 if (flow.Importer is AbstractAntidetectApiService &&
                     credentials.Any() &&
                     flow.Accounts.All(a => !string.IsNullOrEmpty((a as FacebookAccount).Token)))
