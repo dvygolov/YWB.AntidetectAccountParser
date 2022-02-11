@@ -76,7 +76,7 @@ namespace YWB.AntidetectAccountParser.Services.Monitoring
             r.AddParameter("token", acc.Token);
             r.AddParameter("proxy", proxyId);
             r.AddParameter("group", g.Id);
-            if (g.Id=="new")
+            if (g.Id == "new")
                 r.AddParameter("groupName", g.Name);
             r.AddParameter("name", acc.Name);
             if (!string.IsNullOrEmpty(acc.Password))
@@ -91,9 +91,17 @@ namespace YWB.AntidetectAccountParser.Services.Monitoring
             r.AddParameter("comment_status", "on");
             r.AddParameter("deleteOrHide", 0);
             dynamic json = await ExecuteRequestAsync<JObject>(r);
-            if (json.success == false)
+            try
             {
-                Console.WriteLine($"Couldn't add account {acc.Name} to FbTool. Error:{json.message}");
+                if (json.success == false)
+                {
+                    Console.WriteLine($"Couldn't add account {acc.Name} to FbTool. Error:{json.message}");
+                    return false;
+                }
+            }
+            catch
+            {
+                Console.WriteLine($"Got strange reponse: {json.ToString()}");
                 return false;
             }
             return true;
