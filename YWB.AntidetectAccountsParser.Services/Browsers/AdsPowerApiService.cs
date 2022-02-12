@@ -29,10 +29,16 @@ namespace YWB.AntidetectAccountsParser.Services.Browsers
 
         public async override Task<string> CreateNewProfileAsync(SocialAccount acc, string os, AccountGroup group)
         {
-            var r = new RestRequest("fbcc/user/rand-get-user-agent", Method.POST);
-            r.AddParameter("system", os);
-            var json = await ExecuteRequestAsync<JObject>(r);
-            string ua = json["data"]["ua"].ToString();
+            string ua;
+            if (!string.IsNullOrEmpty(acc.UserAgent))
+                ua = acc.UserAgent;
+            else
+            {
+                var r = new RestRequest("fbcc/user/rand-get-user-agent", Method.POST);
+                r.AddParameter("system", os);
+                var json = await ExecuteRequestAsync<JObject>(r);
+                ua = json["data"]["ua"].ToString();
+            }
 
             r = new RestRequest("fbcc/user/random-webgl-config", Method.POST);
             r.AddParameter("ua", ua);

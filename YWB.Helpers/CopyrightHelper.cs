@@ -5,9 +5,9 @@
         public static void Show(bool isBot)
         {
             if (isBot)
-            Console.WriteLine(@"            Antidetect Accounts Parser Telegram Bot v6.1 ");
+            Console.WriteLine(@"            Antidetect Accounts Parser Telegram Bot v7.1 ");
             else
-            Console.WriteLine(@"                Antidetect Accounts Parser v6.1 ");
+            Console.WriteLine(@"                Antidetect Accounts Parser v7.1 ");
             Console.WriteLine(@"   _            __     __  _ _             __          __  _     ");
             Console.WriteLine(@"  | |           \ \   / / | | |            \ \        / / | |    ");
             Console.WriteLine(@"  | |__  _   _   \ \_/ /__| | | _____      _\ \  /\  / /__| |__  ");

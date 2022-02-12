@@ -66,6 +66,8 @@ namespace YWB.AntidetectAccountsParser.Services.Monitoring
             rJson.tags = new JArray();
             if (g != null) rJson.tags.Add(g.Name);
             rJson.cookies = JArray.Parse(acc.Cookies);
+            if (!string.IsNullOrEmpty(acc.UserAgent))
+                rJson.user_agent = acc.UserAgent;
             rJson.proxy = new JObject();
             rJson.proxy.id = proxyId;
             if (!string.IsNullOrEmpty(acc.Password))

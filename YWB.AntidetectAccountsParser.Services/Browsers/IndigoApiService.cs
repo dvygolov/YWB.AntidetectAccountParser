@@ -83,27 +83,52 @@ namespace YWB.AntidetectAccountsParser.Services.Browsers
             var aOutputs = StaticRandom.Instance.Next(0, 4);
 
             var r = new RestRequest("api/v2/profile", Method.POST);
-            var param = @$"{{
-                ""name"":""{acc.Name}"",
-                ""group"":""{group.Id}"",
-                ""os"":""{os}"",
-                ""browser"":""mimic"",
-                ""googleServices"":true,
-                ""mediaDevices"":{{""mode"":""FAKE"",""videoInputs"":""{vInputs}"",""audioInputs"":""{aInputs}"",""audioOutputs"":""{aOutputs}""}},
-                ""storage"":{{""local"":true,""extensions"":true,""bookmarks"":false,""history"":false,""passwords"":false}},
-                ""canvas"":{{""mode"":""REAL""}},
-                ""navigator"":{{""language"":""en-US,en;q=0.9,ru-RU;q=0.8""}},
-                ""audioContext"":{{""mode"":""NOISE""}},
-                ""webGL"":{{""mode"":""NOISE""}},
-                ""webGLMetadata"":{{""mode"":""MASK""}},
-                ""network"":{{""proxy"":{{
-                    ""type"":""{acc.Proxy.Type.ToUpper()}"",
-                    ""host"":""{acc.Proxy.Address}"",
-                    ""port"":""{acc.Proxy.Port}"",
-                    ""username"":""{acc.Proxy.Login}"",
-                    ""password"":""{acc.Proxy.Password}""}}}},
-                ""extensions"":{{""enable"":true,""names"":""""}}}}";
-            r.AddParameter("application/json", param, ParameterType.RequestBody);
+            dynamic p = new JObject();
+            p.name=acc.Name;
+            p.group = group.Id;
+            p.os=os;
+            p.browser = "mimic";
+            p.googleServices = true;
+            dynamic md=new JObject();
+            md.mode = "FAKE";
+            md.videoInputs = vInputs;
+            md.audioInputs=aInputs;
+            md.audioOutputs = aOutputs;
+            p.mediaDevices = md;
+            dynamic strg=new JObject();
+            strg.local = true;
+            strg.extensions = true;
+            strg.bookmarks = false;
+            strg.history = false;
+            strg.passwords = false;
+            p.storage = strg;
+            p.canvas = new JObject();
+            p.canvas.mode = "REAL";
+            dynamic n = new JObject();
+            n.language = "en-US,en;q=0.9,ru-RU;q=0.8";
+            if (!string.IsNullOrEmpty(acc.UserAgent))
+                n.userAgent = acc.UserAgent;
+            p.navigator = n;
+            p.audioContext = new JObject();
+            p.audioContext.mode = "NOISE";
+            p.webGL = new JObject();
+            p.webGL.mode = "NOISE";
+            p.webGLMetadata = new JObject();
+            p.webGLMetadata.mode = "MASK";
+            p.network = new JObject();
+            dynamic pr = new JObject();
+            pr.type = acc.Proxy.Type.ToUpper();
+            pr.host = acc.Proxy.Address;
+            pr.port = acc.Proxy.Port;
+            pr.username = acc.Proxy.Login;
+            pr.password = acc.Proxy.Password;
+            p.network.proxy = pr;
+            dynamic ext = new JObject();
+            ext.enable = true;
+            ext.names = "";
+            p.extensions = ext;
+
+            r.AddParameter("application/json", p.ToString(), ParameterType.RequestBody);
             var res = await ExecuteLocalRequestAsync<JObject>(r);
             if (res["uuid"] == null)
                 throw new Exception($"Can't create browser profile! Error:{res}");

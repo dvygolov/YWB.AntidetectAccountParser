@@ -71,6 +71,8 @@ namespace YWB.AntidetectAccountsParser.Services.Monitoring
             if (g.Id=="new")
                 r.AddParameter("groupName", g.Name);
             r.AddParameter("name", acc.Name);
+            if (!string.IsNullOrEmpty(acc.UserAgent))
+                r.AddParameter("useragent", acc.UserAgent);
             if (!string.IsNullOrEmpty(acc.Password))
                 r.AddParameter("pass", acc.Password);
             if (!string.IsNullOrEmpty(acc.Cookies))

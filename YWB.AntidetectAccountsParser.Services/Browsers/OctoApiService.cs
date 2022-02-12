@@ -36,6 +36,8 @@ namespace YWB.AntidetectAccountsParser.Services.Browsers
             p.title = acc.Name;
             p.fingerprint = new JObject();
             p.fingerprint.os = os;
+            if (!string.IsNullOrEmpty(acc.UserAgent))
+                p.fingerprint.user_agent = acc.UserAgent;
             p.proxy = new JObject();
             p.proxy.type = acc.Proxy.Type;
             p.proxy.host = acc.Proxy.Address;

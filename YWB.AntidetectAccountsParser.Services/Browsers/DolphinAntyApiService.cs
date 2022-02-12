@@ -10,7 +10,6 @@ namespace YWB.AntidetectAccountsParser.Services.Browsers
     public class DolphinAntyApiService : AbstractAntidetectApiService
     {
         private string _token;
-        private Dictionary<Proxy, string> _proxyIds;
 
         public DolphinAntyApiService(string credentials) : base(credentials) { }
 
@@ -29,7 +28,7 @@ namespace YWB.AntidetectAccountsParser.Services.Browsers
         public override async Task<string> CreateNewProfileAsync(SocialAccount acc, string os, AccountGroup group)
         {
             var fp = await GetNewFingerprintAsync(os);
-            var ua = await GetNewUseragentAsync(os);
+            string ua = acc.UserAgent ?? await GetNewUseragentAsync(os);
             var memory = int.Parse(fp["deviceMemory"].ToString());
             if (memory == 0) memory++;
             var cpu = int.Parse(fp["hardwareConcurrency"].ToString());
