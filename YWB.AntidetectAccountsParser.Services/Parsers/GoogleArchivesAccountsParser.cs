@@ -25,7 +25,8 @@ namespace YWB.AntidetectAccountsParser.Services.Parsers
                 AccountActions = new List<AccountAction<SocialAccount>>()
                 {
                     new PasswordAccountAction<SocialAccount>(),
-                    new CookiesAccountAction<SocialAccount>()
+                    new CookiesAccountAction<SocialAccount>(),
+                    new UserAgentAccountAction<SocialAccount>()
                 }
             };
         }

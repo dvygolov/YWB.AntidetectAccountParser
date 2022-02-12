@@ -169,6 +169,29 @@ namespace YWB.AntidetectAccountsParser.Services.Parsers
             return (lst, input);
         }
 
+        private List<FacebookAccount> ProcessUserAgents(string input, List<FacebookAccount> lst)
+        {
+            var re = new Regex(@"(?<UserAgent>Mozilla.*?Gecko\)\s+(\w+/[\d+\. ]+)+)", RegexOptions.Multiline);
+            var matches = re.Matches(input);
+            if (matches.Count == 0)
+            {
+                _logger.LogInformation("Didn't find Useragents!");
+            }
+            else if (matches.Count != lst.Count)
+            {
+                _logger.LogInformation("Found useragents count does not match accounts count!");
+            }
+            else
+            {
+                _logger.LogInformation("Found UserAgents!");
+                for (int i = 0; i < matches.Count; i++)
+                {
+                    lst[i].UserAgent = matches[i].Groups["UserAgent"].Value;
+                }
+            }
+            return lst;
+        }
+
         private List<FacebookAccount> Process2FA(string input, List<FacebookAccount> lst)
         {
             var re = new Regex(@"[:;\|\s](?<TwoFactor>[\dA-Z]{32})($|[\:;\|\s])", RegexOptions.Multiline);
@@ -253,6 +276,7 @@ namespace YWB.AntidetectAccountsParser.Services.Parsers
             accounts = ProcessTokens(input, accounts);
             accounts = ProcessBMTokens(input, accounts);
             accounts = ProcessEmails(input, accounts);
+            accounts = ProcessUserAgents(input, accounts);
             accounts = Process2FA(input, accounts);
             accounts = ProcessBirthdays(input, accounts);
             return accounts;

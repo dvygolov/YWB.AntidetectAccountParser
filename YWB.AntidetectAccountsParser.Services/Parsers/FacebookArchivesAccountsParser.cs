@@ -29,7 +29,8 @@ namespace YWB.AntidetectAccountsParser.Services.Parsers
                 {
                     new PasswordAccountAction<FacebookAccount>(),
                     new CookiesAccountAction<FacebookAccount>(),
-                    new TokenAccountAction<FacebookAccount>()
+                    new TokenAccountAction<FacebookAccount>(),
+                    new UserAgentAccountAction<FacebookAccount>()
                 }
             };
         }
