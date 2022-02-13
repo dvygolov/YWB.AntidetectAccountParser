@@ -10,9 +10,9 @@ namespace YWB.AntidetectAccountsParser.Services.Parsers
     {
         private readonly ILogger<GoogleArchivesAccountsParser> _logger;
 
-        public GoogleArchivesAccountsParser(IProxyProvider<SocialAccount> pp,ILogger<GoogleArchivesAccountsParser> logger) : base(pp)
+        public GoogleArchivesAccountsParser(IProxyProvider<SocialAccount> pp,ILoggerFactory lf) : base(pp,lf)
         {
-            _logger = logger;
+            _logger = lf.CreateLogger<GoogleArchivesAccountsParser>();
         }
 
         public override ActionsFacade<SocialAccount> GetActions(string filePath)

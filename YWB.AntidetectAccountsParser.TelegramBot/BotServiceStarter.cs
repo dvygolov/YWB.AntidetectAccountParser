@@ -37,7 +37,7 @@ namespace YWB.AntidetectAccountsParser.TelegramBot
 
             Assembly.GetEntryAssembly().GetTypesAssignableFrom<AbstractMessageProcessor>().ForEach((t) =>
             {
-                sc.AddScoped(typeof(AbstractMessageProcessor), t);
+                sc.AddScoped(typeof(AbstractMessageProcessor),t);
             });
 
             sc.AddSingleton(x => new AccountsBot(configuration.GetValue<string>("TelegramBotApiKey"), users, 

@@ -8,7 +8,7 @@ namespace YWB.AntidetectAccountsParser.Services.Archives
     {
         public List<string> Containers { get; set; }
 
-        public DirParser(List<string> dirs) => Containers = dirs;
+        public DirParser(List<string> dirs, Microsoft.Extensions.Logging.ILoggerFactory _lf) => Containers = dirs;
 
         public T Parse(ActionsFacade<T> af, string dirPath)
         {

@@ -7,7 +7,6 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
-using YWB.AntidetectAccountParser.Services.Playwright;
 using YWB.AntidetectAccountsParser.Interfaces;
 using YWB.AntidetectAccountsParser.Model;
 using YWB.AntidetectAccountsParser.Model.Accounts;
@@ -72,11 +71,6 @@ namespace YWB.AntidetectAccountsParser.Terminal
                         "All accounts have access tokens! Do you wand to add them to Dolphin/FbTool?");
                     if (add)
                         await ImportToMonitoringService(accounts.Cast<FacebookAccount>().ToList());
-                }
-                else
-                {
-                    var ipws = new IndigoPlaywrightService();
-                    //await ipws.GetTokensAsync(profiles);
                 }
             }
             else if (answer == 2)

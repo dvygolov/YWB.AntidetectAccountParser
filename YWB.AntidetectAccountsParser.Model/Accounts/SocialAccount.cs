@@ -114,9 +114,7 @@ namespace YWB.AntidetectAccountsParser.Model.Accounts
             if (!string.IsNullOrEmpty(Cookies))
             {
                 var cookies = $"{sd}Cookies: {Regex.Replace(Cookies.Replace("\r\n", ""), "[ ]+", "")}{ed}";
-                if ((str + cookies).Length > 5000)
-                    Console.WriteLine("Length is more then 5000 symbols, skipping cookies...");
-                else
+                if ((str + cookies).Length < 5000)
                     str += cookies;
             }
             return str;

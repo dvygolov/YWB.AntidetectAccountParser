@@ -1,4 +1,5 @@
-﻿using YWB.AntidetectAccountsParser.Interfaces;
+﻿using Microsoft.Extensions.Logging;
+using YWB.AntidetectAccountsParser.Interfaces;
 using YWB.AntidetectAccountsParser.Model.Accounts;
 using YWB.AntidetectAccountsParser.Model.Actions;
 using YWB.AntidetectAccountsParser.Services.Archives;
@@ -9,15 +10,17 @@ namespace YWB.AntidetectAccountsParser.Services.Parsers
     public abstract class AbstractArchivesAccountsParser<T> : IAccountsParser<T> where T : SocialAccount
     {
         protected readonly IProxyProvider<T> _pp;
+        private readonly ILoggerFactory _lf;
 
-        public AbstractArchivesAccountsParser(IProxyProvider<T> pp)
+        public AbstractArchivesAccountsParser(IProxyProvider<T> pp,ILoggerFactory lf)
         {
             _pp = pp;
+            _lf = lf;
         }
 
         public IEnumerable<T> Parse()
         {
-            var apf = new ArchiveParserFactory<T>();
+            var apf = new ArchiveParserFactory<T>(_lf);
             var ap = apf.GetArchiveParser();
             List<T> accounts = new List<T>();
             var proxies=_pp.Get();

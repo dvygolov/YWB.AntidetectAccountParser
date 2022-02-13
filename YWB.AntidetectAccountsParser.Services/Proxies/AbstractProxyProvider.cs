@@ -1,4 +1,5 @@
-﻿using YWB.AntidetectAccountsParser.Interfaces;
+﻿using Microsoft.Extensions.Logging;
+using YWB.AntidetectAccountsParser.Interfaces;
 using YWB.AntidetectAccountsParser.Model;
 using YWB.AntidetectAccountsParser.Model.Accounts;
 
@@ -7,6 +8,12 @@ namespace YWB.AntidetectAccountsParser.Services.Proxies
     public abstract class AbstractProxyProvider : IProxyProvider<SocialAccount>
     {
         protected string _source;
+        protected ILogger<AbstractProxyProvider> _logger;
+
+        public AbstractProxyProvider(ILoggerFactory lf)
+        {
+            _logger = lf.CreateLogger<AbstractProxyProvider>();
+        }
         public List<Proxy> Get()
         {
             var lines = GetLines();
@@ -23,7 +30,7 @@ namespace YWB.AntidetectAccountsParser.Services.Proxies
                      UpdateLink = split.Length == 6 ? split[5].Trim() : string.Empty
                  };
              }).ToList();
-            Console.WriteLine($"Found {proxies.Count} proxies!");
+            _logger.LogInformation($"Found {proxies.Count} proxies!");
             return proxies;
         }
 

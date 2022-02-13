@@ -1,4 +1,5 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using Telegram.Bot;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
@@ -12,10 +13,12 @@ namespace YWB.AntidetectAccountsParser.TelegramBot.MessageProcessors
     public class ImporterMessageProcessor : AbstractMessageProcessor
     {
         private readonly List<ServiceCredentials> _credentials;
+        private readonly ILoggerFactory _lf;
 
-        public ImporterMessageProcessor(List<ServiceCredentials> credentials)
+        public ImporterMessageProcessor(List<ServiceCredentials> credentials, ILoggerFactory lf)
         {
             _credentials = credentials;
+            _lf = lf;
         }
 
         public override bool Filter(BotFlow flow, Update update) =>
@@ -37,12 +40,12 @@ namespace YWB.AntidetectAccountsParser.TelegramBot.MessageProcessors
             var current = _credentials.First(c => c.Name == update.CallbackQuery.Data).Credentials;
             flow.Importer = update.CallbackQuery.Data switch
             {
-                "Indigo" => new IndigoApiService(current),
-                "AdsPower" => new AdsPowerApiService(current),
-                "DolphinAnty" => new DolphinAntyApiService(current),
-                "Octo" => new OctoApiService(current),
-                string fbTool when fbTool.StartsWith("FbTool") => new FbToolService(current),
-                "Dolphin" => new DolphinService(current),
+                "Indigo" => new IndigoApiService(current, _lf),
+                "AdsPower" => new AdsPowerApiService(current, _lf),
+                "DolphinAnty" => new DolphinAntyApiService(current, _lf),
+                "Octo" => new OctoApiService(current, _lf),
+                string fbTool when fbTool.StartsWith("FbTool") => new FbToolService(current, _lf),
+                "Dolphin" => new DolphinService(current, _lf),
                 _ => throw new Exception("Invalid importing service name!")
             };
 

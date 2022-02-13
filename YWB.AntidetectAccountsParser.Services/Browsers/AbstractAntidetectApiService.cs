@@ -1,4 +1,5 @@
-﻿using System.Text;
+﻿using Microsoft.Extensions.Logging;
+using System.Text;
 using YWB.AntidetectAccountsParser.Interfaces;
 using YWB.AntidetectAccountsParser.Model;
 using YWB.AntidetectAccountsParser.Model.Accounts;
@@ -9,10 +10,12 @@ namespace YWB.AntidetectAccountsParser.Services.Browsers
     public abstract class AbstractAntidetectApiService : IAccountsImporter
     {
         protected readonly string _credentials;
+        protected readonly ILogger<AbstractAntidetectApiService> _logger;
 
-        public AbstractAntidetectApiService(string credentials)
+        public AbstractAntidetectApiService(string credentials, ILoggerFactory lf)
         {
             _credentials = credentials;
+            _logger = lf.CreateLogger<AbstractAntidetectApiService>();
         }
 
         public abstract Task<string> CreateNewProfileAsync(SocialAccount acc, string os, AccountGroup group);
@@ -29,11 +32,11 @@ namespace YWB.AntidetectAccountsParser.Services.Browsers
             var count = accounts.Count();
             if (count == 0)
             {
-                Console.WriteLine("Couldn't find any accounts to import! Unknown format or empty accounts file!");
+                _logger.LogInformation("Couldn't find any accounts to import! Unknown format or empty accounts file!");
                 return null;
             }
             else
-                Console.WriteLine($"Found {count} accounts.");
+                _logger.LogInformation($"Found {count} accounts.");
 
             AccountNamesHelper.Process(accounts, fs);
 
@@ -41,12 +44,12 @@ namespace YWB.AntidetectAccountsParser.Services.Browsers
 
             foreach (SocialAccount account in accounts)
             {
-                Console.WriteLine($"Creating profile {account.Name}...");
+                _logger.LogInformation($"Creating profile {account.Name}...");
                 var pId = await CreateNewProfileAsync(account, fs.Os, fs.Group);
-                Console.WriteLine($"Profile with ID={pId} created!");
+                _logger.LogInformation($"Profile with ID={pId} created!");
                 if (!string.IsNullOrEmpty(account.Cookies))
                 {
-                    Console.WriteLine($"Importing {account.Login} account's cookies to {account.Name} profile...");
+                    _logger.LogInformation($"Importing {account.Login} account's cookies to {account.Name} profile...");
 
                     if (CookieHelper.AreCookiesInBase64(account.Cookies))
                     {
@@ -56,7 +59,7 @@ namespace YWB.AntidetectAccountsParser.Services.Browsers
                 }
 
                 await SaveItemToNoteAsync(pId, account);
-                Console.WriteLine($"Profile {account.Name} saved!");
+                _logger.LogInformation($"Profile {account.Name} saved!");
                 profiles.Add(pId, account);
             }
             return res;

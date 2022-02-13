@@ -1,4 +1,5 @@
-﻿using Newtonsoft.Json;
+﻿using Microsoft.Extensions.Logging;
+using Newtonsoft.Json;
 using RestSharp;
 using YWB.AntidetectAccountsParser.Interfaces;
 using YWB.AntidetectAccountsParser.Model;
@@ -11,10 +12,12 @@ namespace YWB.AntidetectAccountsParser.Services.Monitoring
     {
         protected string _apiUrl;
         protected string _token;
+        protected readonly ILogger<AbstractMonitoringService> _logger;
         protected readonly string _credentials;
 
-        public AbstractMonitoringService(string credentials)
+        public AbstractMonitoringService(string credentials, ILoggerFactory lf)
         {
+            _logger = lf.CreateLogger<AbstractMonitoringService>();
             _credentials = credentials;
         }
         protected abstract void SetTokenAndApiUrl();
@@ -27,7 +30,7 @@ namespace YWB.AntidetectAccountsParser.Services.Monitoring
         public async Task<Dictionary<string, SocialAccount>> ImportAccountsAsync(IEnumerable<SocialAccount> accounts, FlowSettings fs)
         {
             AccountNamesHelper.Process(accounts, fs);
-            Console.WriteLine("Getting existing proxies...");
+            _logger.LogInformation("Getting existing proxies...");
             var existingProxies = await GetExistingProxiesAsync();
             var existingProxiesDict = new Dictionary<Proxy, string>();
             existingProxies.ForEach(pr =>
@@ -44,19 +47,19 @@ namespace YWB.AntidetectAccountsParser.Services.Monitoring
                 if (existingProxiesDict.ContainsKey(acc.Proxy))
                 {
                     proxyId = existingProxiesDict[acc.Proxy];
-                    Console.WriteLine($"Found existing proxy for {acc.Proxy}!");
+                    _logger.LogInformation($"Found existing proxy for {acc.Proxy}!");
                 }
                 else
                 {
-                    Console.WriteLine($"Adding proxy {acc.Proxy}...");
+                    _logger.LogInformation($"Adding proxy {acc.Proxy}...");
                     proxyId = await AddProxyAsync(acc.Proxy);
                     existingProxiesDict.Add(acc.Proxy, proxyId);
-                    Console.WriteLine($"Proxy {acc.Proxy} added!");
+                    _logger.LogInformation($"Proxy {acc.Proxy} added!");
                 }
-                Console.WriteLine($"Adding account {acc.Name}...");
+                _logger.LogInformation($"Adding account {acc.Name}...");
                 var success = await AddAccountAsync(acc as FacebookAccount, fs.Group, proxyId);
                 if (success)
-                    Console.WriteLine($"Account {acc.Name} added!");
+                    _logger.LogInformation($"Account {acc.Name} added!");
             }
             return null;
         }
@@ -75,7 +78,7 @@ namespace YWB.AntidetectAccountsParser.Services.Monitoring
             }
             catch (Exception e)
             {
-                Console.WriteLine($"Error deserializing {resp.Content} to {typeof(T)}: {e}");
+                _logger.LogError($"Error deserializing {resp.Content} to {typeof(T)}: {e}");
                 throw;
             }
             return res;

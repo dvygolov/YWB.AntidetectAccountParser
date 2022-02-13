@@ -1,4 +1,5 @@
-﻿using Newtonsoft.Json;
+﻿using Microsoft.Extensions.Logging;
+using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using RestSharp;
 using YWB.AntidetectAccountsParser.Model.Accounts;
@@ -14,7 +15,7 @@ namespace YWB.AntidetectAccountsParser.Services.Browsers
         private List<string> _cpu = new List<string> { "2", "4", "6", "8", "16" };
         private List<string> _memory = new List<string> { "2", "4", "6", "8" };
 
-        public AdsPowerApiService(string credentials) : base(credentials) { }
+        public AdsPowerApiService(string credentials,ILoggerFactory lf) : base(credentials,lf) { }
 
         public override List<string> GetOSes() => _oses;
         public override Task<List<AccountGroup>> GetExistingGroupsAsync()
@@ -34,15 +35,15 @@ namespace YWB.AntidetectAccountsParser.Services.Browsers
                 ua = acc.UserAgent;
             else
             {
-                var r = new RestRequest("fbcc/user/rand-get-user-agent", Method.POST);
-                r.AddParameter("system", os);
-                var json = await ExecuteRequestAsync<JObject>(r);
-                ua = json["data"]["ua"].ToString();
+                var uar = new RestRequest("fbcc/user/rand-get-user-agent", Method.POST);
+                uar.AddParameter("system", os);
+                var uajson = await ExecuteRequestAsync<JObject>(uar);
+                ua = uajson["data"]["ua"].ToString();
             }
 
-            r = new RestRequest("fbcc/user/random-webgl-config", Method.POST);
+            var r = new RestRequest("fbcc/user/random-webgl-config", Method.POST);
             r.AddParameter("ua", ua);
-            json = await ExecuteRequestAsync<JObject>(r);
+            var json = await ExecuteRequestAsync<JObject>(r);
             string renderer = json["data"]["unmasked_renderer"].ToString();
             string vendor = json["data"]["unmasked_vendor"].ToString();
 
@@ -124,7 +125,7 @@ namespace YWB.AntidetectAccountsParser.Services.Browsers
             }
             catch (Exception)
             {
-                Console.WriteLine($"Error deserializing {resp.Content} to {typeof(T)}");
+                _logger.LogError($"Error deserializing {resp.Content} to {typeof(T)}");
                 throw;
             }
             return res;
@@ -141,7 +142,7 @@ namespace YWB.AntidetectAccountsParser.Services.Browsers
             }
             catch (Exception)
             {
-                Console.WriteLine($"Error deserializing {resp.Content} to {typeof(T)}");
+                _logger.LogError($"Error deserializing {resp.Content} to {typeof(T)}");
                 throw;
             }
             return res;

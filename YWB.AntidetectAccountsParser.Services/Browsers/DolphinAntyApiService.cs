@@ -1,7 +1,7 @@
-﻿using Newtonsoft.Json;
+﻿using Microsoft.Extensions.Logging;
+using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using RestSharp;
-using YWB.AntidetectAccountsParser.Model;
 using YWB.AntidetectAccountsParser.Model.Accounts;
 using YWB.Helpers;
 
@@ -11,7 +11,7 @@ namespace YWB.AntidetectAccountsParser.Services.Browsers
     {
         private string _token;
 
-        public DolphinAntyApiService(string credentials) : base(credentials) { }
+        public DolphinAntyApiService(string credentials,ILoggerFactory lf) : base(credentials,lf) { }
 
         public override List<string> GetOSes() => new List<string>() { "windows", "linux", "macos" };
 
@@ -166,7 +166,7 @@ namespace YWB.AntidetectAccountsParser.Services.Browsers
             }
             catch (Exception)
             {
-                Console.WriteLine($"Error deserializing {resp.Content} to {typeof(T)}");
+                _logger.LogError($"Error deserializing {resp.Content} to {typeof(T)}");
                 throw;
             }
             return res;

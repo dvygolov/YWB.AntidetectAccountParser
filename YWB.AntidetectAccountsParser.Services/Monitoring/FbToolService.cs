@@ -1,4 +1,5 @@
-﻿using Newtonsoft.Json.Linq;
+﻿using Microsoft.Extensions.Logging;
+using Newtonsoft.Json.Linq;
 using RestSharp;
 using YWB.AntidetectAccountsParser.Model;
 using YWB.AntidetectAccountsParser.Model.Accounts;
@@ -7,7 +8,7 @@ namespace YWB.AntidetectAccountsParser.Services.Monitoring
 {
     public class FbToolService : AbstractMonitoringService
     {
-        public FbToolService(string credentials) : base(credentials) { }
+        public FbToolService(string credentials,ILoggerFactory lf) : base(credentials,lf) { }
 
         public override async Task<List<AccountGroup>> GetExistingGroupsAsync()
         {
@@ -56,7 +57,7 @@ namespace YWB.AntidetectAccountsParser.Services.Monitoring
                 }
                 catch
                 {
-                    Console.WriteLine($"Couldn't parse proxy string:{pStr}");
+                    _logger.LogError($"Couldn't parse proxy string:{pStr}");
                     return null;
                 }
             }).Where(p => p != null).ToList();
@@ -85,12 +86,21 @@ namespace YWB.AntidetectAccountsParser.Services.Monitoring
             r.AddParameter("comment_status", "on");
             r.AddParameter("deleteOrHide", 0);
             dynamic json = await ExecuteRequestAsync<JObject>(r);
-            if (json.success == false)
+            if (json.ContainsKey("success"))
             {
-                Console.WriteLine($"Couldn't add account {acc.Name} to FbTool. Error:{json.message}");
+                if (json.success == false)
+                {
+                    _logger.LogError($"Couldn't add account {acc.Name} to FbTool. Error:{json.message}");
+                    return false;
+                }
+                else
+                    return true;
+            }
+            else
+            {
+                _logger.LogError($"Couldn't add account {acc.Name} to FbTool. Error:{json}");
                 return false;
             }
-            return true;
         }
 
         protected override void AddAuthorization(RestRequest r)

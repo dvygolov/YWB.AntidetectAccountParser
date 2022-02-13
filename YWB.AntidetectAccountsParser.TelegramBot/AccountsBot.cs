@@ -52,7 +52,6 @@ namespace YWB.AntidetectAccountsParser.TelegramBot
             if (!_allowedUsers.Contains(from))
             {
                 await b.SendTextMessageAsync(chatId: fromId, text: "FUCK OFF!");
-                await b.BanChatMemberAsync(chatId: fromId, userId: fromId.Value);
                 return;
             }
 

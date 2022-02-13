@@ -1,4 +1,5 @@
-﻿using Newtonsoft.Json.Linq;
+﻿using Microsoft.Extensions.Logging;
+using Newtonsoft.Json.Linq;
 using RestSharp;
 using YWB.AntidetectAccountsParser.Model;
 using YWB.AntidetectAccountsParser.Model.Accounts;
@@ -7,7 +8,7 @@ namespace YWB.AntidetectAccountsParser.Services.Monitoring
 {
     public class DolphinService : AbstractMonitoringService
     {
-        public DolphinService(string credentials) : base(credentials) { }
+        public DolphinService(string credentials,ILoggerFactory lf) : base(credentials,lf) { }
 
         public override Task<List<AccountGroup>> GetExistingGroupsAsync()
         {

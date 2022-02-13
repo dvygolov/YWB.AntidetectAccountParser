@@ -1,4 +1,5 @@
-﻿using Newtonsoft.Json;
+﻿using Microsoft.Extensions.Logging;
+using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using RestSharp;
 using System.Collections.Concurrent;
@@ -14,7 +15,7 @@ namespace YWB.AntidetectAccountsParser.Services.Browsers
         private IndigoPlanSettings _ips;
         private ConcurrentDictionary<string, IndigoProfileSettings> _profileSettings = new ConcurrentDictionary<string, IndigoProfileSettings>();
 
-        public IndigoApiService(string credentials) : base(credentials) {}
+        public IndigoApiService(string credentials,ILoggerFactory lf) : base(credentials,lf) {}
 
         public IndigoPlanSettings Ips
         {
@@ -142,14 +143,14 @@ namespace YWB.AntidetectAccountsParser.Services.Browsers
             dynamic json = await ExecuteLocalRequestAsync<JObject>(r);
 
             if (json != null && json.status == "OK")
-                Console.WriteLine("Cookies imported! Adding all data to note...");
+                _logger.LogInformation("Cookies imported! Adding all data to note...");
             else
             {
                 switch (json.message)
                 {
                     case "Can't enable Google services":
                         {
-                            Console.WriteLine("Couldn't enable Google services, switching them off...");
+                            _logger.LogWarning("Couldn't enable Google services, switching them off...");
                             var settings = await GetProfileSettingsAsync(profileId);
                             settings.googleServices = false;
                             settings.loadCustomExtensions = false;
@@ -157,9 +158,9 @@ namespace YWB.AntidetectAccountsParser.Services.Browsers
 
                             dynamic json2 = await ExecuteLocalRequestAsync<JObject>(r);
                             if (json2 != null && json2.status == "OK")
-                                Console.WriteLine("Cookies imported! Adding all data to note...");
+                                _logger.LogInformation("Cookies imported! Adding all data to note...");
                             else
-                                Console.WriteLine($"Cookies were NOT imported!!!{json} Adding all data to note...");
+                                _logger.LogWarning($"Cookies were NOT imported!!!{json} Adding all data to note...");
                             break;
                         }
                 }
@@ -177,7 +178,7 @@ namespace YWB.AntidetectAccountsParser.Services.Browsers
             var resp = await ExecuteRequestAsync<JObject>(r);
             if (resp["status"].ToString().ToUpperInvariant() == "ERROR")
             {
-                Console.WriteLine($"Error while trying to save profile's note:{resp["message"]}");
+                _logger.LogError($"Error while trying to save profile's note:{resp["message"]}");
                 return false;
             }
             else
@@ -204,7 +205,7 @@ namespace YWB.AntidetectAccountsParser.Services.Browsers
             }
             catch (Exception)
             {
-                Console.WriteLine($"Error deserializing {resp.Content} to {typeof(T)}");
+                _logger.LogError($"Error deserializing {resp.Content} to {typeof(T)}");
                 throw;
             }
             return res;
@@ -237,7 +238,7 @@ namespace YWB.AntidetectAccountsParser.Services.Browsers
             }
             catch (Exception)
             {
-                Console.WriteLine($"Error deserializing {resp.Content} to {typeof(T)}");
+                _logger.LogError($"Error deserializing {resp.Content} to {typeof(T)}");
                 throw;
             }
             return res;
@@ -256,13 +257,12 @@ namespace YWB.AntidetectAccountsParser.Services.Browsers
         private async Task<string> GetIndigoApiTokenAsync()
         {
             var r = new RestRequest("/bridge/apiToken", Method.GET);
-            var json = await ExecuteLocalRequestAsync<JObject>(r, false);
-            if (json["status"].ToString().ToLowerInvariant() == "ok")
-                return json["value"].ToString();
-            throw new Exception("Couldn't get Indigo's api token!");
+            dynamic json = await ExecuteLocalRequestAsync<JObject>(r, false);
+            if(!json.ContainsKey("status")||!json.ContainsKey("value"))
+                throw new Exception($"Couldn't get Indigo's api token: {json}");
+            if (json.status.ToString().ToLowerInvariant() == "ok")
+                return json.valueToString();
+            throw new Exception($"Couldn't get Indigo's api token: {json}");
         }
-
-        private void AddToLog(Exception e, string msg) => Console.WriteLine($"{msg} - {e}");
-
     }
 }

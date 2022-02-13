@@ -230,7 +230,7 @@ namespace YWB.AntidetectAccountsParser.Services.Parsers
             }
             else if (matches.Count > lst.Count)
             {
-                Console.WriteLine("Found more birthdays than expected, trying to remove unnecessary...");
+                _logger.LogInformation("Found more birthdays than expected, trying to remove unnecessary...");
                 var mList = matches.ToList();
                 int i = 0;
                 var now = DateTime.Now;

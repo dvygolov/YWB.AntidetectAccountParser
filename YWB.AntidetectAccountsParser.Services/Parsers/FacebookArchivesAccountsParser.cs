@@ -10,12 +10,14 @@ namespace YWB.AntidetectAccountsParser.Services.Parsers
     public class FacebookArchivesAccountsParser : AbstractArchivesAccountsParser<FacebookAccount>
     {
         private readonly FbHeadersChecker _fhc;
+        private readonly ILoggerFactory _lf;
         private readonly ILogger<FacebookArchivesAccountsParser> _logger;
 
-        public FacebookArchivesAccountsParser(IProxyProvider<FacebookAccount> pp, FbHeadersChecker fhc, ILogger<FacebookArchivesAccountsParser> logger) : base(pp)
+        public FacebookArchivesAccountsParser(IProxyProvider<FacebookAccount> pp, FbHeadersChecker fhc, ILoggerFactory lf) : base(pp,lf)
         {
             _fhc = fhc;
-            _logger = logger;
+            _lf = lf;
+            _logger = _lf.CreateLogger<FacebookArchivesAccountsParser>();
         }
 
         public override ActionsFacade<FacebookAccount> GetActions(string filePath)

@@ -1,10 +1,13 @@
-﻿using System.Reflection;
+﻿using Microsoft.Extensions.Logging;
+using System.Reflection;
 
 namespace YWB.AntidetectAccountsParser.Services.Proxies
 {
     public class FileProxyProvider : AbstractProxyProvider
     {
         private const string FileName = "proxy.txt";
+
+        public FileProxyProvider(ILoggerFactory lf) : base(lf) { }
 
         public override List<string> GetLines()
         {

@@ -1,4 +1,5 @@
-﻿using Newtonsoft.Json;
+﻿using Microsoft.Extensions.Logging;
+using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using RestSharp;
 using YWB.AntidetectAccountsParser.Model.Accounts;
@@ -10,7 +11,7 @@ namespace YWB.AntidetectAccountsParser.Services.Browsers
         private const string ApiUrl = "https://app.octobrowser.net/api/v2/automation/";
         private string[] _oses = new[] { "win", "mac" };
 
-        public OctoApiService(string credentials) : base(credentials) {} 
+        public OctoApiService(string credentials,ILoggerFactory lf) : base(credentials,lf) {} 
         public override List<string> GetOSes() => _oses.ToList();
 
         public override Task<AccountGroup> AddNewGroupAsync(string groupName)
@@ -86,7 +87,7 @@ namespace YWB.AntidetectAccountsParser.Services.Browsers
             }
             catch (Exception)
             {
-                Console.WriteLine($"Error deserializing {resp.Content} to {typeof(T)}");
+                _logger.LogError($"Error deserializing {resp.Content} to {typeof(T)}");
                 throw;
             }
             return res;
