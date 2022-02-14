@@ -1,12 +1,9 @@
-﻿using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
+﻿using Microsoft.Extensions.Logging;
 using Telegram.Bot;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
 using Telegram.Bot.Types.ReplyMarkups;
-using YWB.AntidetectAccountsParser.Interfaces;
 using YWB.AntidetectAccountsParser.Model;
-using YWB.AntidetectAccountsParser.Model.Accounts;
 using YWB.AntidetectAccountsParser.Services;
 using YWB.AntidetectAccountsParser.Services.Parsers;
 using YWB.AntidetectAccountsParser.Services.Proxies;
@@ -16,13 +13,11 @@ namespace YWB.AntidetectAccountsParser.TelegramBot.MessageProcessors
     public class ProxyMessageProcessor : AbstractMessageProcessor
     {
         private readonly List<ServiceCredentials> _credentials;
-        private readonly AbstractProxyProvider _pp;
         private readonly ILoggerFactory _loggerFactory;
 
-        public ProxyMessageProcessor(List<ServiceCredentials> credentials, AbstractProxyProvider proxyProvider, ILoggerFactory loggerFactory)
+        public ProxyMessageProcessor(List<ServiceCredentials> credentials, ILoggerFactory loggerFactory)
         {
             _credentials = credentials;
-            _pp = proxyProvider;
             _loggerFactory = loggerFactory;
         }
 
@@ -30,6 +25,7 @@ namespace YWB.AntidetectAccountsParser.TelegramBot.MessageProcessors
 
         public override async Task PayloadAsync(BotFlow flow, Update update, ITelegramBotClient b, CancellationToken ct)
         {
+            var _pp = new TextProxyProvider()
             var m = update.Message;
             _pp.SetSource(m.Text);
 
@@ -51,7 +47,7 @@ namespace YWB.AntidetectAccountsParser.TelegramBot.MessageProcessors
                 text: "Checking accounts, please wait!",
                 cancellationToken: ct);
             var ap = new FacebookTextAccountsParser(_pp, flow.AccountsDataProvider, 
-                new FbHeadersChecker(_loggerFactory.CreateLogger<FbHeadersChecker>()),
+                new FbHeadersChecker(_loggerFactory),
                 _loggerFactory.CreateLogger<FacebookTextAccountsParser>());
             flow.Accounts = ap.Parse();
             InlineKeyboardMarkup inlineKeyboard = new(new[]

@@ -20,6 +20,7 @@ namespace YWB.AntidetectAccountsParser.TelegramBot
                             .SetBasePath(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location))
                             .AddJsonFile("appsettings.json", false, true);
             IConfigurationRoot configuration = builder.Build();
+
             List<ServiceCredentials> services = new List<ServiceCredentials>();
             configuration.GetSection("Services").Bind(services);
             services = services.Where(s => !string.IsNullOrEmpty(s.Credentials) || s.Name == "Indigo").ToList();
@@ -28,11 +29,9 @@ namespace YWB.AntidetectAccountsParser.TelegramBot
             configuration.GetSection("AllowedUsers").Bind(users);
 
             var sc = new ServiceCollection();
-            sc.AddSingleton(users);
             sc.AddSingleton(configuration);
             sc.AddSingleton(services);
-            sc.AddTransient<AbstractProxyProvider, TextProxyProvider>();
-            sc.AddTransient<FbHeadersChecker>();
+            sc.AddSingleton(users);
             sc.AddLogging(builder => builder.AddConsole().AddFile(@"logging\AAP.Telegram.log", LogLevel.Trace));
 
             Assembly.GetEntryAssembly().GetTypesAssignableFrom<AbstractMessageProcessor>().ForEach((t) =>

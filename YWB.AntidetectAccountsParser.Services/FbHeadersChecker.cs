@@ -6,9 +6,9 @@ namespace YWB.AntidetectAccountsParser.Services
     {
         private readonly ILogger<FbHeadersChecker> _logger;
 
-        public FbHeadersChecker(ILogger<FbHeadersChecker> logger)
+        public FbHeadersChecker(ILoggerFactory lf)
         {
-            _logger = logger;
+            _logger = lf.CreateLogger<FbHeadersChecker>();
         }
 
         public bool Check(string id)
