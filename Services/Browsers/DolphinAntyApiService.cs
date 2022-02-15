@@ -20,53 +20,7 @@ namespace YWB.AntidetectAccountParser.Services.Browsers
         private string _token;
         private string[] _oses = new[] { "windows", "linux", "macos" };
 
-        private async Task<List<Proxy>> GetExistingProxiesAsync()
-        {
-            var r = new RestRequest("proxy", Method.GET);
-            var res = await ExecuteRequestAsync<JObject>(r);
-            return res["data"].Select(p => new Proxy()
-            {
-                Id = p["id"].ToString(),
-                Address = p["host"].ToString(),
-                Port = p["port"].ToString(),
-                Login = p["login"].ToString(),
-                Password = p["password"].ToString()
-            }).ToList();
-        }
-
-        private async Task<string> CreateOrGetProxyAsync(Proxy p)
-        {
-            var allProxies = await GetExistingProxiesAsync();
-            var allProxiesDict = new Dictionary<Proxy, string>();
-            allProxies.ForEach(pr =>
-            {
-                if (!allProxiesDict.ContainsKey(pr))
-                    allProxiesDict.Add(pr, pr.Id);
-            });
-
-            if (allProxiesDict.ContainsKey(p))
-            {
-                Console.WriteLine("Found existing proxy!");
-                return allProxiesDict[p];
-            }
-            var r = new RestRequest("proxy", Method.POST);
-            if (p.Type == "socks") p.Type = "socks5";
-            r.AddParameter("type", p.Type);
-            r.AddParameter("host", p.Address);
-            r.AddParameter("port", p.Port);
-            r.AddParameter("login", p.Login);
-            r.AddParameter("password", p.Password);
-            if (!string.IsNullOrEmpty(p.UpdateLink))
-                r.AddParameter("changeIpUrl", p.UpdateLink);
-            r.AddParameter("name", DateTime.Now.ToString("G"));
-            var res = await ExecuteRequestAsync<JObject>(r);
-            if (!res["success"]?.Value<bool>() ?? false)
-                throw new Exception(res["error"].ToString());
-            Console.WriteLine("Proxy added!");
-            return res["data"]["id"].ToString();
-        }
-
-        public async Task<string> CreateNewProfileAsync(string pName, string os, string proxyId)
+        public async Task<string> CreateNewProfileAsync(string pName, string os, Proxy proxy)
         {
             var fp = await GetNewFingerprintAsync(os);
             var ua = await GetNewUseragentAsync(os);
@@ -84,8 +38,15 @@ namespace YWB.AntidetectAccountParser.Services.Browsers
             p.platform = os;
             p.platformName = fp["platform"];
             p.osVersion = fp["os"]["version"];
-            p.proxy = new JObject();
-            p.proxy.id = proxyId;
+            dynamic pr = new JObject();
+            pr.Type = (proxy.Type == "socks" ? "socks5" : proxy.Type);
+            pr.host = proxy.Address;
+            pr.port = proxy.Port;
+            pr.login = proxy.Login;
+            pr.password = proxy.Password;
+            if (!string.IsNullOrEmpty(proxy.UpdateLink))
+                pr.changeIpUrl = proxy.UpdateLink;
+            p.proxy = pr;
             p.useragent = new JObject();
             p.useragent.mode = "manual";
             p.useragent.value = ua;
@@ -174,18 +135,11 @@ namespace YWB.AntidetectAccountParser.Services.Browsers
             Console.WriteLine("Choose operating system:");
             var os = SelectHelper.Select(_oses);
 
-            var proxyIds = new Dictionary<Proxy, string>();
             var res = new List<(string, string)>();
             for (int i = 0; i < accounts.Count; i++)
             {
-                if (!proxyIds.ContainsKey(accounts[i].Proxy))
-                {
-                    Console.WriteLine("Adding proxy...");
-                    var proxyId = await CreateOrGetProxyAsync(accounts[i].Proxy);
-                    proxyIds.Add(accounts[i].Proxy, proxyId);
-                }
                 Console.WriteLine($"Creating profile {accounts[i].Name}...");
-                var pId = await CreateNewProfileAsync(accounts[i].Name, os, proxyIds[accounts[i].Proxy]);
+                var pId = await CreateNewProfileAsync(accounts[i].Name, os, accounts[i].Proxy);
                 Console.WriteLine($"Profile with ID={pId} created!");
                 res.Add((accounts[i].Name, pId));
             }
