@@ -1,12 +1,9 @@
-﻿using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
+﻿using Microsoft.Extensions.Logging;
 using Telegram.Bot;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
 using Telegram.Bot.Types.ReplyMarkups;
-using YWB.AntidetectAccountsParser.Interfaces;
 using YWB.AntidetectAccountsParser.Model;
-using YWB.AntidetectAccountsParser.Model.Accounts;
 using YWB.AntidetectAccountsParser.Services;
 using YWB.AntidetectAccountsParser.Services.Parsers;
 using YWB.AntidetectAccountsParser.Services.Proxies;
