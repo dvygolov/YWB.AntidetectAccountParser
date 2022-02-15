@@ -152,7 +152,8 @@ namespace YWB.AntidetectAccountParser.Services.Browsers
             var request = new RestRequest("fingerprints/fingerprint", Method.GET);
             request.AddQueryParameter("platform", os);
             request.AddQueryParameter("browser_type", "anty");
-            request.AddQueryParameter("browser_version", "undefined");
+            request.AddQueryParameter("browser_version", "97");
+            request.AddQueryParameter("type", "fingerprint");
             var res = await ExecuteRequestAsync<JObject>(request);
             return res;
         }
@@ -161,6 +162,8 @@ namespace YWB.AntidetectAccountParser.Services.Browsers
         {
             var request = new RestRequest("fingerprints/useragent", Method.GET);
             request.AddQueryParameter("platform", os);
+            request.AddQueryParameter("browser_type", "anty");
+            request.AddQueryParameter("browser_version", "97");
             var res = await ExecuteRequestAsync<JObject>(request);
             return res["data"].ToString();
         }
@@ -216,16 +219,25 @@ namespace YWB.AntidetectAccountParser.Services.Browsers
             if (string.IsNullOrEmpty(_token))
                 _token = await GetDolphinApiTokenAsync();
             r.AddHeader("Authorization", $"Bearer {_token}");
-            var resp = await rc.ExecuteAsync(r, new CancellationToken());
             T res = default(T);
-            try
+            int tryCount = 0;
+            while (res == null && tryCount < 3)
             {
-                res = JsonConvert.DeserializeObject<T>(resp.Content);
-            }
-            catch (Exception)
-            {
-                Console.WriteLine($"Error deserializing {resp.Content} to {typeof(T)}");
-                throw;
+                var resp = await rc.ExecuteAsync(r, new CancellationToken());
+                try
+                {
+                    res = JsonConvert.DeserializeObject<T>(resp.Content);
+                }
+                catch
+                {
+                    Console.WriteLine($"Error deserializing {resp.Content} to {typeof(T)}. Retrying...");
+                    await Task.Delay(2000);
+                    if (tryCount==2) throw;
+                }
+                finally
+                {
+                    tryCount++;
+                }
             }
             return res;
         }
