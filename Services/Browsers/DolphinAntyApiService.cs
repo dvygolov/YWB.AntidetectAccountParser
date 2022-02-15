@@ -4,7 +4,6 @@ using RestSharp;
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
@@ -39,7 +38,7 @@ namespace YWB.AntidetectAccountParser.Services.Browsers
             p.platformName = fp["platform"];
             p.osVersion = fp["os"]["version"];
             dynamic pr = new JObject();
-            pr.Type = (proxy.Type == "socks" ? "socks5" : proxy.Type);
+            pr.type = (proxy.Type == "socks" ? "socks5" : proxy.Type);
             pr.host = proxy.Address;
             pr.port = proxy.Port;
             pr.login = proxy.Login;
