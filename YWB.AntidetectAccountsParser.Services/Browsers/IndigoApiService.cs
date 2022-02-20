@@ -261,7 +261,7 @@ namespace YWB.AntidetectAccountsParser.Services.Browsers
             if(!json.ContainsKey("status")||!json.ContainsKey("value"))
                 throw new Exception($"Couldn't get Indigo's api token: {json}");
             if (json.status.ToString().ToLowerInvariant() == "ok")
-                return json.valueToString();
+                return json.value.ToString();
             throw new Exception($"Couldn't get Indigo's api token: {json}");
         }
     }
