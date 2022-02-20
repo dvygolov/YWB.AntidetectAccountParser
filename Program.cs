@@ -7,7 +7,6 @@ using YWB.AntidetectAccountParser.Model.Accounts;
 using YWB.AntidetectAccountParser.Services.Browsers;
 using YWB.AntidetectAccountParser.Services.Monitoring;
 using YWB.AntidetectAccountParser.Services.Parsers;
-using YWB.AntidetectAccountParser.Services.Playwright;
 using YWB.AntidetectAccountParser.Services.Proxies;
 
 namespace YWB.AntidetectAccountParser
@@ -18,13 +17,7 @@ namespace YWB.AntidetectAccountParser
         {
             Console.InputEncoding = System.Text.Encoding.UTF8;
             Console.OutputEncoding = System.Text.Encoding.UTF8;
-            Console.WriteLine("Antidetect Accounts Parser v6.2.2 Yellow Web (https://yellowweb.top)");
-            Console.WriteLine("If you like this software, please, donate!");
-            Console.WriteLine("WebMoney: Z182653170916");
-            Console.WriteLine("Bitcoin: bc1qqv99jasckntqnk0pkjnrjtpwu0yurm0qd0gnqv");
-            Console.WriteLine("Ethereum: 0xBC118D3FDE78eE393A154C29A4545c575506ad6B");
-            await Task.Delay(3000);
-            Console.WriteLine();
+            CopyrightHelper.Show();
 
             var apf = new AccountsParserFactory();
             var parser = apf.CreateParser();
@@ -74,11 +67,6 @@ namespace YWB.AntidetectAccountParser
                     {
                         await ImportToMonitoringService(accounts.Cast<FacebookAccount>().ToList());
                     }
-                }
-                else
-                {
-                    var ipws = new IndigoPlaywrightService();
-                    //await ipws.GetTokensAsync(profiles);
                 }
             }
             else if (answer == 2)

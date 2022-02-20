@@ -1,5 +1,8 @@
-﻿namespace YWB.AntidetectAccountParser.Model.Accounts
+﻿using System.Diagnostics;
+
+namespace YWB.AntidetectAccountParser.Model.Accounts
 {
+    [DebuggerDisplay("{ToString()}")]
     public class FacebookAccount : SocialAccount
     {
         public FacebookAccount() : base()
