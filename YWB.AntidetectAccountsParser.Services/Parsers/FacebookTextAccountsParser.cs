@@ -42,6 +42,17 @@ namespace YWB.AntidetectAccountsParser.Services.Parsers
             else if (matches.Count != lst.Count)
             {
                 _logger.LogInformation("Found access tokens count does not match accounts count!");
+                var inputs = input.Split('\n');
+                for (int i = 0; i < inputs.Length; i++)
+                {
+                    if (re.IsMatch(inputs[i]))
+                    {
+                        _logger.LogInformation($"Set token for {i+1} account!");
+                        lst[i].Token = re.Match(inputs[i]).Groups["Token"].Value;
+                    }
+                    else
+                        _logger.LogWarning($"No token found for {i+1} account!");
+                }
             }
             else
             {
