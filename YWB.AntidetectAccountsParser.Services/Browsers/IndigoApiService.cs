@@ -54,7 +54,48 @@ namespace YWB.AntidetectAccountsParser.Services.Browsers
         {
             if (_profileSettings.ContainsKey(profileId)) return _profileSettings[profileId];
             var r = new RestRequest($"clb/p/{profileId}", Method.POST);
-            r.AddJsonBody($@"{{""sid"":""00000000-0000-0000-0000-000000000000"",""name"":"""",""browserType"":5,""osType"":""win"",""maskWebRtc"":true,""webrtcPubIpFillOnStart"":true,""webRtcType"":1,""geoFillOnStart"":true,""tzFillOnStart"":true,""geoPermitType"":1,""canvasDefType"":0,""useCanvasNoise"":false,""useGeoSpoofing"":true,""maskMediaDevices"":true,""mediaDevicesVideoInputs"":1,""mediaDevicesAudioInputs"":2,""mediaDevicesAudioOutputs"":1,""storeExtensions"":false,""storeLs"":false,""disablePlugins"":true,""disableFlashPlugin"":true,""forbidConcurrentExecution"":true,""maskFonts"":true,""maskFontGlyphs"":true,""googleServices"":false,""groupId"":""00000000-0000-0000-0000-000000000000"",""offlineProfile"":false,""localPortsProtection"":true,""localPortsExclude"":[],""container"":{{""navigator"":{{""langHdr"":""en-US,en;q=0.9""}},""scrWidth"":1920,""scrHeight"":1200}},""editPermissionType"":1,""storeBookmarks"":false,""storeHistory"":false,""storePasswords"":false,""storeServiceWorkerCache"":false}}");
+            dynamic s=new JObject();
+            s.sid = "00000000-0000-0000-0000-000000000000";
+            s.name="";
+            s.browserType = 5;
+            s.osType = "win";
+            s.maskWebRtc = true;
+            s.webrtcPubIpFillOnStart=true;
+            s.webRtcType = 1;
+            s.geoFillOnStart = true;
+            s.tzFillOnStart = true;
+            s.geoPermitType = 1;
+            s.cavasDefType = 0;
+            s.useCanvasNoise = false;
+            s.useGeoSpoofing = true;
+            s.maskMediaDevices = true;
+            s.mediaDevicesVideoInputs = 1;
+            s.mediaDevicesAudioInputs = 2;
+            s.mediaDevicesAudioOutputs = 1;
+            s.storeExtensions = false;
+            s.storeLs = false;
+            s.disablePlugins = true;
+            s.disableFlashPlugin=true;
+            s.forbidConcurrentExecution = true;
+            s.maskFonts=true;
+            s.maskFontGlyphs = true;
+            s.googleServices = false;
+            s.groupId = "00000000-0000-0000-0000-000000000000";
+            s.offlineProfile = false;
+            s.localPortsProtection = true;
+            s.localPortsExclude = new JArray();
+            s.container = new JObject();
+            s.container.navigator = new JObject();
+            s.container.navigator.langHdr = "en-US,en;q=0.9";
+            s.container.srcWidth = 1920;
+            s.container.srcHeight = 1200;
+            s.editPermissionType = 1;
+            s.storeBookmarks = false;
+            s.storeHistory = true;
+            s.storePasswords = true;
+            s.storeServiceWorkerCache = false;
+
+            r.AddJsonBody(s.ToString());
             var ips = await ExecuteLocalRequestAsync<IndigoProfileSettings>(r);
             if (ips != null)
                 _profileSettings.AddOrUpdate(profileId, _ => ips, (_, _) => ips);
@@ -261,7 +302,7 @@ namespace YWB.AntidetectAccountsParser.Services.Browsers
             if(!json.ContainsKey("status")||!json.ContainsKey("value"))
                 throw new Exception($"Couldn't get Indigo's api token: {json}");
             if (json.status.ToString().ToLowerInvariant() == "ok")
-                return json.valueToString();
+                return json.value.ToString();
             throw new Exception($"Couldn't get Indigo's api token: {json}");
         }
     }

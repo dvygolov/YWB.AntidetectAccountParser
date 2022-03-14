@@ -25,7 +25,7 @@ namespace YWB.AntidetectAccountsParser.TelegramBot.MessageProcessors
 
         public override async Task PayloadAsync(BotFlow flow, Update update, ITelegramBotClient b, CancellationToken ct)
         {
-            var _pp = new TextProxyProvider()
+            var _pp = new TextProxyProvider(_loggerFactory);
             var m = update.Message;
             _pp.SetSource(m.Text);
 

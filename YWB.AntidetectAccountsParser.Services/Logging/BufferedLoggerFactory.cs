@@ -16,7 +16,8 @@ namespace YWB.AntidetectAccountsParser.Services.Logging
 
         public ILogger CreateLogger(string categoryName)
         {
-            return new BufferedLogger()
+            //return new BufferedLogger()
+            return null;
         }
 
         public void Dispose()
