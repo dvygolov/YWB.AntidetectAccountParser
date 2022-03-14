@@ -39,7 +39,7 @@ namespace YWB.AntidetectAccountsParser.Services.Browsers
         {
             var r = new RestRequest($"clb/rest/v1/t/{Ips.Uid}/m/{Ips.Uid}/g/");
             var groups = await ExecuteRequestAsync<IndigoProfilesGroup[]>(r);
-            return groups.Select(g => new AccountGroup { Id = g.Sid, Name = g.Name }).ToList();
+            return groups.Where(g=>!g.Name.StartsWith('z')).Select(g => new AccountGroup { Id = g.Sid, Name = g.Name }).ToList();
         }
 
         public async override Task<AccountGroup> AddNewGroupAsync(string groupName)
