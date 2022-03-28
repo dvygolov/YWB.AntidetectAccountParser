@@ -130,7 +130,7 @@ namespace YWB.AntidetectAccountsParser.Services.Browsers
             p.group = group.Id;
             p.os=os;
             p.browser = "mimic";
-            p.googleServices = true;
+            p.googleServices = false;
             dynamic md=new JObject();
             md.mode = "FAKE";
             md.videoInputs = vInputs;
@@ -140,9 +140,9 @@ namespace YWB.AntidetectAccountsParser.Services.Browsers
             dynamic strg=new JObject();
             strg.local = true;
             strg.extensions = true;
-            strg.bookmarks = false;
-            strg.history = false;
-            strg.passwords = false;
+            strg.bookmarks = true;
+            strg.history = true;
+            strg.passwords = true;
             p.storage = strg;
             p.canvas = new JObject();
             p.canvas.mode = "REAL";
