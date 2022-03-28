@@ -23,7 +23,7 @@ namespace YWB.AntidetectAccountParser.Services.Parsers
             return lst;
         }
 
-        private List<FacebookAccount> ProcessTokens(string input,List<FacebookAccount> lst)
+        private List<FacebookAccount> ProcessTokens(string input, List<FacebookAccount> lst)
         {
             var re = new Regex(@"(?<Token>EAABsb[^\s:;\|]+)", RegexOptions.Multiline);
             var matches = re.Matches(input);
@@ -117,7 +117,7 @@ namespace YWB.AntidetectAccountParser.Services.Parsers
             return lst;
         }
 
-        private (List<FacebookAccount> accounts,string input) ProcessCookies(string input, List<FacebookAccount> lst)
+        private (List<FacebookAccount> accounts, string input) ProcessCookies(string input, List<FacebookAccount> lst)
         {
             var re = new Regex(@"[\:;\|\s](?<Cookies>\[\s*\{.*?\}\s*\]\s*)($|[\:;\|\s])", RegexOptions.Multiline);
             var matches = re.Matches(input);
@@ -137,13 +137,19 @@ namespace YWB.AntidetectAccountParser.Services.Parsers
             }
             else
             {
-                Console.WriteLine("Found cookies!");
+                Console.WriteLine("Found cookies,checking accounts...");
+                var checkIds = true;
                 for (int i = 0; i < matches.Count; i++)
                 {
                     lst[i].Cookies = CookieHelper.GetDomainCookies(matches[i].Groups["Cookies"].Value, lst[i].Domain);
                     var cUser = CookieHelper.GetCUserCookie(lst[i].AllCookies);
-                    var ch = FbHeadersChecker.Check(cUser);
-                    if (!ch) invalid.Add(i);
+                    if (!checkIds) continue;
+                    try
+                    {
+                        var ch = FbHeadersChecker.Check(cUser);
+                        if (!ch) invalid.Add(i);
+                    }
+                    catch { checkIds = false; }
                 }
             }
 
@@ -163,22 +169,19 @@ namespace YWB.AntidetectAccountParser.Services.Parsers
 
         private List<FacebookAccount> ProcessUserAgents(string input, List<FacebookAccount> lst)
         {
-            var re = new Regex(@"(?<UserAgent>Mozilla.*?Gecko\)\s+(\w+/[\d+\. ]+)+)", RegexOptions.Multiline);
-            var matches = re.Matches(input);
-            if (matches.Count == 0)
+            var split = input.Split(Environment.NewLine);
+            var re = new Regex(@"(?<UserAgent>Mozilla.*?Gecko\)\s+(\w+/[\d+\. ]+)+)");
+
+            for (int i = 0; i < split.Length; i++)
             {
-                Console.WriteLine("Didn't find Useragents!");
-            }
-            else if (matches.Count != lst.Count)
-            {
-                Console.WriteLine("Found useragents count does not match accounts count!");
-            }
-            else
-            {
-                Console.WriteLine("Found UserAgents!");
-                for (int i = 0; i < matches.Count; i++)
+                var match = re.Match(split[i]);
+                if (match.Success)
                 {
-                    lst[i].UserAgent = matches[i].Groups["UserAgent"].Value;
+                    lst[i].UserAgent = match.Groups["UserAgent"].Value;
+                }
+                else
+                {
+                    Console.WriteLine($"Не нашли UserAgent в акке #{i + 1}!");
                 }
             }
             return lst;
@@ -263,8 +266,8 @@ namespace YWB.AntidetectAccountParser.Services.Parsers
 
         protected override IEnumerable<FacebookAccount> Process(string input)
         {
-            var accounts=ProcessLoginsAndPasswords(input);
-            (accounts,input) = ProcessCookies(input, accounts);
+            var accounts = ProcessLoginsAndPasswords(input);
+            (accounts, input) = ProcessCookies(input, accounts);
             accounts = ProcessTokens(input, accounts);
             accounts = ProcessBMTokens(input, accounts);
             accounts = ProcessEmails(input, accounts);
