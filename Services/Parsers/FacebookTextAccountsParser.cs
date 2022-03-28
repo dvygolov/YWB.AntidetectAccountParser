@@ -212,7 +212,7 @@ namespace YWB.AntidetectAccountParser.Services.Parsers
 
         private List<FacebookAccount> ProcessBirthdays(string input, List<FacebookAccount> lst)
         {
-            var re = new Regex(@"(?<Birthday>\d{1,2}\s[а-я]+\s\d{4})", RegexOptions.Multiline);
+            var re = new Regex(@"(?<Birthday>\d{1,2}[\s\|][а-я]+[\s\|]\d{4})", RegexOptions.Multiline);
             var matches = re.Matches(input);
             if (matches.Count == 0)
             {
