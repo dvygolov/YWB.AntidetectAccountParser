@@ -161,8 +161,8 @@ namespace YWB.AntidetectAccountsParser.Services.Parsers
                 {
                     lst[i].Cookies = CookieHelper.GetDomainCookies(matches[i].Groups["Cookies"].Value, lst[i].Domain);
                     var cUser = CookieHelper.GetCUserCookie(lst[i].AllCookies);
-                    var ch = _fhc.Check(cUser);
-                    if (!ch) invalid.Add(i);
+                    //var ch = _fhc.Check(cUser);
+                    //if (!ch) invalid.Add(i);
                 }
             }
 

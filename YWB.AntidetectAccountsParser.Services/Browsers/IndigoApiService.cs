@@ -15,7 +15,7 @@ namespace YWB.AntidetectAccountsParser.Services.Browsers
         private IndigoPlanSettings _ips;
         private ConcurrentDictionary<string, IndigoProfileSettings> _profileSettings = new ConcurrentDictionary<string, IndigoProfileSettings>();
 
-        public IndigoApiService(string credentials,ILoggerFactory lf) : base(credentials,lf) {}
+        public IndigoApiService(string credentials, ILoggerFactory lf) : base(credentials, lf) { }
 
         public IndigoPlanSettings Ips
         {
@@ -39,7 +39,7 @@ namespace YWB.AntidetectAccountsParser.Services.Browsers
         {
             var r = new RestRequest($"clb/rest/v1/t/{Ips.Uid}/m/{Ips.Uid}/g/");
             var groups = await ExecuteRequestAsync<IndigoProfilesGroup[]>(r);
-            return groups.Select(g => new AccountGroup { Id = g.Sid, Name = g.Name }).ToList();
+            return groups.Where(g => g.Name != null && g.Name.Length == 3).Select(g => new AccountGroup { Id = g.Sid, Name = g.Name }).ToList();
         }
 
         public async override Task<AccountGroup> AddNewGroupAsync(string groupName)
@@ -47,20 +47,20 @@ namespace YWB.AntidetectAccountsParser.Services.Browsers
             var r = new RestRequest($"clb/u/{Ips.Uid}/g/", Method.POST);
             r.AddJsonBody($@"{{""name"":""{groupName}"",""accessRights"":""[]"",""accessRightsModified"":true}}");
             var group = await ExecuteLocalRequestAsync<IndigoProfilesGroup>(r);
-            return new AccountGroup { Id=group.Sid, Name = group.Name };
+            return new AccountGroup { Id = group.Sid, Name = group.Name };
         }
 
         private async Task<IndigoProfileSettings> GetProfileSettingsAsync(string profileId)
         {
             if (_profileSettings.ContainsKey(profileId)) return _profileSettings[profileId];
             var r = new RestRequest($"clb/p/{profileId}", Method.POST);
-            dynamic s=new JObject();
+            dynamic s = new JObject();
             s.sid = "00000000-0000-0000-0000-000000000000";
-            s.name="";
+            s.name = "";
             s.browserType = 5;
             s.osType = "win";
             s.maskWebRtc = true;
-            s.webrtcPubIpFillOnStart=true;
+            s.webrtcPubIpFillOnStart = true;
             s.webRtcType = 1;
             s.geoFillOnStart = true;
             s.tzFillOnStart = true;
@@ -75,9 +75,9 @@ namespace YWB.AntidetectAccountsParser.Services.Browsers
             s.storeExtensions = false;
             s.storeLs = false;
             s.disablePlugins = true;
-            s.disableFlashPlugin=true;
+            s.disableFlashPlugin = true;
             s.forbidConcurrentExecution = true;
-            s.maskFonts=true;
+            s.maskFonts = true;
             s.maskFontGlyphs = true;
             s.googleServices = false;
             s.groupId = "00000000-0000-0000-0000-000000000000";
@@ -126,18 +126,18 @@ namespace YWB.AntidetectAccountsParser.Services.Browsers
 
             var r = new RestRequest("api/v2/profile", Method.POST);
             dynamic p = new JObject();
-            p.name=acc.Name;
+            p.name = acc.Name;
             p.group = group.Id;
-            p.os=os;
+            p.os = os;
             p.browser = "mimic";
             p.googleServices = false;
             dynamic md=new JObject();
             md.mode = "FAKE";
             md.videoInputs = vInputs;
-            md.audioInputs=aInputs;
+            md.audioInputs = aInputs;
             md.audioOutputs = aOutputs;
             p.mediaDevices = md;
-            dynamic strg=new JObject();
+            dynamic strg = new JObject();
             strg.local = true;
             strg.extensions = true;
             strg.bookmarks = true;
@@ -299,7 +299,7 @@ namespace YWB.AntidetectAccountsParser.Services.Browsers
         {
             var r = new RestRequest("/bridge/apiToken", Method.GET);
             dynamic json = await ExecuteLocalRequestAsync<JObject>(r, false);
-            if(!json.ContainsKey("status")||!json.ContainsKey("value"))
+            if (!json.ContainsKey("status") || !json.ContainsKey("value"))
                 throw new Exception($"Couldn't get Indigo's api token: {json}");
             if (json.status.ToString().ToLowerInvariant() == "ok")
                 return json.value.ToString();

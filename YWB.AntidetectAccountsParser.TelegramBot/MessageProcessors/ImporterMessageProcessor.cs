@@ -1,5 +1,4 @@
-﻿using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
+﻿using Microsoft.Extensions.Logging;
 using Telegram.Bot;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
@@ -66,7 +65,7 @@ namespace YWB.AntidetectAccountsParser.TelegramBot.MessageProcessors
                 flow.Os = "None";
                 var groups = await flow.Importer.GetExistingGroupsAsync();
                 var buttons = groups.Where(g => g.Name != null).OrderBy(g => g.Name)
-                    .Select(g => InlineKeyboardButton.WithCallbackData(g.Name, g.Name)).Chunk(6).ToArray();
+                    .Select(g => InlineKeyboardButton.WithCallbackData(g.Name, g.Name)).Chunk(5).ToArray();
                 InlineKeyboardMarkup inlineKeyboard = new(buttons);
                 await b.SendTextMessageAsync(
                     chatId: fromId,
