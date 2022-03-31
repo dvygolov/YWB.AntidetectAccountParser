@@ -119,7 +119,7 @@ namespace YWB.AntidetectAccountParser.Services.Parsers
 
         private (List<FacebookAccount> accounts, string input) ProcessCookies(string input, List<FacebookAccount> lst)
         {
-            var re = new Regex(@"[\:;\|\s](?<Cookies>\[\s*\{.*?\}\s*\]\s*)($|[\:;\|\s])", RegexOptions.Multiline);
+            var re = new Regex(@"[\:;\|\s\""](?<Cookies>\[\s*\{.*?\}\s*\]\s*)($|[\""\:;\|\s])", RegexOptions.Multiline);
             var matches = re.Matches(input);
             var invalid = new List<int>();
             if (matches.Count == 0)
