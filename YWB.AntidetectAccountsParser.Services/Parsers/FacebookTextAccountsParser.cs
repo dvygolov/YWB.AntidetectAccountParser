@@ -31,7 +31,7 @@ namespace YWB.AntidetectAccountsParser.Services.Parsers
             return lst;
         }
 
-        private List<FacebookAccount> ProcessTokens(string input,List<FacebookAccount> lst)
+        private List<FacebookAccount> ProcessTokens(string input, List<FacebookAccount> lst)
         {
             var re = new Regex(@"(?<Token>EAABsb[^\s:;\|]+)", RegexOptions.Multiline);
             var matches = re.Matches(input);
@@ -47,11 +47,11 @@ namespace YWB.AntidetectAccountsParser.Services.Parsers
                 {
                     if (re.IsMatch(inputs[i]))
                     {
-                        _logger.LogInformation($"Set token for {i+1} account!");
+                        _logger.LogInformation($"Set token for {i + 1} account!");
                         lst[i].Token = re.Match(inputs[i]).Groups["Token"].Value;
                     }
                     else
-                        _logger.LogWarning($"No token found for {i+1} account!");
+                        _logger.LogWarning($"No token found for {i + 1} account!");
                 }
             }
             else
@@ -136,7 +136,7 @@ namespace YWB.AntidetectAccountsParser.Services.Parsers
             return lst;
         }
 
-        private (List<FacebookAccount> accounts,string input) ProcessCookies(string input, List<FacebookAccount> lst)
+        private (List<FacebookAccount> accounts, string input) ProcessCookies(string input, List<FacebookAccount> lst)
         {
             var re = new Regex(@"[\:;\|\s\""](?<Cookies>\[\s*\{.*?\}\s*\]\s*)($|[\:;\|\s\""])", RegexOptions.Multiline);
             var matches = re.Matches(input);
@@ -207,6 +207,11 @@ namespace YWB.AntidetectAccountsParser.Services.Parsers
         {
             var re = new Regex(@"[:;\|\s](?<TwoFactor>[\dA-Z]{32})($|[\:;\|\s])", RegexOptions.Multiline);
             var matches = re.Matches(input);
+            if (matches.Count == 0)
+            {
+                re = new Regex(@"[:;\|\s](?<TwoFactor>[\dA-Z]{4}\s+[\dA-Z]{4}\s+[\dA-Z]{4}\s+[\dA-Z]{4}\s+[\dA-Z]{4}\s+[\dA-Z]{4}\s+[\dA-Z]{4}\s+[\dA-Z]{4})($|[\:;\|\s])", RegexOptions.Multiline);
+                matches = re.Matches(input);
+            }
             if (matches.Count == 0)
             {
                 _logger.LogInformation("Didn't find 2FA!");
@@ -282,8 +287,8 @@ namespace YWB.AntidetectAccountsParser.Services.Parsers
 
         protected override IEnumerable<FacebookAccount> Process(string input)
         {
-            var accounts=ProcessLoginsAndPasswords(input);
-            (accounts,input) = ProcessCookies(input, accounts);
+            var accounts = ProcessLoginsAndPasswords(input);
+            (accounts, input) = ProcessCookies(input, accounts);
             accounts = ProcessTokens(input, accounts);
             accounts = ProcessBMTokens(input, accounts);
             accounts = ProcessEmails(input, accounts);
