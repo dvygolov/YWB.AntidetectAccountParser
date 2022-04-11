@@ -15,6 +15,7 @@ namespace YWB.AntidetectAccountParser.Services
             var url = $"https://mbasic.facebook.com/profile.php?id={id}";
             var hc = new HttpClient();
             hc.DefaultRequestHeaders.Add("User-Agent", "Mozilla/5.0 (iPhone; CPU iPhone OS 14_2 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) GSA/190.0.415307624 Mobile/15E148 Safari/604.1");
+            
             var resp = hc.Send(new HttpRequestMessage(HttpMethod.Head, url));
             switch (resp.StatusCode)
             {

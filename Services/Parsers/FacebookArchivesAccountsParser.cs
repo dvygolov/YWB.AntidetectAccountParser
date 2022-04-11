@@ -10,6 +10,7 @@ namespace YWB.AntidetectAccountParser.Services.Parsers
 {
     public class FacebookArchivesAccountsParser : AbstractArchivesAccountsParser<FacebookAccount>
     {
+        private bool _checkIds = true;
         public override ActionsFacade<FacebookAccount> GetActions(string filePath)
         {
             var fa = new FacebookAccount(Path.GetFileNameWithoutExtension(filePath));
@@ -31,8 +32,12 @@ namespace YWB.AntidetectAccountParser.Services.Parsers
             if (fa.AllCookies.Any(c => CookieHelper.HasCUserCookie(c)))
             {
                 var uid=CookieHelper.GetCUserCookie(fa.AllCookies);
-                var ch=FbHeadersChecker.Check(uid);
-                if (!ch) return AccountValidity.Invalid;
+                try
+                {
+                    var ch = FbHeadersChecker.Check(uid);
+                    if (!ch) return AccountValidity.Invalid;
+                }
+                catch { _checkIds = false; }
                 return AccountValidity.Valid;
             }
             else if (fa.Login != null && fa.Password != null)
