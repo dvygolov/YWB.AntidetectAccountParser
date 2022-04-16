@@ -157,12 +157,18 @@ namespace YWB.AntidetectAccountsParser.Services.Parsers
             else
             {
                 _logger.LogInformation("Found cookies!");
+                var checkIds = true;
                 for (int i = 0; i < matches.Count; i++)
                 {
                     lst[i].Cookies = CookieHelper.GetDomainCookies(matches[i].Groups["Cookies"].Value, lst[i].Domain);
                     var cUser = CookieHelper.GetCUserCookie(lst[i].AllCookies);
-                    //var ch = _fhc.Check(cUser);
-                    //if (!ch) invalid.Add(i);
+                    if (!checkIds) continue;
+                    try
+                    {
+                        var ch = _fhc.Check(cUser);
+                        if (!ch) invalid.Add(i);
+                    }
+                    catch { checkIds = false; }
                 }
             }
 
@@ -182,22 +188,19 @@ namespace YWB.AntidetectAccountsParser.Services.Parsers
 
         private List<FacebookAccount> ProcessUserAgents(string input, List<FacebookAccount> lst)
         {
-            var re = new Regex(@"(?<UserAgent>Mozilla.*?Gecko\)\s+(\w+/[\d+\. ]+)+)", RegexOptions.Multiline);
-            var matches = re.Matches(input);
-            if (matches.Count == 0)
+            var split = input.Split(Environment.NewLine);
+            var re = new Regex(@"(?<UserAgent>Mozilla.*?Gecko\)\s+(\w+/[\d+\. ]+)+)");
+
+            for (int i = 0; i < split.Length; i++)
             {
-                _logger.LogInformation("Didn't find Useragents!");
-            }
-            else if (matches.Count != lst.Count)
-            {
-                _logger.LogInformation("Found useragents count does not match accounts count!");
-            }
-            else
-            {
-                _logger.LogInformation("Found UserAgents!");
-                for (int i = 0; i < matches.Count; i++)
+                var match = re.Match(split[i]);
+                if (match.Success)
                 {
-                    lst[i].UserAgent = matches[i].Groups["UserAgent"].Value;
+                    lst[i].UserAgent = match.Groups["UserAgent"].Value;
+                }
+                else
+                {
+                    Console.WriteLine($"Не нашли UserAgent в акке #{i + 1}!");
                 }
             }
             return lst;

@@ -12,6 +12,7 @@ namespace YWB.AntidetectAccountsParser.Services.Parsers
         private readonly FbHeadersChecker _fhc;
         private readonly ILoggerFactory _lf;
         private readonly ILogger<FacebookArchivesAccountsParser> _logger;
+        private bool _checkIds = true;
 
         public FacebookArchivesAccountsParser(IProxyProvider<FacebookAccount> pp, FbHeadersChecker fhc, ILoggerFactory lf) : base(pp,lf)
         {
@@ -41,9 +42,16 @@ namespace YWB.AntidetectAccountsParser.Services.Parsers
         {
             if (fa.AllCookies.Any(c => CookieHelper.HasCUserCookie(c)))
             {
-                var uid = CookieHelper.GetCUserCookie(fa.AllCookies);
-                var ch = _fhc.Check(uid);
-                if (!ch) return AccountValidity.Invalid;
+                var uid=CookieHelper.GetCUserCookie(fa.AllCookies);
+                if (_checkIds)
+                {
+                    try
+                    {
+                        var ch = _fhc.Check(uid);
+                        if (!ch) return AccountValidity.Invalid;
+                    }
+                    catch { _checkIds = false; }
+                }
                 return AccountValidity.Valid;
             }
             else if (fa.Login != null && fa.Password != null)
