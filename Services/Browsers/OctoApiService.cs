@@ -84,13 +84,18 @@ namespace YWB.AntidetectAccountParser.Services.Browsers
         }
 
 
-        protected override async Task ImportCookiesAsync(string profileId, string cookies)
+        protected override async Task<bool> ImportCookiesAsync(string profileId, string cookies)
         {
             var request = new RestRequest($"profiles/{profileId}/import_cookies", Method.POST);
             var body = @$"{{""cookies"":{cookies}}}";
             request.AddParameter("application/json", body, ParameterType.RequestBody);
             dynamic res = await ExecuteRequestAsync<JObject>(request);
-            if (res.success != true) throw new Exception(res.ToString());
+            if (res.success != true)
+            {
+                Console.WriteLine(res.ToString());
+                return false;
+            }
+            return true;
         }
 
         protected override async Task<bool> SaveItemToNoteAsync(string profileId, SocialAccount fa)

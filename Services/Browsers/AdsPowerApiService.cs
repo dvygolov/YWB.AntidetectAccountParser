@@ -106,9 +106,9 @@ namespace YWB.AntidetectAccountParser.Services.Browsers
             return profileId;
         }
 
-        protected override Task ImportCookiesAsync(string profileId, string cookies)
+        protected override Task<bool> ImportCookiesAsync(string profileId, string cookies)
         {
-            return Task.CompletedTask;
+            return Task.FromResult(true);
         }
 
         protected override async Task<bool> SaveItemToNoteAsync(string profileId, SocialAccount fa)

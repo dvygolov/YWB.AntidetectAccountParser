@@ -5,7 +5,7 @@ public class CopyrightHelper
 {
     public static void Show()
     {
-        Console.WriteLine(@"                Antidetect Accounts Parser v6.2.5 ");
+        Console.WriteLine(@"                Antidetect Accounts Parser v6.2.7 ");
         Console.WriteLine(@"   _            __     __  _ _             __          __  _     ");
         Console.WriteLine(@"  | |           \ \   / / | | |            \ \        / / | |    ");
         Console.WriteLine(@"  | |__  _   _   \ \_/ /__| | | _____      _\ \  /\  / /__| |__  ");

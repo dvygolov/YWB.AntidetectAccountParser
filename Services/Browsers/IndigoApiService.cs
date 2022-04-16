@@ -135,35 +135,39 @@ namespace YWB.AntidetectAccountParser.Services.Browsers
             }
         }
 
-        protected override async Task ImportCookiesAsync(string profileId, string cookies)
+        protected override async Task<bool> ImportCookiesAsync(string profileId, string cookies)
         {
             var r = new RestRequest($"api/v1/profile/cookies/import/webext?profileId={profileId}", Method.POST);
             r.AddParameter("text/plain", cookies, ParameterType.RequestBody);
             dynamic json = await ExecuteLocalRequestAsync<JObject>(r);
 
             if (json != null && json.status == "OK")
+            {
                 Console.WriteLine("Cookies imported! Adding all data to note...");
+                return true;
+            }
             else
             {
                 switch (json.message)
                 {
                     case "Can't enable Google services":
-                    {
-                        Console.WriteLine("Couldn't enable Google services, switching them off...");
-                        var settings = await GetProfileSettingsAsync(profileId);
-                        settings.googleServices = false;
-                        settings.loadCustomExtensions = false;
-                        await SaveProfileSettingsAsync(settings);
+                        {
+                            Console.WriteLine("Couldn't enable Google services, switching them off...");
+                            var settings = await GetProfileSettingsAsync(profileId);
+                            settings.googleServices = false;
+                            settings.loadCustomExtensions = false;
+                            await SaveProfileSettingsAsync(settings);
 
-                        dynamic json2 = await ExecuteLocalRequestAsync<JObject>(r);
-                        if (json2 != null && json2.status == "OK")
-                            Console.WriteLine("Cookies imported! Adding all data to note...");
-                        else
-                            Console.WriteLine($"Cookies were NOT imported!!!{json} Adding all data to note...");
-                        break;
-                    }
+                            dynamic json2 = await ExecuteLocalRequestAsync<JObject>(r);
+                            if (json2 != null && json2.status == "OK")
+                                return true;
+                            else
+                                return false;
+                            break;
+                        }
                 }
             }
+            return false;
         }
 
         public async Task<string> CreateNewProfileAsync(string pName, string os, string groupId, Proxy p)

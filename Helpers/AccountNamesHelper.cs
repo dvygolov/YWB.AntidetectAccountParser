@@ -13,7 +13,9 @@ namespace YWB.AntidetectAccountParser.Helpers
             Console.Write("Enter account name prefix:");
             var namePrefix = Console.ReadLine();
             Console.Write("Enter starting index (For example, 1):");
-            var sIndex = int.Parse(Console.ReadLine());
+
+            int sIndex=1;
+            int.TryParse(Console.ReadLine(),out sIndex);
             int i = 0;
             foreach (var acc in accounts)
             {

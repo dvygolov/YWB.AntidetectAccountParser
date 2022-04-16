@@ -12,7 +12,7 @@ namespace YWB.AntidetectAccountParser.Services.Browsers
         protected abstract string FileName { get; set; }
         protected abstract Task<List<(string pName, string pId)>> CreateOrChooseProfilesAsync(IList<SocialAccount> accounts);
 
-        protected abstract Task ImportCookiesAsync(string profileId, string cookies);
+        protected abstract Task<bool> ImportCookiesAsync(string profileId, string cookies);
 
         protected abstract Task<bool> SaveItemToNoteAsync(string profileId, SocialAccount sa);
 
@@ -45,7 +45,8 @@ namespace YWB.AntidetectAccountParser.Services.Browsers
                     {
                         accounts[i].Cookies = Encoding.UTF8.GetString(Convert.FromBase64String(accounts[i].Cookies));
                     }
-                    await ImportCookiesAsync(pId, accounts[i].Cookies);
+                    var imported=await ImportCookiesAsync(pId, accounts[i].Cookies);
+                    Console.WriteLine($"Cookies {(!imported?"NOT ":"")}imported!");
                 }
 
                 await SaveItemToNoteAsync(pId, accounts[i]);

@@ -4,6 +4,7 @@ using RestSharp;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Net;
 using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
@@ -146,13 +147,16 @@ namespace YWB.AntidetectAccountParser.Services.Browsers
         }
 
 
-        protected override async Task ImportCookiesAsync(string profileId, string cookies)
+        protected override async Task<bool> ImportCookiesAsync(string profileId, string cookies)
         {
-            var request = new RestRequest($"sync/{profileId}/cookies", Method.POST);
+            var request = new RestRequest(Method.POST);
             var body = @$"{{""cookies"":{cookies}}}";
             request.AddParameter("text/plain", body, ParameterType.RequestBody);
             request.AddHeader("Content-Type", "application/json");
-            var res = await ExecuteRequestAsync<JObject>(request);
+            request.AddQueryParameter("actionType", "importCookies");
+            request.AddQueryParameter("browserProfileId", profileId);
+            var res = await ExecuteRequestAsync<JObject>(request, "https://sync.anty-api.com");
+            return bool.Parse(res["success"].ToString());
         }
 
         protected override async Task<bool> SaveItemToNoteAsync(string profileId, SocialAccount fa)
@@ -185,7 +189,7 @@ namespace YWB.AntidetectAccountParser.Services.Browsers
                 {
                     Console.WriteLine($"Error deserializing {resp.Content} to {typeof(T)}. Retrying...");
                     await Task.Delay(2000);
-                    if (tryCount==2) throw;
+                    if (tryCount == 2) throw;
                 }
                 finally
                 {
@@ -199,11 +203,18 @@ namespace YWB.AntidetectAccountParser.Services.Browsers
         {
             (string login, string password) = GetLoginAndPassword();
             var client = new RestClient("https://anty-api.com/auth/login");
-            client.Timeout = -1;
             var request = new RestRequest(Method.POST);
             request.AddParameter("username", login);
             request.AddParameter("password", password);
             var response = await client.ExecuteAsync(request, new CancellationToken());
+            while (response.ErrorException != null)
+            {
+                Console.WriteLine(response.ErrorException.Message);
+                await Task.Delay(1000);
+                ServicePointManager.ServerCertificateValidationCallback += (sender, cert, chain, sslPolicyErrors) => true;
+                response = await client.ExecuteAsync(request, new CancellationToken());
+            }
+
             var res = JObject.Parse(response.Content);
             return res["token"].ToString();
         }
