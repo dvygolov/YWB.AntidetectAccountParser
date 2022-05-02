@@ -28,6 +28,13 @@ namespace YWB.AntidetectAccountParser.Helpers
                 .Any(c => c["name"].ToString().ToLowerInvariant() == "c_user");
         }
 
+        public static string GetCUserCookie(string cookies)
+        {
+            if (string.IsNullOrEmpty(cookies)) return null;
+            var cookieArray = JArray.Parse(cookies);
+            return cookieArray.FirstOrDefault(c => c["name"].ToString().ToLowerInvariant() == "c_user")?["value"].ToString()??null;
+        }
+
         internal static string GetCUserCookie(List<string> allCookies)
         {
             foreach(var cookies in allCookies)

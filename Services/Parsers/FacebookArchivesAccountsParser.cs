@@ -32,12 +32,15 @@ namespace YWB.AntidetectAccountParser.Services.Parsers
             if (fa.AllCookies.Any(c => CookieHelper.HasCUserCookie(c)))
             {
                 var uid=CookieHelper.GetCUserCookie(fa.AllCookies);
-                try
+                if (_checkIds)
                 {
-                    var ch = FbHeadersChecker.Check(uid);
-                    if (!ch) return AccountValidity.Invalid;
+                    try
+                    {
+                        var ch = FbHeadersChecker.Check(uid);
+                        if (!ch) return AccountValidity.Invalid;
+                    }
+                    catch { _checkIds = false; }
                 }
-                catch { _checkIds = false; }
                 return AccountValidity.Valid;
             }
             else if (fa.Login != null && fa.Password != null)
@@ -57,9 +60,10 @@ namespace YWB.AntidetectAccountParser.Services.Parsers
                     finalRes.Add(fa);
                     continue;
                 }
-                for (int i = 0; i < fa.AllCookies.Count; i++)
+                var groupedByCUser=fa.AllCookies.Where(c=>CookieHelper.HasCUserCookie(c)).GroupBy(c=>CookieHelper.GetCUserCookie(c));
+                foreach (var grouped in groupedByCUser)
                 {
-                    var cookies = fa.AllCookies[i];
+                    var cookies = grouped.MaxBy(g => g.Length);
                     var newFa = new FacebookAccount()
                     {
                         Birthday = fa.Birthday,
@@ -72,7 +76,7 @@ namespace YWB.AntidetectAccountParser.Services.Parsers
                         Token = fa.Token,
                         TwoFactor = fa.TwoFactor,
                         UserAgent = fa.UserAgent,
-                        Name = $"{fa.Name}_{i + 1}"
+                        Name = fa.Name
                     };
                     finalRes.Add(newFa);
                 }
