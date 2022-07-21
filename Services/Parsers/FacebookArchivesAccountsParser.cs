@@ -76,7 +76,8 @@ namespace YWB.AntidetectAccountParser.Services.Parsers
                         Token = fa.Token,
                         TwoFactor = fa.TwoFactor,
                         UserAgent = fa.UserAgent,
-                        Name = fa.Name
+                        Name = fa.Name,
+                        Proxy = fa.Proxy
                     };
                     finalRes.Add(newFa);
                 }
