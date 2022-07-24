@@ -221,6 +221,11 @@ namespace YWB.AntidetectAccountParser.Services.Parsers
             }
             if (matches.Count == 0)
             {
+                re = new Regex(@"(?<Birthday>[12]\d{3}[\./\-]\d{1,2}[\./\-]\d{1,2})", RegexOptions.Multiline);
+                matches = re.Matches(input);
+            }
+            if (matches.Count == 0)
+            {
                 Console.WriteLine("Didn't find birthdays!");
             }
             else if (matches.Count > lst.Count)

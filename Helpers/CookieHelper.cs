@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 using System.Text.RegularExpressions;
 
 namespace YWB.AntidetectAccountParser.Helpers
@@ -10,6 +11,8 @@ namespace YWB.AntidetectAccountParser.Helpers
     {
         public static string GetDomainCookies(string cookies,string domain)
         {
+            if (AreCookiesInBase64(cookies))
+                cookies = Encoding.UTF8.GetString(Convert.FromBase64String(cookies));
             var cookieArray = JArray.Parse(cookies);
             var domainCookies = cookieArray
                 .Where(c => c["domain"]?.ToString().Contains(domain)??false)
