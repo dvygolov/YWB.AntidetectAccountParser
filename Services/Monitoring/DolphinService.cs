@@ -109,6 +109,7 @@ namespace YWB.AntidetectAccountParser.Services.Monitoring
 
         private async Task<dynamic> ExecuteDolphinRequestAsync(RestRequest r)
         {
+            r.AddHeader("Content-Type", "application/json");
             dynamic res = await ExecuteRequestAsync<JObject>(r);
             if (res.success == false)
             {
