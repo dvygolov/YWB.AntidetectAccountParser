@@ -174,7 +174,7 @@ namespace YWB.AntidetectAccountParser.Services.Browsers
         {
             var rc = new RestClient(url);
             if (string.IsNullOrEmpty(_token))
-                _token = await GetDolphinApiTokenAsync();
+                _token = GetDolphinApiToken();
             r.AddHeader("Authorization", $"Bearer {_token}");
             T res = default(T);
             int tryCount = 0;
@@ -199,42 +199,18 @@ namespace YWB.AntidetectAccountParser.Services.Browsers
             return res;
         }
 
-        private async Task<string> GetDolphinApiTokenAsync()
-        {
-            (string login, string password) = GetLoginAndPassword();
-            var client = new RestClient("https://anty-api.com/auth/login");
-            var request = new RestRequest(Method.POST);
-            request.AddParameter("username", login);
-            request.AddParameter("password", password);
-            var response = await client.ExecuteAsync(request, new CancellationToken());
-            while (response.ErrorException != null)
-            {
-                Console.WriteLine(response.ErrorException.Message);
-                await Task.Delay(1000);
-                ServicePointManager.ServerCertificateValidationCallback += (sender, cert, chain, sslPolicyErrors) => true;
-                response = await client.ExecuteAsync(request, new CancellationToken());
-            }
-
-            var res = JObject.Parse(response.Content);
-            return res["token"].ToString();
-        }
-
-        private (string login, string password) GetLoginAndPassword()
+        private string GetDolphinApiToken()
         {
             var dir = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
             var fullPath = Path.Combine(dir, FileName);
             if (File.Exists(fullPath))
             {
-                var split = File.ReadAllText(fullPath).Split(':');
-                return (split[0], split[1]);
+                return File.ReadAllText(fullPath);
             }
             else
             {
-                Console.Write("Enter your Dolphin Anty login:");
-                var login = Console.ReadLine();
-                Console.Write("Enter your Dolphin Anty password:");
-                var password = Console.ReadLine();
-                return (login, password);
+                Console.Write("Enter your Dolphin Anty API token:");
+                return Console.ReadLine();
             }
         }
     }
